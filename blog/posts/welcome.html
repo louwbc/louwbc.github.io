@@ -1,0 +1,19 @@
+<h2>为什么要加博客？</h2>
+<p>博客用于发布版本更新、推荐电台专题、以及使用教程。整体风格保持简单、干净，移动端阅读舒适。</p>
+
+<h2>目前支持的功能</h2>
+<ul>
+  <li>文章列表：按时间倒序展示</li>
+  <li>搜索：按标题/摘要/标签关键词过滤</li>
+  <li>标签筛选：一键查看某个主题</li>
+  <li>文章详情：独立页面打开阅读</li>
+</ul>
+
+<h2>如何新增文章</h2>
+<ol>
+  <li>在 <code>blog/posts/</code> 下新增一个 <code>slug.html</code> 文件作为正文</li>
+  <li>在 <code>blog/posts/index.json</code> 里补上一条元数据（slug/title/date/tags/excerpt）</li>
+  <li>刷新 <code>/blog/</code> 即可看到文章</li>
+</ol>
+
+<p class="muted">提示：这是一个静态博客实现，不依赖数据库，也不需要构建流程，适合轻量发布与快速迭代。</p>

@@ -1,9 +1,18 @@
-const CACHE = 'solo-radio-v4'
+const CACHE = 'solo-radio-v8'
 const ASSETS = [
   '/',
   '/index.html',
+  '/blog/',
+  '/blog/index.html',
+  '/blog/post.html',
+  '/blog/write.html',
+  '/blog/posts/index.json',
+  '/blog/posts/welcome.html',
+  '/tools/pomodoro.html',
   '/assets/css/styles.css',
   '/assets/js/app.js',
+  '/assets/js/blog.js',
+  '/assets/js/pomodoro.js',
   '/manifest.webmanifest',
   '/icons/icon.svg'
 ]

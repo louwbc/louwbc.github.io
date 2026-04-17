@@ -13,7 +13,8 @@ const state = {
   langCounts: {},
   includeInsecure: load('includeInsecure', false),
   loading: false,
-  hasMore: true
+  hasMore: true,
+  playContext: 'discover'
 }
 
 const audio = $('#audio')
@@ -26,6 +27,8 @@ const nowSub = $('#nowSub')
 const resultInfo = $('#resultInfo')
 const sentinel = $('#sentinel')
 const includeInsecureEl = $('#includeInsecure')
+const prevBtn = $('#prevBtn')
+const nextBtn = $('#nextBtn')
 
 init()
 
@@ -68,6 +71,8 @@ function bindUI() {
     else audio.pause()
   })
   stopBtn.addEventListener('click', stop)
+  prevBtn.addEventListener('click', prevStation)
+  nextBtn.addEventListener('click', nextStation)
   favBtn.addEventListener('click', toggleFavCurrent)
   $('.tabs').addEventListener('click', (e) => {
     if (e.target.matches('.tab')) {
@@ -178,7 +183,7 @@ async function fetchStations(reset) {
   }
   const listEl = $('#stationList')
   for (const s of results) {
-    const li = renderStationItem(s)
+    const li = renderStationItem(s, 'discover')
     listEl.appendChild(li)
   }
   state.stations.push(...results)
@@ -188,13 +193,13 @@ async function fetchStations(reset) {
   state.loading = false
 }
 
-function renderStationItem(s) {
+function renderStationItem(s, list) {
   const li = document.createElement('li')
   li.className = 'item'
   const play = document.createElement('button')
   play.className = 'icon-btn'
   play.textContent = '▶'
-  play.addEventListener('click', () => playStation(s))
+  play.addEventListener('click', () => playStation(s, list || 'discover'))
   const meta = document.createElement('div')
   meta.className = 'meta'
   const name = document.createElement('div')
@@ -230,11 +235,12 @@ function updateResultInfo() {
   resultInfo.hidden = false
 }
 
-function playStation(s) {
+function playStation(s, list) {
   if (!s?.url_resolved) return
   audio.src = s.url_resolved
   audio.play().catch(() => {})
   state.playing = s
+  state.playContext = list || state.playContext || 'discover'
   nowTitle.textContent = s.name || '未命名电台'
   nowSub.textContent = [s.country, s.tags].filter(Boolean).join(' · ')
   favBtn.textContent = isFav(s) ? '★' : '☆'
@@ -295,7 +301,7 @@ function renderFavs() {
   }
   $('#emptyFav').style.display = 'none'
   for (const s of state.favorites) {
-    const li = renderStationItem(s)
+    const li = renderStationItem(s, 'favorites')
     list.appendChild(li)
   }
 }
@@ -309,7 +315,7 @@ function renderRecent() {
   }
   $('#emptyRecent').style.display = 'none'
   for (const s of state.recent) {
-    const li = renderStationItem(s)
+    const li = renderStationItem(s, 'recent')
     list.appendChild(li)
   }
 }
@@ -348,6 +354,8 @@ function setupMediaSession() {
   navigator.mediaSession.setActionHandler('play', () => audio.play())
   navigator.mediaSession.setActionHandler('pause', () => audio.pause())
   navigator.mediaSession.setActionHandler('stop', stop)
+  navigator.mediaSession.setActionHandler('previoustrack', prevStation)
+  navigator.mediaSession.setActionHandler('nexttrack', nextStation)
 }
 
 // PWA
@@ -373,4 +381,32 @@ function registerSW() {
     deferredPrompt = null
     btn.hidden = true
   })
+}
+
+function getCurrentList() {
+  if (state.playContext === 'favorites') return state.favorites
+  if (state.playContext === 'recent') return state.recent
+  return state.stations
+}
+
+function findCurrentIndex(arr) {
+  if (!state.playing) return -1
+  const id = state.playing.stationuuid
+  return arr.findIndex(x => x.stationuuid === id)
+}
+
+function nextStation() {
+  const arr = getCurrentList()
+  if (!arr.length) return
+  let i = findCurrentIndex(arr)
+  i = (i >= 0) ? (i + 1) % arr.length : 0
+  playStation(arr[i], state.playContext)
+}
+
+function prevStation() {
+  const arr = getCurrentList()
+  if (!arr.length) return
+  let i = findCurrentIndex(arr)
+  i = (i >= 0) ? (i - 1 + arr.length) % arr.length : 0
+  playStation(arr[i], state.playContext)
 }
