@@ -1,4 +1,4 @@
-const CACHE = 'solo-radio-v8'
+const CACHE = 'solo-radio-v9'
 const ASSETS = [
   '/',
   '/index.html',

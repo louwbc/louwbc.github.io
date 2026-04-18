@@ -38,6 +38,7 @@ async function init() {
   bindUI()
   setVolume(load('volume', 1))
   await populateFilters()
+  applyPreferredLanguage()
   await searchStations()
   renderFavs()
   renderRecent()
@@ -48,6 +49,12 @@ function bindUI() {
   $('#searchBtn').addEventListener('click', () => searchStations())
   $('#searchInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') searchStations()
+  })
+  $('#languageSelect').addEventListener('change', (e) => {
+    const v = e.target.value
+    if (v) save('preferredLanguage', v)
+    else localStorage.removeItem('preferredLanguage')
+    searchStations()
   })
   includeInsecureEl.checked = !!state.includeInsecure
   includeInsecureEl.addEventListener('change', () => {
@@ -121,6 +128,17 @@ async function populateFilters() {
   } catch (e) {
     console.warn('过滤条件加载失败', e)
   }
+}
+
+function applyPreferredLanguage() {
+  const langSelect = $('#languageSelect')
+  if (!langSelect) return
+  if (langSelect.value) return
+  const preferred = load('preferredLanguage', 'English')
+  const opts = Array.from(langSelect.options || [])
+  const match = opts.find(o => String(o.value).toLowerCase() === String(preferred).toLowerCase())
+    || opts.find(o => String(o.value).toLowerCase() === 'english')
+  if (match) langSelect.value = match.value
 }
 
 async function searchStations() {
