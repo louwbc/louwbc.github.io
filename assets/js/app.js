@@ -379,7 +379,7 @@ function setupMediaSession() {
 // PWA
 function registerSW() {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').then(() => {
+    navigator.serviceWorker.register('./sw.js').then(() => {
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         location.reload()
       })

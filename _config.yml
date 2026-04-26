@@ -1,0 +1,7 @@
+title: "lizkca"
+description: "个人博客 · 番茄钟 · 全球FM"
+lang: "zh-CN"
+markdown: kramdown
+permalink: /blog/:title/
+kramdown:
+  input: GFM

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <title>番茄钟</title>
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" class="logo" aria-hidden="true"><path d="M4 7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v7a4 4 0 0 1-4 4h-2.2l1.1 2.2a1 1 0 1 1-1.8.9L11.4 18H7a3 3 0 0 1-3-3V7zm3-1a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h10a2 2 0 0 0 2-2V7a1 1 0 0 0-1-1H7zM6 9h2v2H6V9zm3 0h2v2H9V9z" fill="currentColor"/></svg>
+      <span class="title">番茄钟</span>
+    </div>
+    <nav class="topnav">
+      <a class="navlink" href="/">返回首页</a>
+      <a class="navlink" href="/blog/">博客</a>
+      <a class="navlink" href="/global-fm/">全球FM</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="card card-pad">
+      <div class="pomodoro-head">
+        <h1 class="blog-title" style="margin:0">番茄工作法</h1>
+        <span class="pill" id="p-state">未开始</span>
+      </div>
+      <div class="pomodoro-time" id="p-time">25:00</div>
+      <div class="muted" id="p-sub" style="text-align:center;margin-top:8px">专注 25 分钟 · 休息 5 分钟 · 每 4 次专注长休息</div>
+      <div class="row" style="justify-content:center;margin-top:12px">
+        <button id="p-start" class="btn primary">开始</button>
+        <button id="p-pause" class="btn primary" disabled>暂停</button>
+        <button id="p-next" class="btn primary">跳到下一段</button>
+        <button id="p-reset" class="btn primary">重置</button>
+      </div>
+    </section>
+
+    <section class="card card-pad" style="margin-top:12px">
+      <div class="blog-head">
+        <h2 class="blog-title">设置</h2>
+        <button id="p-notify" class="btn primary">开启提醒</button>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <label class="pomodoro-field">
+          <span class="muted">专注(分钟)</span>
+          <input id="p-work" type="number" min="1" max="180" inputmode="numeric">
+        </label>
+        <label class="pomodoro-field">
+          <span class="muted">短休息(分钟)</span>
+          <input id="p-short" type="number" min="1" max="60" inputmode="numeric">
+        </label>
+        <label class="pomodoro-field">
+          <span class="muted">长休息(分钟)</span>
+          <input id="p-long" type="number" min="1" max="120" inputmode="numeric">
+        </label>
+        <label class="pomodoro-field">
+          <span class="muted">每几次专注长休息</span>
+          <input id="p-cycles" type="number" min="2" max="12" inputmode="numeric">
+        </label>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <label class="pomodoro-toggle">
+          <input id="p-sound" type="checkbox">
+          <span>声音提醒</span>
+        </label>
+        <label class="pomodoro-toggle">
+          <input id="p-vibrate" type="checkbox">
+          <span>震动提醒</span>
+        </label>
+        <label class="pomodoro-toggle">
+          <input id="p-wakelock" type="checkbox">
+          <span>保持唤醒</span>
+        </label>
+      </div>
+      <div class="muted" id="p-hint" style="margin-top:10px"></div>
+    </section>
+  </main>
+
+  <script src="/assets/js/pomodoro.js" type="module"></script>
+</body>
+</html>

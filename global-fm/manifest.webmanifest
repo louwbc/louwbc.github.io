@@ -1,0 +1,12 @@
+{
+  "name": "全球FM",
+  "short_name": "全球FM",
+  "start_url": "/global-fm/",
+  "scope": "/global-fm/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
