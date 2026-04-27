@@ -1,11 +1,12 @@
 const CACHE = 'global-fm-v1'
 const ASSETS = [
-  '/global-fm/',
-  '/global-fm/index.html',
-  '/global-fm/manifest.webmanifest',
-  '/assets/css/styles.css',
-  '/assets/js/app.js',
-  '/icons/icon.svg'
+  './',
+  './index.html',
+  './global-fm.css',
+  './global-fm.js',
+  './manifest.webmanifest',
+  '../../assets/css/site.css',
+  '../../icons/icon.svg'
 ]
 
 self.addEventListener('install', (e) => {
@@ -27,7 +28,8 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(request.url)
   if (url.origin !== self.location.origin) return
 
-  const isHtml = request.headers.get('accept')?.includes('text/html')
+  const accept = request.headers.get('accept') || ''
+  const isHtml = accept.includes('text/html')
   if (isHtml) {
     e.respondWith(networkFirst(request))
     return

@@ -1,0 +1,38 @@
+.time{
+  margin-top:14px;
+  font-size:54px;
+  font-weight:800;
+  letter-spacing:1px;
+  text-align:center;
+}
+.badge{
+  font-size:12px;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.12);
+  color:#e5e7eb;
+  background:rgba(255,255,255,.04);
+}
+.field{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  flex:1 1 200px;
+}
+.field input{
+  width:100%;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.04);
+  color:#e5e7eb;
+}
+.toggle{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.04);
+}

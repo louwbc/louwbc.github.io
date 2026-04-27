@@ -1,0 +1,48 @@
+.input{
+  flex:1 1 220px;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.04);
+  color:#e5e7eb;
+}
+select.input{appearance:none}
+.check{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.04);
+}
+.list{
+  display:grid;
+  gap:10px;
+}
+.item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.item-main{min-width:0}
+.item-title{font-weight:700}
+.item-sub{margin-top:4px;font-size:13px}
+.item-actions{display:flex;gap:8px;flex:0 0 auto}
+.player{
+  position:sticky;
+  bottom:0;
+  border-top:1px solid rgba(255,255,255,.10);
+  background:rgba(11,18,32,.85);
+  backdrop-filter:saturate(180%) blur(10px);
+}
+.player .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+.player .now{min-width:0}
+.now-title{font-weight:800}
+.now-sub{font-size:13px;margin-top:4px}
+.vol{width:140px}
+@media (max-width:520px){
+  .vol{width:100%}
+  .player .controls{justify-content:space-between}
+}

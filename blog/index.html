@@ -4,19 +4,17 @@ title: "博客"
 ---
 
 <section class="card card-pad">
-  <h1 class="blog-title" style="margin:0">博客</h1>
-  <p class="muted" style="margin-top:8px">文章按时间倒序展示。</p>
+  <h1 class="hero-title" style="margin:0">博客</h1>
+  <p class="muted" style="margin-top:8px">使用 Jekyll 的 `_posts/` 写文章，GitHub Pages 自动发布。</p>
 </section>
 
-<section style="margin-top:12px">
+<section class="post-list">
   {% for post in site.posts %}
-    <a class="card card-pad post-item" href="{{ post.url }}" style="display:block;margin-top:12px;text-decoration:none">
-      <div class="title">{{ post.title }}</div>
-      <div class="muted" style="margin-top:6px">
-        {{ post.date | date: "%Y-%m-%d" }}{% if post.tags %} · {{ post.tags | join: " · " }}{% endif %}
-      </div>
+    <a class="card card-pad post-item" href="{{ post.url | relative_url }}">
+      <h3 class="post-title">{{ post.title }}</h3>
+      <div class="post-meta">{{ post.date | date: "%Y-%m-%d" }}{% if post.tags %} · {{ post.tags | join: " · " }}{% endif %}</div>
       {% if post.excerpt %}
-        <p class="excerpt muted" style="margin-bottom:0">{{ post.excerpt | strip_html | strip_newlines }}</p>
+        <p class="post-excerpt">{{ post.excerpt }}</p>
       {% endif %}
     </a>
   {% endfor %}

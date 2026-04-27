@@ -4,10 +4,15 @@ layout: default
 
 <section class="card">
   <div class="card-pad">
-    <div class="muted">{{ page.date | date: "%Y-%m-%d" }}{% if page.tags %} · {{ page.tags | join: " · " }}{% endif %}</div>
-    <h1 style="margin:8px 0 0">{{ page.title }}</h1>
+    <h1 class="hero-title">{{ page.title }}</h1>
+    <div class="post-meta">
+      {{ page.date | date: "%Y-%m-%d" }}{% if page.tags %} · {{ page.tags | join: " · " }}{% endif %}
+    </div>
+    {% if page.excerpt %}
+      <p class="post-excerpt">{{ page.excerpt }}</p>
+    {% endif %}
   </div>
-  <article class="post-body" style="padding:16px 16px 18px">
+  <article class="card-pad prose">
     {{ content }}
   </article>
 </section>
