@@ -1,4 +1,4 @@
-const CACHE = 'global-fm-v5'
+const CACHE = 'global-fm-v6'
 const ASSETS = [
   './',
   './index.html',

@@ -25,6 +25,7 @@ select.input{appearance:none}
 .tabs{gap:8px}
 .tools{gap:8px}
 .tools .btn{min-height:40px}
+.head-actions{gap:10px;flex-wrap:wrap;justify-content:flex-end}
 .tabs{
   padding:4px;
   border-radius:14px;
@@ -78,11 +79,15 @@ select.input{appearance:none}
 .now-sub{font-size:13px;margin-top:4px}
 .vol{width:140px}
 @media (max-width:520px){
+  .meta-row{flex-direction:column;align-items:stretch}
+  #info{width:100%}
+  .head-actions{width:100%;justify-content:space-between}
+  .tools{flex:1 1 100%;justify-content:flex-end}
   .input{flex:1 1 100%}
   .check{flex:1 1 100%;justify-content:space-between}
   #searchBtn{flex:1 1 100%}
-  .tabs{width:100%;justify-content:space-between}
-  .tab{flex:1 1 33%}
+  .tabs{width:100%;justify-content:space-between;gap:6px;padding:3px}
+  .tab{flex:1 1 33%;padding:9px 8px;font-size:14px}
   .vol{width:100%}
   .player .controls{justify-content:space-between}
   .player .controls .btn{flex:0 0 auto}
