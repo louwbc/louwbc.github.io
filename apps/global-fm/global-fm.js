@@ -157,7 +157,11 @@ function setupInfiniteScroll() {
 
 function setupPwaInstall() {
   if (!('serviceWorker' in navigator)) return
-  navigator.serviceWorker.register('./sw.js').catch(() => {})
+  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+    navigator.serviceWorker.getRegistration('./').then(r => r?.unregister()).catch(() => {})
+    return
+  }
+  navigator.serviceWorker.register('./sw.js').then((reg) => reg.update().catch(() => {})).catch(() => {})
 
   let deferred = null
   window.addEventListener('beforeinstallprompt', (e) => {
