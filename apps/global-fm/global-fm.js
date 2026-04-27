@@ -13,6 +13,9 @@ const ui = {
   tabDiscover: $('#tabDiscover'),
   tabFav: $('#tabFav'),
   tabRecent: $('#tabRecent'),
+  exportFavBtn: $('#exportFavBtn'),
+  importFavBtn: $('#importFavBtn'),
+  importFavFile: $('#importFavFile'),
   nowTitle: $('#nowTitle'),
   nowSub: $('#nowSub'),
   prevBtn: $('#prevBtn'),
@@ -54,6 +57,7 @@ async function init() {
   ui.vol.value = String(load(STORE.volume, 1))
   ui.audio.volume = Number(ui.vol.value)
   ui.insecure.checked = !!load(STORE.includeInsecure, false)
+  setupFavoritesBackup()
   setupTabs()
   setupPlayerControls()
   setupInfiniteScroll()
@@ -66,6 +70,79 @@ async function init() {
   setDefaultTab()
   if (state.tab === 'discover') await search(true)
   else setInfo('已显示收藏')
+}
+
+function setupFavoritesBackup() {
+  ui.exportFavBtn.addEventListener('click', () => exportFavorites())
+  ui.importFavBtn.addEventListener('click', () => ui.importFavFile.click())
+  ui.importFavFile.addEventListener('change', async () => {
+    const file = ui.importFavFile.files?.[0]
+    ui.importFavFile.value = ''
+    if (!file) return
+    await importFavoritesFromFile(file)
+  })
+}
+
+function exportFavorites() {
+  const favorites = loadFavorites().map(minStation)
+  const payload = {
+    schema: 'global-fm-favorites',
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    favorites
+  }
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `global-fm-favorites-${new Date().toISOString().slice(0, 10)}.json`
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+  setInfo(`已导出 ${favorites.length} 个收藏`)
+}
+
+async function importFavoritesFromFile(file) {
+  try {
+    const text = await file.text()
+    const parsed = JSON.parse(text)
+    const list = Array.isArray(parsed) ? parsed : (parsed?.favorites || [])
+    if (!Array.isArray(list)) {
+      setInfo('导入失败：文件格式不正确')
+      return
+    }
+
+    const incoming = []
+    for (const s of list) {
+      const url = s?.url_resolved || s?.url
+      if (!url) continue
+      incoming.push(minStation({ ...s, url_resolved: url }))
+    }
+    if (!incoming.length) {
+      setInfo('导入失败：没有可用的电台数据')
+      return
+    }
+
+    const merged = mergeUniqueStations(incoming, loadFavorites())
+    saveFavorites(merged.slice(0, 500))
+    refreshPlayerFav()
+    refreshList()
+    setInfo(`已导入 ${incoming.length} 个收藏（当前共 ${merged.length} 个）`)
+  } catch (_) {
+    setInfo('导入失败：无法解析文件')
+  }
+}
+
+function mergeUniqueStations(primary, secondary) {
+  const out = []
+  for (const s of (primary || [])) {
+    if (!out.some(x => sameStation(x, s))) out.push(s)
+  }
+  for (const s of (secondary || [])) {
+    if (!out.some(x => sameStation(x, s))) out.push(s)
+  }
+  return out
 }
 
 function setDefaultTab() {

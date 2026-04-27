@@ -7,8 +7,8 @@
   <title>全球FM</title>
   <link rel="icon" href="../../icons/icon.svg" type="image/svg+xml">
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="stylesheet" href="../../assets/css/site.css?v=20260427a">
-  <link rel="stylesheet" href="./global-fm.css?v=20260427a">
+  <link rel="stylesheet" href="../../assets/css/site.css?v=20260427b">
+  <link rel="stylesheet" href="./global-fm.css?v=20260427b">
 </head>
 <body>
   <header class="topbar">
@@ -44,10 +44,17 @@
       </div>
       <div class="row" style="margin-top:10px;justify-content:space-between;align-items:center">
         <div class="muted" id="info">准备就绪</div>
-        <div class="row tabs" role="tablist" aria-label="列表切换">
-          <button class="btn tab" id="tabFav" data-tab="favorites" role="tab" aria-selected="false" tabindex="-1">收藏</button>
-          <button class="btn tab" id="tabDiscover" data-tab="discover" role="tab" aria-selected="false" tabindex="-1">发现</button>
-          <button class="btn tab" id="tabRecent" data-tab="recent" role="tab" aria-selected="false" tabindex="-1">最近</button>
+        <div class="row" style="align-items:center">
+          <div class="row tools" aria-label="收藏备份">
+            <button class="btn" id="exportFavBtn">导出</button>
+            <button class="btn" id="importFavBtn">导入</button>
+            <input id="importFavFile" type="file" accept="application/json" hidden>
+          </div>
+          <div class="row tabs" role="tablist" aria-label="列表切换">
+            <button class="btn tab" id="tabFav" data-tab="favorites" role="tab" aria-selected="false" tabindex="-1">收藏</button>
+            <button class="btn tab" id="tabDiscover" data-tab="discover" role="tab" aria-selected="false" tabindex="-1">发现</button>
+            <button class="btn tab" id="tabRecent" data-tab="recent" role="tab" aria-selected="false" tabindex="-1">最近</button>
+          </div>
         </div>
       </div>
     </section>
@@ -72,6 +79,6 @@
     <audio id="audio" preload="none" crossorigin="anonymous"></audio>
   </footer>
 
-  <script src="./global-fm.js?v=20260427a" type="module"></script>
+  <script src="./global-fm.js?v=20260427b" type="module"></script>
 </body>
 </html>

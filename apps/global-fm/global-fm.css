@@ -23,6 +23,8 @@ select.input{appearance:none}
 }
 .check input{width:18px;height:18px}
 .tabs{gap:8px}
+.tools{gap:8px}
+.tools .btn{min-height:40px}
 .tabs{
   padding:4px;
   border-radius:14px;
