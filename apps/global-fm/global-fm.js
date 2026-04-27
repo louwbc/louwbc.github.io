@@ -46,6 +46,8 @@ const state = {
   apiBase: 'https://de1.api.radio-browser.info/json'
 }
 
+const TAB_BTNS = [ui.tabFav, ui.tabDiscover, ui.tabRecent]
+
 init()
 
 async function init() {
@@ -62,7 +64,8 @@ async function init() {
   await loadTags()
   applyPreferredTag()
   setDefaultTab()
-  await search(true)
+  if (state.tab === 'discover') await search(true)
+  else setInfo('已显示收藏')
 }
 
 function setDefaultTab() {
@@ -72,11 +75,33 @@ function setDefaultTab() {
 }
 
 function setupTabs() {
-  for (const btn of [ui.tabDiscover, ui.tabFav, ui.tabRecent]) {
+  for (const btn of TAB_BTNS) {
     btn.addEventListener('click', () => {
-      state.tab = btn.dataset.tab
-      refreshList()
+      setTab(btn.dataset.tab, false)
     })
+    btn.addEventListener('keydown', (e) => {
+      const key = e.key
+      if (key !== 'ArrowLeft' && key !== 'ArrowRight' && key !== 'Home' && key !== 'End') return
+      e.preventDefault()
+      const current = TAB_BTNS.findIndex(x => x === btn)
+      const nextIdx =
+        key === 'Home' ? 0 :
+        key === 'End' ? (TAB_BTNS.length - 1) :
+        key === 'ArrowLeft' ? (current - 1 + TAB_BTNS.length) % TAB_BTNS.length :
+        (current + 1) % TAB_BTNS.length
+      const nextBtn = TAB_BTNS[nextIdx]
+      setTab(nextBtn.dataset.tab, true)
+    })
+  }
+}
+
+function setTab(tab, focus) {
+  state.tab = tab
+  refreshList()
+  if (state.tab === 'discover' && !state.stations.length) search(true)
+  if (focus) {
+    const btn = TAB_BTNS.find(x => x.dataset.tab === state.tab)
+    btn?.focus()
   }
 }
 
@@ -89,7 +114,7 @@ function setupPlayerControls() {
 
   ui.playBtn.addEventListener('click', async () => {
     if (!state.playing) return
-    if (ui.audio.paused) await ui.audio.play().catch(() => {})
+    if (ui.audio.paused) await ui.audio.play().catch((err) => onPlayError(err))
     else ui.audio.pause()
     syncPlayButton()
   })
@@ -106,6 +131,10 @@ function setupPlayerControls() {
   ui.audio.addEventListener('play', syncPlayButton)
   ui.audio.addEventListener('pause', syncPlayButton)
   ui.audio.addEventListener('ended', () => jump(1))
+  ui.audio.addEventListener('error', () => setInfo('播放失败：音频源不可用或已断开'))
+  ui.audio.addEventListener('waiting', () => {
+    if (!ui.audio.paused && state.playing) setInfo('缓冲中…')
+  })
 
   if ('mediaSession' in navigator) {
     navigator.mediaSession.setActionHandler('play', () => ui.audio.play())
@@ -149,21 +178,34 @@ function setInfo(text) {
   ui.info.textContent = text
 }
 
-ui.searchBtn.addEventListener('click', () => search(true))
+ui.searchBtn.addEventListener('click', () => {
+  state.tab = 'discover'
+  refreshList()
+  search(true)
+})
 ui.q.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') search(true)
+  if (e.key !== 'Enter') return
+  state.tab = 'discover'
+  refreshList()
+  search(true)
 })
 ui.insecure.addEventListener('change', () => {
   save(STORE.includeInsecure, ui.insecure.checked)
+  state.tab = 'discover'
+  refreshList()
   search(true)
 })
 ui.lang.addEventListener('change', () => {
   if (ui.lang.value) save(STORE.preferredLanguage, ui.lang.value)
+  state.tab = 'discover'
+  refreshList()
   search(true)
 })
 ui.tag.addEventListener('change', () => {
   if (ui.tag.value) save(STORE.preferredTag, ui.tag.value)
   else save(STORE.preferredTag, '')
+  state.tab = 'discover'
+  refreshList()
   search(true)
 })
 
@@ -191,9 +233,9 @@ async function search(reset) {
     const payload = {
       name: q || undefined,
       tag: tag || undefined,
-      tag_exact: !!tag,
+      tag_exact: false,
       language: lang || undefined,
-      language_exact: !!lang,
+      language_exact: false,
       hidebroken: true,
       order: 'clickcount',
       reverse: true,
@@ -249,9 +291,12 @@ function filterHttps(items, includeInsecure) {
 
 function refreshList() {
   const tab = state.tab
-  ui.tabDiscover.classList.toggle('primary', tab === 'discover')
-  ui.tabFav.classList.toggle('primary', tab === 'favorites')
-  ui.tabRecent.classList.toggle('primary', tab === 'recent')
+  for (const btn of TAB_BTNS) {
+    const active = btn.dataset.tab === tab
+    btn.classList.toggle('active', active)
+    btn.setAttribute('aria-selected', active ? 'true' : 'false')
+    btn.tabIndex = active ? 0 : -1
+  }
 
   let items = []
   if (tab === 'discover') items = state.stations
@@ -261,7 +306,33 @@ function refreshList() {
   ui.list.innerHTML = ''
   if (!items.length) {
     ui.empty.hidden = false
-    ui.empty.textContent = tab === 'discover' ? '没有结果' : '暂无内容'
+    if (tab === 'favorites') {
+      ui.empty.textContent = ''
+      const wrap = document.createElement('div')
+      wrap.className = 'card card-pad'
+      const title = document.createElement('div')
+      title.textContent = '还没有收藏'
+      title.style.fontWeight = '700'
+      const tip = document.createElement('div')
+      tip.className = 'muted'
+      tip.style.marginTop = '6px'
+      tip.textContent = '去“发现”里找到电台后，点 ☆ 收藏。'
+      const btn = document.createElement('button')
+      btn.className = 'btn primary'
+      btn.style.marginTop = '12px'
+      btn.textContent = '去发现'
+      btn.addEventListener('click', () => {
+        state.tab = 'discover'
+        refreshList()
+        if (!state.stations.length) search(true)
+      })
+      wrap.append(title, tip, btn)
+      ui.empty.appendChild(wrap)
+    } else {
+      if (tab === 'discover') ui.empty.textContent = '没有结果：可以试试切换分类/语言，或勾选“包含非HTTPS”'
+      else if (tab === 'recent') ui.empty.textContent = '暂无内容：去“发现”播放一个电台，最近会出现在这里'
+      else ui.empty.textContent = '暂无内容'
+    }
     return
   }
   ui.empty.hidden = true
@@ -274,6 +345,20 @@ function refreshList() {
 function renderItem(s, tab) {
   const card = document.createElement('div')
   card.className = 'card card-pad item'
+  card.tabIndex = 0
+  card.setAttribute('role', 'button')
+  card.setAttribute('aria-label', `播放 ${s.name || '未命名电台'}`)
+  if (state.playing && sameStation(state.playing, s)) card.classList.add('playing')
+  card.addEventListener('click', (e) => {
+    if (e.target.closest('button')) return
+    playStation(s, tab)
+  })
+  card.addEventListener('keydown', (e) => {
+    if (e.target.closest('button')) return
+    if (e.key !== 'Enter' && e.key !== ' ') return
+    e.preventDefault()
+    playStation(s, tab)
+  })
 
   const main = document.createElement('div')
   main.className = 'item-main'
@@ -300,7 +385,7 @@ function renderItem(s, tab) {
   play.setAttribute('aria-label', isCurrent ? '播放/暂停' : '播放')
   play.addEventListener('click', async () => {
     if (state.playing && sameStation(state.playing, s)) {
-      if (ui.audio.paused) await ui.audio.play().catch(() => {})
+      if (ui.audio.paused) await ui.audio.play().catch((err) => onPlayError(err))
       else ui.audio.pause()
       syncPlayButton()
       refreshList()
@@ -331,7 +416,7 @@ function playStation(s, context) {
   state.playContext = context || 'discover'
 
   ui.audio.src = url
-  ui.audio.play().catch(() => {})
+  ui.audio.play().catch((err) => onPlayError(err))
 
   ui.nowTitle.textContent = s.name || '未命名电台'
   ui.nowSub.textContent = [s.country, s.language].filter(Boolean).join(' · ')
@@ -346,6 +431,13 @@ function playStation(s, context) {
       album: s.language || ''
     })
   }
+}
+
+function onPlayError(err) {
+  const name = String(err?.name || '')
+  if (name === 'NotAllowedError') setInfo('播放失败：浏览器阻止了自动播放，请再点一次播放')
+  else setInfo('播放失败：请换一个电台试试')
+  syncPlayButton()
 }
 
 function syncPlayButton() {
