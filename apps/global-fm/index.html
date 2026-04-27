@@ -30,6 +30,9 @@
     <section class="card card-pad">
       <div class="row">
         <input id="q" class="input" type="search" placeholder="搜索电台名称…" autocomplete="off">
+        <select id="tag" class="input">
+          <option value="">所有分类</option>
+        </select>
         <select id="lang" class="input">
           <option value="">所有语言</option>
         </select>
@@ -41,10 +44,10 @@
       </div>
       <div class="row" style="margin-top:10px;justify-content:space-between;align-items:center">
         <div class="muted" id="info">准备就绪</div>
-        <div class="row">
-          <button class="btn" id="tabDiscover" data-tab="discover">发现</button>
-          <button class="btn" id="tabFav" data-tab="favorites">收藏</button>
-          <button class="btn" id="tabRecent" data-tab="recent">最近</button>
+        <div class="row tabs">
+          <button class="btn tab" id="tabFav" data-tab="favorites">收藏</button>
+          <button class="btn tab" id="tabDiscover" data-tab="discover">发现</button>
+          <button class="btn tab" id="tabRecent" data-tab="recent">最近</button>
         </div>
       </div>
     </section>

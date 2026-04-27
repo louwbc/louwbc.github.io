@@ -7,6 +7,10 @@
   color:#e5e7eb;
 }
 select.input{appearance:none}
+.input:focus{
+  outline:none;
+  border-color:rgba(96,165,250,.55);
+}
 .check{
   display:flex;
   align-items:center;
@@ -16,6 +20,9 @@ select.input{appearance:none}
   border:1px solid rgba(255,255,255,.12);
   background:rgba(255,255,255,.04);
 }
+.check input{width:18px;height:18px}
+.tabs{gap:8px}
+.tab{padding:10px 12px}
 .list{
   display:grid;
   gap:10px;
@@ -43,6 +50,11 @@ select.input{appearance:none}
 .now-sub{font-size:13px;margin-top:4px}
 .vol{width:140px}
 @media (max-width:520px){
+  .input{flex:1 1 100%}
+  .check{flex:1 1 100%;justify-content:space-between}
+  #searchBtn{flex:1 1 100%}
+  .tabs{width:100%;justify-content:space-between}
   .vol{width:100%}
   .player .controls{justify-content:space-between}
+  .player .controls .btn{flex:1 1 100px}
 }

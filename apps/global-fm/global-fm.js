@@ -2,6 +2,7 @@ const $ = (s) => document.querySelector(s)
 
 const ui = {
   q: $('#q'),
+  tag: $('#tag'),
   lang: $('#lang'),
   insecure: $('#insecure'),
   searchBtn: $('#searchBtn'),
@@ -28,7 +29,8 @@ const STORE = {
   recent: 'global-fm:recent',
   volume: 'global-fm:volume',
   includeInsecure: 'global-fm:includeInsecure',
-  preferredLanguage: 'global-fm:preferredLanguage'
+  preferredLanguage: 'global-fm:preferredLanguage',
+  preferredTag: 'global-fm:preferredTag'
 }
 
 const state = {
@@ -57,7 +59,16 @@ async function init() {
   await discoverApiBase()
   await loadLanguages()
   applyPreferredLanguage()
+  await loadTags()
+  applyPreferredTag()
+  setDefaultTab()
   await search(true)
+}
+
+function setDefaultTab() {
+  const favs = loadFavorites()
+  state.tab = favs.length ? 'favorites' : 'discover'
+  refreshList()
 }
 
 function setupTabs() {
@@ -150,6 +161,11 @@ ui.lang.addEventListener('change', () => {
   if (ui.lang.value) save(STORE.preferredLanguage, ui.lang.value)
   search(true)
 })
+ui.tag.addEventListener('change', () => {
+  if (ui.tag.value) save(STORE.preferredTag, ui.tag.value)
+  else save(STORE.preferredTag, '')
+  search(true)
+})
 
 async function search(reset) {
   if (state.loading) return
@@ -167,12 +183,15 @@ async function search(reset) {
     if (!state.hasMore) return
 
     const q = ui.q.value.trim()
+    const tag = ui.tag.value
     const lang = ui.lang.value
     const includeInsecure = ui.insecure.checked
     const offset = state.page * state.pageSize
 
     const payload = {
       name: q || undefined,
+      tag: tag || undefined,
+      tag_exact: !!tag,
       language: lang || undefined,
       language_exact: !!lang,
       hidebroken: true,
@@ -185,9 +204,14 @@ async function search(reset) {
     let results = await apiPost('/stations/search', payload)
     results = filterHttps(results, includeInsecure)
 
-    if (results.length === 0 && lang && offset === 0) {
-      const byLang = await apiGet(`/stations/bylanguage/${encodeURIComponent(lang)}?hidebroken=true&order=clickcount&reverse=true&offset=0&limit=${state.pageSize}`)
-      results = filterHttps(byLang, includeInsecure)
+    if (results.length === 0 && offset === 0) {
+      if (tag && !q && !lang) {
+        const byTag = await apiGet(`/stations/bytag/${encodeURIComponent(tag)}?hidebroken=true&order=clickcount&reverse=true&offset=0&limit=${state.pageSize}`)
+        results = filterHttps(byTag, includeInsecure)
+      } else if (lang && !q && !tag) {
+        const byLang = await apiGet(`/stations/bylanguage/${encodeURIComponent(lang)}?hidebroken=true&order=clickcount&reverse=true&offset=0&limit=${state.pageSize}`)
+        results = filterHttps(byLang, includeInsecure)
+      }
     }
 
     if (results.length === 0) {
@@ -366,6 +390,7 @@ function toggleFavorite(s) {
   if (i >= 0) favs.splice(i, 1)
   else favs.unshift(minStation(s))
   saveFavorites(favs.slice(0, 500))
+  if (state.tab === 'favorites') refreshList()
 }
 
 function loadRecent() {
@@ -410,6 +435,30 @@ function applyPreferredLanguage() {
   const opts = Array.from(ui.lang.options)
   const match = opts.find(o => o.value.toLowerCase() === String(preferred).toLowerCase())
   if (match) ui.lang.value = match.value
+}
+
+async function loadTags() {
+  try {
+    const tags = await apiGet('/tags?order=stationcount&reverse=true&hidebroken=true')
+    const cleaned = (tags || [])
+      .map(x => ({ name: x.name || '', count: x.stationcount || 0 }))
+      .filter(x => x.name)
+      .slice(0, 200)
+    for (const t of cleaned) {
+      const opt = document.createElement('option')
+      opt.value = t.name
+      opt.textContent = `${t.name} (${t.count})`
+      ui.tag.appendChild(opt)
+    }
+  } catch (_) {}
+}
+
+function applyPreferredTag() {
+  const preferred = load(STORE.preferredTag, '')
+  if (!preferred) return
+  const opts = Array.from(ui.tag.options)
+  const match = opts.find(o => o.value.toLowerCase() === String(preferred).toLowerCase())
+  if (match) ui.tag.value = match.value
 }
 
 async function discoverApiBase() {
