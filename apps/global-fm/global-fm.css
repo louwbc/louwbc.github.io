@@ -22,7 +22,23 @@ select.input{appearance:none}
 }
 .check input{width:18px;height:18px}
 .tabs{gap:8px}
-.tab{padding:10px 12px}
+.tabs{
+  padding:4px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.03);
+}
+.tab{
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid transparent;
+  background:transparent;
+  min-height:40px;
+}
+.tab.primary{
+  border-color:rgba(96,165,250,.45);
+  background:rgba(96,165,250,.14);
+}
 .list{
   display:grid;
   gap:10px;
@@ -37,6 +53,13 @@ select.input{appearance:none}
 .item-title{font-weight:700}
 .item-sub{margin-top:4px;font-size:13px}
 .item-actions{display:flex;gap:8px;flex:0 0 auto}
+.icon-btn{
+  width:44px;
+  padding:10px 0;
+  font-size:18px;
+  line-height:1;
+}
+.item-actions .icon-btn{width:42px}
 .player{
   position:sticky;
   bottom:0;
@@ -54,7 +77,8 @@ select.input{appearance:none}
   .check{flex:1 1 100%;justify-content:space-between}
   #searchBtn{flex:1 1 100%}
   .tabs{width:100%;justify-content:space-between}
+  .tab{flex:1 1 33%}
   .vol{width:100%}
   .player .controls{justify-content:space-between}
-  .player .controls .btn{flex:1 1 100px}
+  .player .controls .btn{flex:0 0 auto}
 }

@@ -294,8 +294,10 @@ function renderItem(s, tab) {
   actions.className = 'item-actions'
 
   const play = document.createElement('button')
-  play.className = 'btn primary'
-  play.textContent = (state.playing && sameStation(state.playing, s) && !ui.audio.paused) ? '暂停' : '播放'
+  play.className = 'btn primary icon-btn'
+  const isCurrent = state.playing && sameStation(state.playing, s)
+  play.textContent = (isCurrent && !ui.audio.paused) ? '⏸' : '▶'
+  play.setAttribute('aria-label', isCurrent ? '播放/暂停' : '播放')
   play.addEventListener('click', async () => {
     if (state.playing && sameStation(state.playing, s)) {
       if (ui.audio.paused) await ui.audio.play().catch(() => {})
@@ -308,8 +310,9 @@ function renderItem(s, tab) {
   })
 
   const fav = document.createElement('button')
-  fav.className = 'btn'
-  fav.textContent = isFavorite(s) ? '已收藏' : '收藏'
+  fav.className = 'btn icon-btn'
+  fav.textContent = isFavorite(s) ? '★' : '☆'
+  fav.setAttribute('aria-label', isFavorite(s) ? '取消收藏' : '收藏')
   fav.addEventListener('click', () => {
     toggleFavorite(s)
     refreshPlayerFav()
@@ -346,11 +349,11 @@ function playStation(s, context) {
 }
 
 function syncPlayButton() {
-  ui.playBtn.textContent = ui.audio.paused ? '播放' : '暂停'
+  ui.playBtn.textContent = ui.audio.paused ? '▶' : '⏸'
 }
 
 function refreshPlayerFav() {
-  ui.favBtn.textContent = (state.playing && isFavorite(state.playing)) ? '已收藏' : '收藏'
+  ui.favBtn.textContent = (state.playing && isFavorite(state.playing)) ? '★' : '☆'
 }
 
 function jump(step) {

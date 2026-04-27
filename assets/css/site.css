@@ -34,6 +34,7 @@ a{color:inherit}
 .nav a{
   text-decoration:none;
   padding:8px 10px;
+  min-height:40px;
   border:1px solid var(--border);
   border-radius:10px;
   color:var(--text);
@@ -51,13 +52,19 @@ a{color:inherit}
 .row{display:flex;gap:10px;flex-wrap:wrap}
 .btn{
   display:inline-flex;align-items:center;justify-content:center;
-  padding:10px 12px;border-radius:12px;
+  padding:10px 12px;min-height:44px;border-radius:12px;
   border:1px solid var(--border);
   background:rgba(255,255,255,.02);
   text-decoration:none;
 }
-.btn.primary{border-color:rgba(96,165,250,.55)}
-.btn.primary:hover{background:rgba(96,165,250,.12)}
+.btn:focus{outline:none}
+.btn:focus-visible{outline:2px solid rgba(96,165,250,.55);outline-offset:2px}
+.btn.primary{
+  border-color:rgba(96,165,250,.55);
+  background:linear-gradient(180deg, rgba(96,165,250,.22), rgba(96,165,250,.10));
+}
+.btn.primary:hover{background:linear-gradient(180deg, rgba(96,165,250,.28), rgba(96,165,250,.14))}
+.btn:active{transform:translateY(1px)}
 .post-list{display:grid;gap:12px;margin-top:12px}
 .post-item{display:block;text-decoration:none}
 .post-title{margin:0;font-size:18px}
