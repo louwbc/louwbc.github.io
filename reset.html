@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f6f7f9">
+  <title>修复缓存 - louwbc</title>
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/site.css">
+</head>
+<body>
+  <main class="container">
+    <section class="card card-pad">
+      <h1 style="margin-top:0">修复缓存 / Service Worker</h1>
+      <p class="muted" style="margin-top:6px">当手机打开站点白屏、卡在旧版本、或某个页面打不开时，可以尝试本页一键清理。</p>
+      <pre id="log" class="muted" style="white-space:pre-wrap;line-height:1.5;margin:12px 0 0"></pre>
+      <div class="row" style="margin-top:12px">
+        <a class="btn primary" href="/" id="homeBtn">回到首页</a>
+        <button class="btn" id="retryBtn" type="button">重试清理</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      var logEl = document.getElementById('log')
+      var retryBtn = document.getElementById('retryBtn')
+      var homeBtn = document.getElementById('homeBtn')
+
+      function log(line) {
+        if (!logEl) return
+        logEl.textContent += line + '\n'
+      }
+
+      function clearAll() {
+        if (logEl) logEl.textContent = ''
+        log('开始清理…')
+
+        var tasks = []
+
+        if ('caches' in window && caches && caches.keys) {
+          tasks.push(
+            caches.keys().then(function (keys) {
+              log('Cache Storage: ' + keys.length + ' 个')
+              return Promise.all(keys.map(function (k) { return caches.delete(k) }))
+            }).then(function () {
+              log('Cache Storage: 已清理')
+            }, function () {
+              log('Cache Storage: 清理失败（可忽略）')
+            })
+          )
+        } else {
+          log('Cache Storage: 不支持')
+        }
+
+        if ('serviceWorker' in navigator && navigator.serviceWorker.getRegistrations) {
+          tasks.push(
+            navigator.serviceWorker.getRegistrations().then(function (regs) {
+              log('Service Worker: ' + regs.length + ' 个')
+              return Promise.all(regs.map(function (r) {
+                try { return r.unregister() } catch (_) { return Promise.resolve(false) }
+              }))
+            }).then(function () {
+              log('Service Worker: 已注销')
+            }, function () {
+              log('Service Worker: 注销失败（可忽略）')
+            })
+          )
+        } else {
+          log('Service Worker: 不支持')
+        }
+
+        Promise.all(tasks).then(function () {
+          log('完成。')
+          if (homeBtn) homeBtn.focus()
+        })
+      }
+
+      if (retryBtn) retryBtn.addEventListener('click', clearAll)
+      clearAll()
+    })()
+  </script>
+</body>
+</html>

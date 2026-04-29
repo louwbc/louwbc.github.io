@@ -79,6 +79,19 @@
     <audio id="audio" preload="none" crossorigin="anonymous"></audio>
   </footer>
 
+  <script>
+    (function () {
+      if (!('serviceWorker' in navigator)) return
+      navigator.serviceWorker.getRegistrations().then(function (regs) {
+        for (var i = 0; i < regs.length; i++) {
+          var r = regs[i]
+          try {
+            if (r && r.scope === (location.origin + '/')) r.unregister()
+          } catch (_) {}
+        }
+      }).catch(function () {})
+    })()
+  </script>
   <script src="./global-fm.js?v=20260427b" type="module"></script>
 </body>
 </html>

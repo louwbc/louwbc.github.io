@@ -77,6 +77,19 @@
     </section>
   </main>
 
+  <script>
+    (function () {
+      if (!('serviceWorker' in navigator)) return
+      navigator.serviceWorker.getRegistrations().then(function (regs) {
+        for (var i = 0; i < regs.length; i++) {
+          var r = regs[i]
+          try {
+            if (r && r.scope === (location.origin + '/')) r.unregister()
+          } catch (_) {}
+        }
+      }).catch(function () {})
+    })()
+  </script>
   <script src="./pomodoro.js" type="module"></script>
 </body>
 </html>
