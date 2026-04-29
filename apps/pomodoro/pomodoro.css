@@ -9,9 +9,9 @@
   font-size:12px;
   padding:6px 10px;
   border-radius:999px;
-  border:1px solid rgba(255,255,255,.12);
-  color:#e5e7eb;
-  background:rgba(255,255,255,.04);
+  border:1px solid var(--border);
+  color:var(--text);
+  background:var(--surface);
 }
 .field{
   display:flex;
@@ -23,16 +23,19 @@
   width:100%;
   padding:10px 12px;
   border-radius:12px;
-  border:1px solid rgba(255,255,255,.12);
-  background:rgba(255,255,255,.04);
-  color:#e5e7eb;
+  border:1px solid var(--border);
+  background:var(--surface);
+  color:var(--text);
 }
+.field input:focus{outline:none;border-color:var(--accent-border)}
+.field input:focus-visible{outline:2px solid var(--accent-outline);outline-offset:2px}
 .toggle{
   display:flex;
   align-items:center;
   gap:10px;
   padding:10px 12px;
   border-radius:12px;
-  border:1px solid rgba(255,255,255,.12);
-  background:rgba(255,255,255,.04);
+  border:1px solid var(--border);
+  background:var(--surface);
 }
+.toggle input{width:18px;height:18px}
