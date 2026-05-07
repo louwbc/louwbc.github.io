@@ -29,6 +29,7 @@
    width:calc(var(--cell) * 9);
    height:calc(var(--cell) * 10);
   position:relative;
+  box-sizing:content-box;
    border:1px solid var(--border);
    border-radius:14px;
   background:linear-gradient(180deg, #fbfcfe, #f2f4f7);
