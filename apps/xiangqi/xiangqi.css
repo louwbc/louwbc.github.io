@@ -28,27 +28,48 @@
    --cell:48px;
    width:calc(var(--cell) * 9);
    height:calc(var(--cell) * 10);
-   display:grid;
-   grid-template-columns:repeat(9, var(--cell));
-   grid-template-rows:repeat(10, var(--cell));
-   gap:0;
+  position:relative;
    border:1px solid var(--border);
    border-radius:14px;
-   background:linear-gradient(180deg, #f8fafc, #f1f3f6);
+  background:linear-gradient(180deg, #fbfcfe, #f2f4f7);
    overflow:hidden;
    user-select:none;
    touch-action:manipulation;
  }
+.board-lines{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+}
+.board-grid{
+  position:absolute;
+  inset:0;
+  display:grid;
+  grid-template-columns:repeat(9, var(--cell));
+  grid-template-rows:repeat(10, var(--cell));
+  gap:0;
+}
 .cell{
    position:relative;
-   border-right:1px solid rgba(15,23,42,.10);
-   border-bottom:1px solid rgba(15,23,42,.10);
+  z-index:1;
  }
-.cell:nth-child(9n){border-right:none}
-.cell:nth-last-child(-n+9){border-bottom:none}
-.cell.to{background:rgba(31,74,122,.10)}
-.cell.sel{background:rgba(31,74,122,.14)}
-.cell.cap{background:rgba(127,29,29,.10)}
+.cell::after{
+  content:'';
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:34px;
+  height:34px;
+  transform:translate(-50%,-50%);
+  border-radius:999px;
+  background:transparent;
+  border:1px solid transparent;
+}
+.cell.to::after{background:rgba(31,74,122,.10);border-color:rgba(31,74,122,.16)}
+.cell.sel::after{background:rgba(31,74,122,.14);border-color:rgba(31,74,122,.20)}
+.cell.cap::after{background:rgba(127,29,29,.10);border-color:rgba(127,29,29,.18)}
 .piece{
    width:38px;height:38px;
    border-radius:999px;
@@ -58,6 +79,7 @@
    position:absolute;left:50%;top:50%;
    transform:translate(-50%,-50%);
    padding:0;
+  z-index:2;
  }
 .piece:focus{outline:none}
 .piece:focus-visible{outline:2px solid var(--accent-outline);outline-offset:2px}
@@ -95,6 +117,7 @@
 .field.compact select{width:100%}
 @media (max-width:520px){
    .board{--cell:38px;border-radius:12px}
+  .cell::after{width:28px;height:28px}
    .piece{width:32px;height:32px;font-size:16px}
    .river{padding:0 10px}
  }

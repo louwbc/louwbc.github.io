@@ -9,6 +9,7 @@ title: "首页"
   <div class="row" style="margin-top:12px">
     <a class="btn primary" href="{{ '/blog/' | relative_url }}">进入博客</a>
     <a class="btn" href="{{ '/apps/pomodoro/' | relative_url }}">番茄钟</a>
+    <a class="btn" href="{{ '/apps/xiangqi/' | relative_url }}">中国象棋</a>
     <a class="btn" href="{{ '/apps/global-fm/' | relative_url }}">全球FM</a>
   </div>
 </section>

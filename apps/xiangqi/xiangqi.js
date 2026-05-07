@@ -42,7 +42,8 @@ const state = {
   legalTo: new Set(),
   lastMove: null,
   history: [],
-  moveText: []
+  moveText: [],
+  cells: []
 }
 
 init()
@@ -59,14 +60,104 @@ function init() {
 
 function buildBoardUI() {
   ui.board.innerHTML = ''
+  ui.board.appendChild(buildBoardLinesSvg())
+  const grid = document.createElement('div')
+  grid.className = 'board-grid'
+  ui.board.appendChild(grid)
+  state.cells = []
   for (let i = 0; i < W * H; i++) {
     const cell = document.createElement('div')
     cell.className = 'cell'
     cell.dataset.idx = String(i)
     cell.setAttribute('role', 'gridcell')
-    ui.board.appendChild(cell)
+    grid.appendChild(cell)
+    state.cells.push(cell)
   }
   ui.board.addEventListener('click', onBoardClick)
+}
+
+function buildBoardLinesSvg() {
+  const unit = 100
+  const width = W * unit
+  const height = H * unit
+  const x = (i) => (i + 0.5) * unit
+  const y = (j) => (j + 0.5) * unit
+
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+  svg.setAttribute('class', 'board-lines')
+  svg.setAttribute('viewBox', `0 0 ${width} ${height}`)
+  svg.setAttribute('aria-hidden', 'true')
+
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+  g.setAttribute('fill', 'none')
+  g.setAttribute('stroke', 'rgba(15,23,42,.38)')
+  g.setAttribute('stroke-linecap', 'round')
+  g.setAttribute('stroke-linejoin', 'round')
+  g.setAttribute('vector-effect', 'non-scaling-stroke')
+  g.setAttribute('stroke-width', '2')
+
+  const border = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+  border.setAttribute('x', String(x(0)))
+  border.setAttribute('y', String(y(0)))
+  border.setAttribute('width', String(x(8) - x(0)))
+  border.setAttribute('height', String(y(9) - y(0)))
+  border.setAttribute('rx', '10')
+  g.appendChild(border)
+
+  for (let j = 0; j < H; j++) {
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+    line.setAttribute('x1', String(x(0)))
+    line.setAttribute('y1', String(y(j)))
+    line.setAttribute('x2', String(x(8)))
+    line.setAttribute('y2', String(y(j)))
+    g.appendChild(line)
+  }
+
+  for (let i = 0; i < W; i++) {
+    if (i === 0 || i === 8) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+      line.setAttribute('x1', String(x(i)))
+      line.setAttribute('y1', String(y(0)))
+      line.setAttribute('x2', String(x(i)))
+      line.setAttribute('y2', String(y(9)))
+      g.appendChild(line)
+    } else {
+      const top = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+      top.setAttribute('x1', String(x(i)))
+      top.setAttribute('y1', String(y(0)))
+      top.setAttribute('x2', String(x(i)))
+      top.setAttribute('y2', String(y(4)))
+      g.appendChild(top)
+
+      const bot = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+      bot.setAttribute('x1', String(x(i)))
+      bot.setAttribute('y1', String(y(5)))
+      bot.setAttribute('x2', String(x(i)))
+      bot.setAttribute('y2', String(y(9)))
+      g.appendChild(bot)
+    }
+  }
+
+  const palace = (y0) => {
+    const d1 = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+    d1.setAttribute('x1', String(x(3)))
+    d1.setAttribute('y1', String(y(y0)))
+    d1.setAttribute('x2', String(x(5)))
+    d1.setAttribute('y2', String(y(y0 + 2)))
+    g.appendChild(d1)
+
+    const d2 = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+    d2.setAttribute('x1', String(x(5)))
+    d2.setAttribute('y1', String(y(y0)))
+    d2.setAttribute('x2', String(x(3)))
+    d2.setAttribute('y2', String(y(y0 + 2)))
+    g.appendChild(d2)
+  }
+  palace(0)
+  palace(7)
+
+  svg.appendChild(g)
+  return svg
 }
 
 function newGame(fromUser) {
@@ -166,7 +257,7 @@ function clearSelection() {
 
 function render() {
   for (let i = 0; i < W * H; i++) {
-    const cell = ui.board.children[i]
+    const cell = state.cells[i]
     const p = state.board[i]
     cell.classList.toggle('sel', i === state.selected)
     cell.classList.toggle('to', state.legalTo.has(i) && !p)
