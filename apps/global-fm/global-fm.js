@@ -38,6 +38,10 @@ const STORE = {
   podcasts: 'global-fm:podcasts'
 }
 
+const RECOMMENDED_PODCASTS = [
+  { id: 'https://feeds.simplecast.com/54nAGcIl', title: 'The Daily', feedUrl: 'https://feeds.simplecast.com/54nAGcIl' }
+]
+
 const state = {
   tab: 'discover',
   stations: [],
@@ -48,6 +52,7 @@ const state = {
   lastQuery: '',
   playing: null,
   playContext: 'discover',
+  podcastView: 'recommended',
   podcastSelectedId: null,
   podcastEpisodes: [],
   apiBase: 'https://de1.api.radio-browser.info/json'
@@ -181,6 +186,9 @@ function setTab(tab, focus) {
   if (state.tab !== 'podcasts') {
     state.podcastSelectedId = null
     state.podcastEpisodes = []
+  } else {
+    const mine = loadPodcasts()
+    if (!mine.length) state.podcastView = 'recommended'
   }
   refreshList()
   if (state.tab === 'discover' && !state.stations.length) search(true)
@@ -389,7 +397,7 @@ function refreshList() {
   if (tab === 'recent') items = loadRecent()
   if (tab === 'podcasts') {
     if (state.podcastSelectedId) items = state.podcastEpisodes
-    else items = loadPodcasts()
+    else items = (state.podcastView === 'mine') ? loadPodcasts() : RECOMMENDED_PODCASTS
   }
 
   ui.list.innerHTML = ''
@@ -422,14 +430,16 @@ function refreshList() {
       const wrap = document.createElement('div')
       wrap.className = 'card card-pad'
       const title = document.createElement('div')
-      title.textContent = state.podcastSelectedId ? '没有可播放的剧集' : '还没有播客源'
+      title.textContent = state.podcastSelectedId ? '没有可播放的剧集' : (state.podcastView === 'mine' ? '还没有播客源' : '没有推荐播客')
       title.style.fontWeight = '700'
       const tip = document.createElement('div')
       tip.className = 'muted'
       tip.style.marginTop = '6px'
       tip.textContent = state.podcastSelectedId
         ? '这个播客源可能不支持跨域（CORS），或者没有可用音频链接。'
-        : '添加一个播客 RSS 地址后，就可以像电台一样连续收听剧集。'
+        : (state.podcastView === 'mine'
+          ? '添加一个播客 RSS 地址后，就可以像电台一样连续收听剧集。'
+          : '暂无推荐。你可以切换到“我添加的”或自己添加一个播客 RSS。')
       const row = document.createElement('div')
       row.className = 'row'
       row.style.marginTop = '12px'
@@ -448,7 +458,7 @@ function refreshList() {
         const feedUrl = normalizeUrl(input.value)
         if (!feedUrl) return
         input.value = ''
-        await addPodcast(feedUrl)
+        await addPodcast(feedUrl, feedUrl, true)
       }
       addBtn.addEventListener('click', onAdd)
       input.addEventListener('keydown', (e) => {
@@ -474,7 +484,7 @@ function refreshList() {
     for (const s of items) frag.appendChild(renderEpisodeItem(s))
   } else if (tab === 'podcasts') {
     frag.appendChild(renderPodcastsHeader())
-    for (const s of items) frag.appendChild(renderPodcastItem(s))
+    for (const s of items) frag.appendChild(renderPodcastItem(s, state.podcastView))
   } else {
     for (const s of items) frag.appendChild(renderStationItem(s, tab))
   }
@@ -655,23 +665,30 @@ function normalizeUrl(u) {
   }
 }
 
-async function addPodcast(feedUrl) {
+async function addPodcast(feedUrl, title, openAfterAdd) {
   const normalized = normalizeUrl(feedUrl)
   if (!normalized) return
   const list = loadPodcasts()
   const exists = list.some(x => String(x.feedUrl) === String(normalized))
   if (exists) {
+    if (openAfterAdd) {
+      state.tab = 'podcasts'
+      state.podcastSelectedId = normalized
+      await openPodcast(normalized)
+    }
+    return
+  }
+  const added = { id: normalized, title: title || normalized, feedUrl: normalized, addedAt: Date.now() }
+  savePodcasts([added, ...list].slice(0, 50))
+  if (openAfterAdd) {
+    state.podcastView = 'mine'
     state.tab = 'podcasts'
     state.podcastSelectedId = normalized
     await openPodcast(normalized)
-    return
+  } else {
+    refreshList()
+    setInfo('已添加到“我添加的”')
   }
-  const added = { id: normalized, title: normalized, feedUrl: normalized, addedAt: Date.now() }
-  savePodcasts([added, ...list].slice(0, 50))
-  state.tab = 'podcasts'
-  state.podcastSelectedId = normalized
-  await openPodcast(normalized)
-  refreshList()
 }
 
 function renderPodcastsHeader() {
@@ -685,7 +702,7 @@ function renderPodcastsHeader() {
   const left = document.createElement('div')
   left.style.fontWeight = '700'
   if (state.podcastSelectedId) {
-    const p = loadPodcasts().find(x => String(x.id) === String(state.podcastSelectedId))
+    const p = getPodcastSourceById(state.podcastSelectedId)
     left.textContent = p?.title || '播客'
   } else {
     left.textContent = '播客'
@@ -707,6 +724,40 @@ function renderPodcastsHeader() {
       setInfo('已显示播客源')
     })
     actions.append(back)
+  } else {
+    const tabs = document.createElement('div')
+    tabs.className = 'row tabs'
+    tabs.setAttribute('role', 'tablist')
+    tabs.setAttribute('aria-label', '播客列表切换')
+
+    const rec = document.createElement('button')
+    rec.className = 'btn tab'
+    rec.textContent = '推荐'
+    rec.setAttribute('role', 'tab')
+    rec.classList.toggle('active', state.podcastView === 'recommended')
+    rec.setAttribute('aria-selected', state.podcastView === 'recommended' ? 'true' : 'false')
+    rec.tabIndex = state.podcastView === 'recommended' ? 0 : -1
+    rec.addEventListener('click', () => {
+      state.podcastView = 'recommended'
+      refreshList()
+      setInfo('已显示推荐播客')
+    })
+
+    const mine = document.createElement('button')
+    mine.className = 'btn tab'
+    mine.textContent = '我添加的'
+    mine.setAttribute('role', 'tab')
+    mine.classList.toggle('active', state.podcastView === 'mine')
+    mine.setAttribute('aria-selected', state.podcastView === 'mine' ? 'true' : 'false')
+    mine.tabIndex = state.podcastView === 'mine' ? 0 : -1
+    mine.addEventListener('click', () => {
+      state.podcastView = 'mine'
+      refreshList()
+      setInfo('已显示我添加的播客')
+    })
+
+    tabs.append(rec, mine)
+    actions.append(tabs)
   }
 
   row.append(left, actions)
@@ -728,7 +779,7 @@ function renderPodcastsHeader() {
     const feedUrl = normalizeUrl(input.value)
     if (!feedUrl) return
     input.value = ''
-    await addPodcast(feedUrl)
+    await addPodcast(feedUrl, feedUrl, true)
   }
   add.addEventListener('click', onAdd)
   input.addEventListener('keydown', (e) => {
@@ -741,7 +792,8 @@ function renderPodcastsHeader() {
   return card
 }
 
-function renderPodcastItem(p) {
+function renderPodcastItem(p, view) {
+  const isMine = view === 'mine'
   const card = document.createElement('div')
   card.className = 'card card-pad item'
   card.tabIndex = 0
@@ -779,23 +831,33 @@ function renderPodcastItem(p) {
     await openPodcast(p.id, true)
   })
 
-  const del = document.createElement('button')
-  del.className = 'btn icon-btn'
-  del.textContent = '✕'
-  del.setAttribute('aria-label', '删除播客')
-  del.addEventListener('click', () => {
-    if (!confirm('删除这个播客源？')) return
-    const list = loadPodcasts().filter(x => String(x.id) !== String(p.id))
-    savePodcasts(list)
-    if (String(state.podcastSelectedId) === String(p.id)) {
-      state.podcastSelectedId = null
-      state.podcastEpisodes = []
-    }
-    refreshList()
-    setInfo('已删除播客源')
-  })
-
-  actions.append(open, del)
+  if (isMine) {
+    const del = document.createElement('button')
+    del.className = 'btn icon-btn'
+    del.textContent = '✕'
+    del.setAttribute('aria-label', '删除播客')
+    del.addEventListener('click', () => {
+      if (!confirm('删除这个播客源？')) return
+      const list = loadPodcasts().filter(x => String(x.id) !== String(p.id))
+      savePodcasts(list)
+      if (String(state.podcastSelectedId) === String(p.id)) {
+        state.podcastSelectedId = null
+        state.podcastEpisodes = []
+      }
+      refreshList()
+      setInfo('已删除播客源')
+    })
+    actions.append(open, del)
+  } else {
+    const addBtn = document.createElement('button')
+    addBtn.className = 'btn icon-btn'
+    addBtn.textContent = '＋'
+    addBtn.setAttribute('aria-label', '添加到我添加的')
+    addBtn.addEventListener('click', async () => {
+      await addPodcast(p.feedUrl, p.title, false)
+    })
+    actions.append(open, addBtn)
+  }
   card.append(main, actions)
   return card
 }
@@ -885,9 +947,17 @@ function fmtDate(ms) {
   }
 }
 
+function getPodcastSourceById(id) {
+  const mine = loadPodcasts().find(x => String(x.id) === String(id))
+  if (mine) return mine
+  const rec = RECOMMENDED_PODCASTS.find(x => String(x.id) === String(id))
+  if (rec) return rec
+  return null
+}
+
 async function openPodcast(id, autoPlay) {
   const list = loadPodcasts()
-  const p = list.find(x => String(x.id) === String(id))
+  const p = getPodcastSourceById(id)
   if (!p?.feedUrl) return
   state.tab = 'podcasts'
   state.podcastSelectedId = id
@@ -900,8 +970,11 @@ async function openPodcast(id, autoPlay) {
     const xml = await res.text()
     const parsed = parseFeed(xml)
     const title = parsed?.title || p.title || p.feedUrl
-    const updatedList = list.map(x => String(x.id) === String(id) ? { ...x, title } : x)
-    savePodcasts(updatedList)
+    const inMine = list.some(x => String(x.id) === String(id))
+    if (inMine) {
+      const updatedList = list.map(x => String(x.id) === String(id) ? { ...x, title } : x)
+      savePodcasts(updatedList)
+    }
     state.podcastEpisodes = (parsed.items || []).slice(0, 80)
     if (!state.podcastEpisodes.length) {
       setInfo('没有可播放的剧集')
