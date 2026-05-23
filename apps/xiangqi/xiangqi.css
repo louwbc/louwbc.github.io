@@ -25,8 +25,9 @@
 
 .board-wrap{position:relative;display:flex;justify-content:center}
 .board{
-   --cell:48px;
-   width:calc(var(--cell) * 9);
+   max-width:calc(48px * 9);
+   width:100%;
+   --cell:min(48px, calc(100% / 9));
    height:calc(var(--cell) * 10);
   position:relative;
   box-sizing:content-box;
@@ -93,10 +94,12 @@
 .piece.disabled{opacity:.65}
 .river{
    position:absolute;
-   left:50%;
+   left:0;
+   right:0;
    top:50%;
-   transform:translate(-50%,-50%);
-   width:calc(var(--cell) * 9);
+   transform:translateY(-50%);
+   width:100%;
+   box-sizing:border-box;
    pointer-events:none;
    display:flex;justify-content:space-between;
    padding:0 16px;
@@ -121,7 +124,7 @@
 .field.compact{min-width:140px}
 .field.compact select{width:100%}
 @media (max-width:520px){
-   .board{--cell:38px;border-radius:12px}
+   .board{--cell:min(38px, calc(100% / 9));border-radius:12px}
   .cell::after{width:28px;height:28px}
    .piece{width:32px;height:32px;font-size:16px}
    .river{padding:0 10px}
