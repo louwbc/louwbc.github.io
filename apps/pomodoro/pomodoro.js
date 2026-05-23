@@ -23,6 +23,7 @@ const ui = {
 }
 
 const STORE_KEY = 'pomodoro-v1'
+const ALARM_MAX_MS = 30 * 1000
 
 const state = loadState() || {
   mode: 'work',
@@ -33,6 +34,7 @@ const state = loadState() || {
   awaitingAck: false,
   awaitEndedMode: null,
   awaitNextMode: null,
+  alarmStopAtMs: null,
   settings: {
     workMin: 25,
     shortMin: 5,
@@ -46,6 +48,7 @@ const state = loadState() || {
 let timer = null
 let alarm = null
 let alarmLoop = null
+let alarmAutoStop = null
 let alarmNotifiedFor = null
 let baseTitle = document.title
 let audioCtx = null
@@ -146,6 +149,7 @@ function reset() {
   state.awaitingAck = false
   state.awaitEndedMode = null
   state.awaitNextMode = null
+  state.alarmStopAtMs = null
   alarmNotifiedFor = null
   setBaseTitle()
   state.mode = 'work'
@@ -190,12 +194,15 @@ function refreshUI() {
   ui.skip.disabled = !!state.awaitingAck
   ui.alarmPanel.hidden = !state.awaitingAck
   if (state.awaitingAck) {
+    const stopped = Number.isFinite(state.alarmStopAtMs) && Date.now() >= state.alarmStopAtMs
     const endedMode = state.awaitEndedMode || state.mode
     const endedLabel = endedMode === 'work' ? '专注结束' : '休息结束'
     const nextMode = state.awaitNextMode || computeNextMode(endedMode)
     const nextLabel = nextMode === 'work' ? '下一段专注' : (nextMode === 'short' ? '下一段短休息' : '下一段长休息')
     ui.alarmTitle.textContent = endedLabel
-    ui.alarmDesc.textContent = `已到时间。点击下方按钮停止提醒，并开始 ${nextLabel}。`
+    ui.alarmDesc.textContent = stopped
+      ? `提醒已自动停止。点击下方按钮开始 ${nextLabel}。`
+      : `已到时间。将持续提醒 30 秒。点击下方按钮停止提醒，并开始 ${nextLabel}。`
   }
 }
 
@@ -317,11 +324,16 @@ function migrateState() {
   if (typeof state.awaitingAck !== 'boolean') state.awaitingAck = false
   if (!('awaitEndedMode' in state)) state.awaitEndedMode = null
   if (!('awaitNextMode' in state)) state.awaitNextMode = null
+  if (!('alarmStopAtMs' in state)) state.alarmStopAtMs = null
   if (!Number.isFinite(state.remainingMs)) state.remainingMs = durationForMode(state.mode || 'work')
   if (state.awaitingAck) {
     state.running = false
     state.endAtMs = null
     state.remainingMs = 0
+    if (Number.isFinite(state.alarmStopAtMs) && Date.now() >= state.alarmStopAtMs) {
+      stopAlarmLoop()
+      setBaseTitle()
+    }
   } else if (state.running) {
     if (!Number.isFinite(state.endAtMs)) state.endAtMs = Date.now() + Math.max(0, state.remainingMs)
   } else {
@@ -351,6 +363,7 @@ function enterAlarm(endedMode, fromResume) {
   state.awaitingAck = true
   state.awaitEndedMode = endedMode
   state.awaitNextMode = computeNextMode(endedMode)
+  state.alarmStopAtMs = Date.now() + ALARM_MAX_MS
 
   state.running = false
   state.remainingMs = 0
@@ -374,6 +387,7 @@ function ackAlarm() {
   state.awaitingAck = false
   state.awaitEndedMode = null
   state.awaitNextMode = null
+  state.alarmStopAtMs = null
   alarmNotifiedFor = null
   setBaseTitle()
 
@@ -386,6 +400,13 @@ function ackAlarm() {
 }
 
 function startAlarming(endedMode, silentNotify) {
+  const stopped = Number.isFinite(state.alarmStopAtMs) && Date.now() >= state.alarmStopAtMs
+  if (stopped) {
+    stopAlarmLoop()
+    setBaseTitle()
+    refreshUI()
+    return
+  }
   setAlarmTitle()
   if (!silentNotify && alarmNotifiedFor !== endedMode) {
     notifySegment(endedMode)
@@ -396,6 +417,19 @@ function startAlarming(endedMode, silentNotify) {
 
 function startAlarmLoop(endedMode) {
   stopAlarmLoop()
+  const remain = Number.isFinite(state.alarmStopAtMs) ? (state.alarmStopAtMs - Date.now()) : ALARM_MAX_MS
+  if (remain <= 0) {
+    stopAlarmLoop()
+    setBaseTitle()
+    refreshUI()
+    return
+  }
+  clearTimeout(alarmAutoStop)
+  alarmAutoStop = setTimeout(() => {
+    stopAlarmLoop()
+    setBaseTitle()
+    refreshUI()
+  }, Math.min(remain, 0x7fffffff))
   alarmLoop = setInterval(() => {
     if (!state.awaitingAck) return
     alarmTick(endedMode)
@@ -405,7 +439,9 @@ function startAlarmLoop(endedMode) {
 
 function stopAlarmLoop() {
   clearInterval(alarmLoop)
+  clearTimeout(alarmAutoStop)
   alarmLoop = null
+  alarmAutoStop = null
 }
 
 function alarmTick(endedMode) {
