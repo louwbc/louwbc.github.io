@@ -13,6 +13,7 @@ const ui = {
   tabDiscover: $('#tabDiscover'),
   tabFav: $('#tabFav'),
   tabRecent: $('#tabRecent'),
+  tabPodcasts: $('#tabPodcasts'),
   exportFavBtn: $('#exportFavBtn'),
   importFavBtn: $('#importFavBtn'),
   importFavFile: $('#importFavFile'),
@@ -33,7 +34,8 @@ const STORE = {
   volume: 'global-fm:volume',
   includeInsecure: 'global-fm:includeInsecure',
   preferredLanguage: 'global-fm:preferredLanguage',
-  preferredTag: 'global-fm:preferredTag'
+  preferredTag: 'global-fm:preferredTag',
+  podcasts: 'global-fm:podcasts'
 }
 
 const state = {
@@ -46,10 +48,12 @@ const state = {
   lastQuery: '',
   playing: null,
   playContext: 'discover',
+  podcastSelectedId: null,
+  podcastEpisodes: [],
   apiBase: 'https://de1.api.radio-browser.info/json'
 }
 
-const TAB_BTNS = [ui.tabFav, ui.tabDiscover, ui.tabRecent]
+const TAB_BTNS = [ui.tabFav, ui.tabDiscover, ui.tabRecent, ui.tabPodcasts]
 
 init()
 
@@ -174,6 +178,10 @@ function setupTabs() {
 
 function setTab(tab, focus) {
   state.tab = tab
+  if (state.tab !== 'podcasts') {
+    state.podcastSelectedId = null
+    state.podcastEpisodes = []
+  }
   refreshList()
   if (state.tab === 'discover' && !state.stations.length) search(true)
   if (focus) {
@@ -200,6 +208,7 @@ function setupPlayerControls() {
   ui.nextBtn.addEventListener('click', () => jump(1))
   ui.favBtn.addEventListener('click', () => {
     if (!state.playing) return
+    if (isEpisode(state.playing)) return
     toggleFavorite(state.playing)
     refreshPlayerFav()
     refreshList()
@@ -260,33 +269,28 @@ function setInfo(text) {
 }
 
 ui.searchBtn.addEventListener('click', () => {
-  state.tab = 'discover'
-  refreshList()
+  setTab('discover', false)
   search(true)
 })
 ui.q.addEventListener('keydown', (e) => {
   if (e.key !== 'Enter') return
-  state.tab = 'discover'
-  refreshList()
+  setTab('discover', false)
   search(true)
 })
 ui.insecure.addEventListener('change', () => {
   save(STORE.includeInsecure, ui.insecure.checked)
-  state.tab = 'discover'
-  refreshList()
+  setTab('discover', false)
   search(true)
 })
 ui.lang.addEventListener('change', () => {
   if (ui.lang.value) save(STORE.preferredLanguage, ui.lang.value)
-  state.tab = 'discover'
-  refreshList()
+  setTab('discover', false)
   search(true)
 })
 ui.tag.addEventListener('change', () => {
   if (ui.tag.value) save(STORE.preferredTag, ui.tag.value)
   else save(STORE.preferredTag, '')
-  state.tab = 'discover'
-  refreshList()
+  setTab('discover', false)
   search(true)
 })
 
@@ -383,6 +387,10 @@ function refreshList() {
   if (tab === 'discover') items = state.stations
   if (tab === 'favorites') items = loadFavorites()
   if (tab === 'recent') items = loadRecent()
+  if (tab === 'podcasts') {
+    if (state.podcastSelectedId) items = state.podcastEpisodes
+    else items = loadPodcasts()
+  }
 
   ui.list.innerHTML = ''
   if (!items.length) {
@@ -409,6 +417,48 @@ function refreshList() {
       })
       wrap.append(title, tip, btn)
       ui.empty.appendChild(wrap)
+    } else if (tab === 'podcasts') {
+      ui.empty.textContent = ''
+      const wrap = document.createElement('div')
+      wrap.className = 'card card-pad'
+      const title = document.createElement('div')
+      title.textContent = state.podcastSelectedId ? '没有可播放的剧集' : '还没有播客源'
+      title.style.fontWeight = '700'
+      const tip = document.createElement('div')
+      tip.className = 'muted'
+      tip.style.marginTop = '6px'
+      tip.textContent = state.podcastSelectedId
+        ? '这个播客源可能不支持跨域（CORS），或者没有可用音频链接。'
+        : '添加一个播客 RSS 地址后，就可以像电台一样连续收听剧集。'
+      const row = document.createElement('div')
+      row.className = 'row'
+      row.style.marginTop = '12px'
+      row.style.alignItems = 'center'
+      const input = document.createElement('input')
+      input.className = 'input'
+      input.type = 'url'
+      input.inputMode = 'url'
+      input.placeholder = '粘贴播客 RSS 地址（需支持跨域/CORS）…'
+      input.autocomplete = 'off'
+      input.style.flex = '1 1 320px'
+      const addBtn = document.createElement('button')
+      addBtn.className = 'btn primary'
+      addBtn.textContent = '添加'
+      const onAdd = async () => {
+        const feedUrl = normalizeUrl(input.value)
+        if (!feedUrl) return
+        input.value = ''
+        await addPodcast(feedUrl)
+      }
+      addBtn.addEventListener('click', onAdd)
+      input.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter') return
+        e.preventDefault()
+        onAdd()
+      })
+      row.append(input, addBtn)
+      wrap.append(title, tip, row)
+      ui.empty.appendChild(wrap)
     } else {
       if (tab === 'discover') ui.empty.textContent = '没有结果：可以试试切换分类/语言，或勾选“包含非HTTPS”'
       else if (tab === 'recent') ui.empty.textContent = '暂无内容：去“发现”播放一个电台，最近会出现在这里'
@@ -419,17 +469,25 @@ function refreshList() {
   ui.empty.hidden = true
 
   const frag = document.createDocumentFragment()
-  for (const s of items) frag.appendChild(renderItem(s, tab))
+  if (tab === 'podcasts' && state.podcastSelectedId) {
+    frag.appendChild(renderPodcastsHeader())
+    for (const s of items) frag.appendChild(renderEpisodeItem(s))
+  } else if (tab === 'podcasts') {
+    frag.appendChild(renderPodcastsHeader())
+    for (const s of items) frag.appendChild(renderPodcastItem(s))
+  } else {
+    for (const s of items) frag.appendChild(renderStationItem(s, tab))
+  }
   ui.list.appendChild(frag)
 }
 
-function renderItem(s, tab) {
+function renderStationItem(s, tab) {
   const card = document.createElement('div')
   card.className = 'card card-pad item'
   card.tabIndex = 0
   card.setAttribute('role', 'button')
   card.setAttribute('aria-label', `播放 ${s.name || '未命名电台'}`)
-  if (state.playing && sameStation(state.playing, s)) card.classList.add('playing')
+  if (state.playing && sameMedia(state.playing, s)) card.classList.add('playing')
   card.addEventListener('click', (e) => {
     if (e.target.closest('button')) return
     playStation(s, tab)
@@ -461,11 +519,11 @@ function renderItem(s, tab) {
 
   const play = document.createElement('button')
   play.className = 'btn primary icon-btn'
-  const isCurrent = state.playing && sameStation(state.playing, s)
+  const isCurrent = state.playing && sameMedia(state.playing, s)
   play.textContent = (isCurrent && !ui.audio.paused) ? '⏸' : '▶'
   play.setAttribute('aria-label', isCurrent ? '播放/暂停' : '播放')
   play.addEventListener('click', async () => {
-    if (state.playing && sameStation(state.playing, s)) {
+    if (state.playing && sameMedia(state.playing, s)) {
       if (ui.audio.paused) await ui.audio.play().catch((err) => onPlayError(err))
       else ui.audio.pause()
       syncPlayButton()
@@ -493,9 +551,12 @@ function renderItem(s, tab) {
 function playStation(s, context) {
   const url = s?.url_resolved || s?.url
   if (!url) return
+  state.podcastSelectedId = null
+  state.podcastEpisodes = []
   state.playing = s
   state.playContext = context || 'discover'
 
+  ui.audio.crossOrigin = 'anonymous'
   ui.audio.src = url
   ui.audio.play().catch((err) => onPlayError(err))
 
@@ -517,6 +578,7 @@ function playStation(s, context) {
 function onPlayError(err) {
   const name = String(err?.name || '')
   if (name === 'NotAllowedError') setInfo('播放失败：浏览器阻止了自动播放，请再点一次播放')
+  else if (state.playing && isEpisode(state.playing)) setInfo('播放失败：该播客剧集音频不可用或跨域限制')
   else setInfo('播放失败：请换一个电台试试')
   syncPlayButton()
 }
@@ -526,19 +588,26 @@ function syncPlayButton() {
 }
 
 function refreshPlayerFav() {
-  ui.favBtn.textContent = (state.playing && isFavorite(state.playing)) ? '★' : '☆'
+  if (!state.playing || isEpisode(state.playing)) {
+    ui.favBtn.disabled = true
+    ui.favBtn.textContent = '☆'
+    return
+  }
+  ui.favBtn.disabled = false
+  ui.favBtn.textContent = isFavorite(state.playing) ? '★' : '☆'
 }
 
 function jump(step) {
   const list = currentPlayList()
   if (!list.length) return
-  const idx = state.playing ? list.findIndex(x => sameStation(x, state.playing)) : -1
+  const idx = state.playing ? list.findIndex(x => sameMedia(x, state.playing)) : -1
   const next = idx < 0 ? 0 : (idx + step + list.length) % list.length
-  playStation(list[next], state.playContext)
+  playAny(list[next], state.playContext)
   refreshList()
 }
 
 function currentPlayList() {
+  if (state.playContext === 'podcasts') return state.podcastEpisodes
   if (state.playContext === 'favorites') return loadFavorites()
   if (state.playContext === 'recent') return loadRecent()
   return state.stations
@@ -548,6 +617,361 @@ function sameStation(a, b) {
   const ida = a?.stationuuid || a?.uuid || a?.name
   const idb = b?.stationuuid || b?.uuid || b?.name
   return String(ida) === String(idb)
+}
+
+function isEpisode(x) {
+  return x?.kind === 'episode'
+}
+
+function episodeId(x) {
+  return x?.guid || x?.id || x?.audioUrl || x?.title
+}
+
+function sameMedia(a, b) {
+  if (isEpisode(a) || isEpisode(b)) return isEpisode(a) && isEpisode(b) && String(episodeId(a)) === String(episodeId(b))
+  return sameStation(a, b)
+}
+
+function playAny(item, context) {
+  if (isEpisode(item)) playEpisode(item, context)
+  else playStation(item, context)
+}
+
+function loadPodcasts() {
+  return load(STORE.podcasts, [])
+}
+
+function savePodcasts(list) {
+  save(STORE.podcasts, list)
+}
+
+function normalizeUrl(u) {
+  try {
+    const url = new URL(String(u || '').trim())
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return ''
+    return url.toString()
+  } catch (_) {
+    return ''
+  }
+}
+
+async function addPodcast(feedUrl) {
+  const normalized = normalizeUrl(feedUrl)
+  if (!normalized) return
+  const list = loadPodcasts()
+  const exists = list.some(x => String(x.feedUrl) === String(normalized))
+  if (exists) {
+    state.tab = 'podcasts'
+    state.podcastSelectedId = normalized
+    await openPodcast(normalized)
+    return
+  }
+  const added = { id: normalized, title: normalized, feedUrl: normalized, addedAt: Date.now() }
+  savePodcasts([added, ...list].slice(0, 50))
+  state.tab = 'podcasts'
+  state.podcastSelectedId = normalized
+  await openPodcast(normalized)
+  refreshList()
+}
+
+function renderPodcastsHeader() {
+  const card = document.createElement('div')
+  card.className = 'card card-pad'
+  const row = document.createElement('div')
+  row.className = 'row'
+  row.style.alignItems = 'center'
+  row.style.justifyContent = 'space-between'
+
+  const left = document.createElement('div')
+  left.style.fontWeight = '700'
+  if (state.podcastSelectedId) {
+    const p = loadPodcasts().find(x => String(x.id) === String(state.podcastSelectedId))
+    left.textContent = p?.title || '播客'
+  } else {
+    left.textContent = '播客'
+  }
+
+  const actions = document.createElement('div')
+  actions.className = 'row'
+  actions.style.gap = '8px'
+  actions.style.flexWrap = 'nowrap'
+
+  if (state.podcastSelectedId) {
+    const back = document.createElement('button')
+    back.className = 'btn'
+    back.textContent = '返回'
+    back.addEventListener('click', () => {
+      state.podcastSelectedId = null
+      state.podcastEpisodes = []
+      refreshList()
+      setInfo('已显示播客源')
+    })
+    actions.append(back)
+  }
+
+  row.append(left, actions)
+  const row2 = document.createElement('div')
+  row2.className = 'row'
+  row2.style.marginTop = '10px'
+  row2.style.alignItems = 'center'
+  const input = document.createElement('input')
+  input.className = 'input'
+  input.type = 'url'
+  input.inputMode = 'url'
+  input.placeholder = '粘贴播客 RSS 地址（需支持跨域/CORS）…'
+  input.autocomplete = 'off'
+  input.style.flex = '1 1 320px'
+  const add = document.createElement('button')
+  add.className = 'btn primary'
+  add.textContent = '添加'
+  const onAdd = async () => {
+    const feedUrl = normalizeUrl(input.value)
+    if (!feedUrl) return
+    input.value = ''
+    await addPodcast(feedUrl)
+  }
+  add.addEventListener('click', onAdd)
+  input.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return
+    e.preventDefault()
+    onAdd()
+  })
+  row2.append(input, add)
+  card.append(row, row2)
+  return card
+}
+
+function renderPodcastItem(p) {
+  const card = document.createElement('div')
+  card.className = 'card card-pad item'
+  card.tabIndex = 0
+  card.setAttribute('role', 'button')
+  card.setAttribute('aria-label', `打开播客 ${p.title || '未命名播客'}`)
+  card.addEventListener('click', (e) => {
+    if (e.target.closest('button')) return
+    openPodcast(p.id)
+  })
+  card.addEventListener('keydown', (e) => {
+    if (e.target.closest('button')) return
+    if (e.key !== 'Enter' && e.key !== ' ') return
+    e.preventDefault()
+    openPodcast(p.id)
+  })
+
+  const main = document.createElement('div')
+  main.className = 'item-main'
+  const title = document.createElement('div')
+  title.className = 'item-title'
+  title.textContent = p.title || '未命名播客'
+  const sub = document.createElement('div')
+  sub.className = 'item-sub muted'
+  sub.textContent = p.feedUrl || ''
+  main.append(title, sub)
+
+  const actions = document.createElement('div')
+  actions.className = 'item-actions'
+
+  const open = document.createElement('button')
+  open.className = 'btn primary icon-btn'
+  open.textContent = '▶'
+  open.setAttribute('aria-label', '打开并播放')
+  open.addEventListener('click', async () => {
+    await openPodcast(p.id, true)
+  })
+
+  const del = document.createElement('button')
+  del.className = 'btn icon-btn'
+  del.textContent = '✕'
+  del.setAttribute('aria-label', '删除播客')
+  del.addEventListener('click', () => {
+    if (!confirm('删除这个播客源？')) return
+    const list = loadPodcasts().filter(x => String(x.id) !== String(p.id))
+    savePodcasts(list)
+    if (String(state.podcastSelectedId) === String(p.id)) {
+      state.podcastSelectedId = null
+      state.podcastEpisodes = []
+    }
+    refreshList()
+    setInfo('已删除播客源')
+  })
+
+  actions.append(open, del)
+  card.append(main, actions)
+  return card
+}
+
+function renderEpisodeItem(ep) {
+  const card = document.createElement('div')
+  card.className = 'card card-pad item'
+  card.tabIndex = 0
+  card.setAttribute('role', 'button')
+  card.setAttribute('aria-label', `播放 ${ep.title || '未命名剧集'}`)
+  if (state.playing && sameMedia(state.playing, ep)) card.classList.add('playing')
+  card.addEventListener('click', (e) => {
+    if (e.target.closest('button')) return
+    playEpisode(ep, 'podcasts')
+  })
+  card.addEventListener('keydown', (e) => {
+    if (e.target.closest('button')) return
+    if (e.key !== 'Enter' && e.key !== ' ') return
+    e.preventDefault()
+    playEpisode(ep, 'podcasts')
+  })
+
+  const main = document.createElement('div')
+  main.className = 'item-main'
+  const title = document.createElement('div')
+  title.className = 'item-title'
+  title.textContent = ep.title || '未命名剧集'
+  const sub = document.createElement('div')
+  sub.className = 'item-sub muted'
+  sub.textContent = [ep.podcastTitle, ep.publishedAt ? fmtDate(ep.publishedAt) : ''].filter(Boolean).join(' · ')
+  main.append(title, sub)
+
+  const actions = document.createElement('div')
+  actions.className = 'item-actions'
+
+  const play = document.createElement('button')
+  play.className = 'btn primary icon-btn'
+  const isCurrent = state.playing && sameMedia(state.playing, ep)
+  play.textContent = (isCurrent && !ui.audio.paused) ? '⏸' : '▶'
+  play.setAttribute('aria-label', isCurrent ? '播放/暂停' : '播放')
+  play.addEventListener('click', async () => {
+    if (state.playing && sameMedia(state.playing, ep)) {
+      if (ui.audio.paused) await ui.audio.play().catch((err) => onPlayError(err))
+      else ui.audio.pause()
+      syncPlayButton()
+      refreshList()
+      return
+    }
+    playEpisode(ep, 'podcasts')
+  })
+
+  actions.append(play)
+  card.append(main, actions)
+  return card
+}
+
+function playEpisode(ep, context) {
+  const url = ep?.audioUrl
+  if (!url) return
+  state.playing = ep
+  state.playContext = context || 'podcasts'
+
+  ui.audio.removeAttribute('crossorigin')
+  ui.audio.src = url
+  ui.audio.play().catch((err) => onPlayError(err))
+
+  ui.nowTitle.textContent = ep.title || '播客'
+  ui.nowSub.textContent = [ep.podcastTitle, ep.publishedAt ? fmtDate(ep.publishedAt) : ''].filter(Boolean).join(' · ')
+  refreshPlayerFav()
+  syncPlayButton()
+
+  if ('mediaSession' in navigator) {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: ep.title || '播客',
+      artist: ep.podcastTitle || '',
+      album: ''
+    })
+  }
+}
+
+function fmtDate(ms) {
+  try {
+    const d = new Date(ms)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  } catch (_) {
+    return ''
+  }
+}
+
+async function openPodcast(id, autoPlay) {
+  const list = loadPodcasts()
+  const p = list.find(x => String(x.id) === String(id))
+  if (!p?.feedUrl) return
+  state.tab = 'podcasts'
+  state.podcastSelectedId = id
+  state.podcastEpisodes = []
+  refreshList()
+  setInfo('加载播客中…')
+  try {
+    const res = await fetch(p.feedUrl, { mode: 'cors' })
+    if (!res.ok) throw new Error('feed')
+    const xml = await res.text()
+    const parsed = parseFeed(xml)
+    const title = parsed?.title || p.title || p.feedUrl
+    const updatedList = list.map(x => String(x.id) === String(id) ? { ...x, title } : x)
+    savePodcasts(updatedList)
+    state.podcastEpisodes = (parsed.items || []).slice(0, 80)
+    if (!state.podcastEpisodes.length) {
+      setInfo('没有可播放的剧集')
+    } else {
+      setInfo(`已加载 ${state.podcastEpisodes.length} 个剧集`)
+      if (autoPlay) playEpisode(state.podcastEpisodes[0], 'podcasts')
+    }
+  } catch (_) {
+    state.podcastEpisodes = []
+    setInfo('加载失败：该播客源可能不支持跨域（CORS）')
+  } finally {
+    refreshList()
+  }
+}
+
+function parseFeed(xmlText) {
+  const doc = new DOMParser().parseFromString(xmlText || '', 'text/xml')
+  const root = doc.documentElement
+  const lower = String(root?.nodeName || '').toLowerCase()
+
+  if (lower === 'rss') return parseRss(doc)
+  if (lower === 'feed') return parseAtom(doc)
+  const rss = doc.querySelector('rss')
+  if (rss) return parseRss(doc)
+  const feed = doc.querySelector('feed')
+  if (feed) return parseAtom(doc)
+  return { title: '', items: [] }
+}
+
+function parseRss(doc) {
+  const ch = doc.querySelector('channel')
+  const title = textOf(ch?.querySelector('title')) || ''
+  const items = []
+  const nodes = Array.from(doc.querySelectorAll('channel > item'))
+  for (const it of nodes) {
+    const t = textOf(it.querySelector('title')) || '未命名剧集'
+    const guid = textOf(it.querySelector('guid')) || ''
+    const pub = textOf(it.querySelector('pubDate')) || textOf(it.querySelector('date')) || ''
+    const publishedAt = Date.parse(pub || '') || null
+    const enc = it.querySelector('enclosure')
+    const audioUrl = normalizeUrl(enc?.getAttribute('url') || '') || normalizeUrl(textOf(it.querySelector('link')) || '')
+    if (!audioUrl) continue
+    items.push({ kind: 'episode', id: guid || audioUrl, guid: guid || audioUrl, podcastTitle: title, title: t, audioUrl, publishedAt })
+  }
+  items.sort((a, b) => (b.publishedAt || 0) - (a.publishedAt || 0))
+  return { title, items }
+}
+
+function parseAtom(doc) {
+  const feed = doc.querySelector('feed')
+  const title = textOf(feed?.querySelector('title')) || ''
+  const items = []
+  const nodes = Array.from(doc.querySelectorAll('feed > entry'))
+  for (const en of nodes) {
+    const t = textOf(en.querySelector('title')) || '未命名剧集'
+    const guid = textOf(en.querySelector('id')) || ''
+    const pub = textOf(en.querySelector('published')) || textOf(en.querySelector('updated')) || ''
+    const publishedAt = Date.parse(pub || '') || null
+    const links = Array.from(en.querySelectorAll('link'))
+    const enclosure = links.find(l => String(l.getAttribute('rel') || '').toLowerCase() === 'enclosure') || null
+    const audioUrl = normalizeUrl(enclosure?.getAttribute('href') || '') || normalizeUrl(textOf(en.querySelector('link')) || '')
+    if (!audioUrl) continue
+    items.push({ kind: 'episode', id: guid || audioUrl, guid: guid || audioUrl, podcastTitle: title, title: t, audioUrl, publishedAt })
+  }
+  items.sort((a, b) => (b.publishedAt || 0) - (a.publishedAt || 0))
+  return { title, items }
+}
+
+function textOf(el) {
+  return String(el?.textContent || '').trim()
 }
 
 function loadFavorites() {

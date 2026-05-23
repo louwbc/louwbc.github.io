@@ -87,7 +87,7 @@ select.input{appearance:none}
   .check{flex:1 1 100%;justify-content:space-between}
   #searchBtn{flex:1 1 100%}
   .tabs{width:100%;justify-content:space-between;gap:6px;padding:3px}
-  .tab{flex:1 1 33%;padding:9px 8px;font-size:14px}
+  .tab{flex:1 1 25%;padding:9px 6px;font-size:13px}
   .vol{width:100%}
   .player .controls{justify-content:space-between}
   .player .controls .btn{flex:0 0 auto}
