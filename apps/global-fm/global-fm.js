@@ -39,7 +39,7 @@ const STORE = {
 }
 
 const RECOMMENDED_PODCASTS = [
-  { id: 'https://feeds.simplecast.com/54nAGcIl', title: 'The Daily', feedUrl: 'https://feeds.simplecast.com/54nAGcIl' }
+  { id: 'https://feeds.simplecast.com/54nAGcIl', title: 'The Daily', feedUrl: 'https://feeds.simplecast.com/54nAGcIl', language: 'english' }
 ]
 
 const state = {
@@ -53,6 +53,11 @@ const state = {
   playing: null,
   playContext: 'discover',
   podcastView: 'recommended',
+  podcastSearching: false,
+  podcastFilterLang: '',
+  podcastFilterKeyword: '',
+  podcastFilterFrom: '',
+  podcastFilterTo: '',
   podcastSelectedId: null,
   podcastEpisodes: [],
   apiBase: 'https://de1.api.radio-browser.info/json'
@@ -396,11 +401,29 @@ function refreshList() {
   if (tab === 'favorites') items = loadFavorites()
   if (tab === 'recent') items = loadRecent()
   if (tab === 'podcasts') {
-    if (state.podcastSelectedId) items = state.podcastEpisodes
-    else items = (state.podcastView === 'mine') ? loadPodcasts() : RECOMMENDED_PODCASTS
+    if (state.podcastSelectedId) items = filterEpisodes(state.podcastEpisodes)
+    else {
+      const base = (state.podcastView === 'mine') ? loadPodcasts() : RECOMMENDED_PODCASTS
+      items = filterPodcastSources(base)
+    }
   }
 
   ui.list.innerHTML = ''
+  if (tab === 'podcasts') {
+    ui.empty.hidden = true
+    ui.empty.textContent = ''
+    const frag = document.createDocumentFragment()
+    frag.appendChild(renderPodcastsHeader())
+    if (!items.length) {
+      frag.appendChild(renderPodcastsEmptyCard())
+    } else if (state.podcastSelectedId) {
+      for (const s of items) frag.appendChild(renderEpisodeItem(s))
+    } else {
+      for (const s of items) frag.appendChild(renderPodcastItem(s, state.podcastView))
+    }
+    ui.list.appendChild(frag)
+    return
+  }
   if (!items.length) {
     ui.empty.hidden = false
     if (tab === 'favorites') {
@@ -425,50 +448,6 @@ function refreshList() {
       })
       wrap.append(title, tip, btn)
       ui.empty.appendChild(wrap)
-    } else if (tab === 'podcasts') {
-      ui.empty.textContent = ''
-      const wrap = document.createElement('div')
-      wrap.className = 'card card-pad'
-      const title = document.createElement('div')
-      title.textContent = state.podcastSelectedId ? '没有可播放的剧集' : (state.podcastView === 'mine' ? '还没有播客源' : '没有推荐播客')
-      title.style.fontWeight = '700'
-      const tip = document.createElement('div')
-      tip.className = 'muted'
-      tip.style.marginTop = '6px'
-      tip.textContent = state.podcastSelectedId
-        ? '这个播客源可能不支持跨域（CORS），或者没有可用音频链接。'
-        : (state.podcastView === 'mine'
-          ? '添加一个播客 RSS 地址后，就可以像电台一样连续收听剧集。'
-          : '暂无推荐。你可以切换到“我添加的”或自己添加一个播客 RSS。')
-      const row = document.createElement('div')
-      row.className = 'row'
-      row.style.marginTop = '12px'
-      row.style.alignItems = 'center'
-      const input = document.createElement('input')
-      input.className = 'input'
-      input.type = 'url'
-      input.inputMode = 'url'
-      input.placeholder = '粘贴播客 RSS 地址（需支持跨域/CORS）…'
-      input.autocomplete = 'off'
-      input.style.flex = '1 1 320px'
-      const addBtn = document.createElement('button')
-      addBtn.className = 'btn primary'
-      addBtn.textContent = '添加'
-      const onAdd = async () => {
-        const feedUrl = normalizeUrl(input.value)
-        if (!feedUrl) return
-        input.value = ''
-        await addPodcast(feedUrl, feedUrl, true)
-      }
-      addBtn.addEventListener('click', onAdd)
-      input.addEventListener('keydown', (e) => {
-        if (e.key !== 'Enter') return
-        e.preventDefault()
-        onAdd()
-      })
-      row.append(input, addBtn)
-      wrap.append(title, tip, row)
-      ui.empty.appendChild(wrap)
     } else {
       if (tab === 'discover') ui.empty.textContent = '没有结果：可以试试切换分类/语言，或勾选“包含非HTTPS”'
       else if (tab === 'recent') ui.empty.textContent = '暂无内容：去“发现”播放一个电台，最近会出现在这里'
@@ -479,16 +458,57 @@ function refreshList() {
   ui.empty.hidden = true
 
   const frag = document.createDocumentFragment()
-  if (tab === 'podcasts' && state.podcastSelectedId) {
-    frag.appendChild(renderPodcastsHeader())
-    for (const s of items) frag.appendChild(renderEpisodeItem(s))
-  } else if (tab === 'podcasts') {
-    frag.appendChild(renderPodcastsHeader())
-    for (const s of items) frag.appendChild(renderPodcastItem(s, state.podcastView))
-  } else {
-    for (const s of items) frag.appendChild(renderStationItem(s, tab))
-  }
+  for (const s of items) frag.appendChild(renderStationItem(s, tab))
   ui.list.appendChild(frag)
+}
+
+function renderPodcastsEmptyCard() {
+  const wrap = document.createElement('div')
+  wrap.className = 'card card-pad'
+  const title = document.createElement('div')
+  title.textContent = state.podcastSelectedId ? '没有可播放的剧集' : (state.podcastView === 'mine' ? '还没有播客源' : '没有推荐播客')
+  title.style.fontWeight = '700'
+  const tip = document.createElement('div')
+  tip.className = 'muted'
+  tip.style.marginTop = '6px'
+  tip.textContent = state.podcastSelectedId
+    ? '这个播客源可能不支持跨域（CORS），或者没有可用音频链接。'
+    : (state.podcastView === 'mine'
+      ? '添加一个播客 RSS 地址后，就可以像电台一样连续收听剧集。'
+      : '暂无推荐。你可以切换到“我添加的”或自己添加一个播客 RSS。')
+
+  wrap.append(title, tip)
+  if (!state.podcastSelectedId) {
+    const row = document.createElement('div')
+    row.className = 'row'
+    row.style.marginTop = '12px'
+    row.style.alignItems = 'center'
+    const input = document.createElement('input')
+    input.className = 'input'
+    input.type = 'url'
+    input.inputMode = 'url'
+    input.placeholder = '粘贴播客 RSS 地址（需支持跨域/CORS）…'
+    input.autocomplete = 'off'
+    input.style.flex = '1 1 320px'
+    const addBtn = document.createElement('button')
+    addBtn.className = 'btn primary'
+    addBtn.textContent = '添加'
+    const onAdd = async () => {
+      const feedUrl = normalizeUrl(input.value)
+      if (!feedUrl) return
+      input.value = ''
+      await addPodcast(feedUrl, feedUrl, true)
+    }
+    addBtn.addEventListener('click', onAdd)
+    input.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return
+      e.preventDefault()
+      onAdd()
+    })
+    row.append(input, addBtn)
+    wrap.appendChild(row)
+  }
+  return wrap
 }
 
 function renderStationItem(s, tab) {
@@ -665,7 +685,7 @@ function normalizeUrl(u) {
   }
 }
 
-async function addPodcast(feedUrl, title, openAfterAdd) {
+async function addPodcast(feedUrl, title, openAfterAdd, language) {
   const normalized = normalizeUrl(feedUrl)
   if (!normalized) return
   const list = loadPodcasts()
@@ -678,7 +698,7 @@ async function addPodcast(feedUrl, title, openAfterAdd) {
     }
     return
   }
-  const added = { id: normalized, title: title || normalized, feedUrl: normalized, addedAt: Date.now() }
+  const added = { id: normalized, title: title || normalized, feedUrl: normalized, language: language || '', addedAt: Date.now() }
   savePodcasts([added, ...list].slice(0, 50))
   if (openAfterAdd) {
     state.podcastView = 'mine'
@@ -702,8 +722,11 @@ function renderPodcastsHeader() {
   const left = document.createElement('div')
   left.style.fontWeight = '700'
   if (state.podcastSelectedId) {
-    const p = getPodcastSourceById(state.podcastSelectedId)
-    left.textContent = p?.title || '播客'
+    if (state.podcastSelectedId === 'search') left.textContent = '搜索结果'
+    else {
+      const p = getPodcastSourceById(state.podcastSelectedId)
+      left.textContent = p?.title || '播客'
+    }
   } else {
     left.textContent = '播客'
   }
@@ -788,7 +811,85 @@ function renderPodcastsHeader() {
     onAdd()
   })
   row2.append(input, add)
-  card.append(row, row2)
+
+  const row3 = document.createElement('div')
+  row3.className = 'row'
+  row3.style.marginTop = '10px'
+  row3.style.alignItems = 'center'
+
+  const lang = document.createElement('select')
+  lang.className = 'input'
+  lang.setAttribute('aria-label', '播客语言')
+  lang.style.flex = '0 1 180px'
+  lang.appendChild(new Option('所有语言', ''))
+  for (const v of availablePodcastLanguages()) {
+    const label = v === 'unknown' ? '未知' : v
+    lang.appendChild(new Option(label, v))
+  }
+  lang.value = state.podcastFilterLang || ''
+  lang.addEventListener('change', () => {
+    state.podcastFilterLang = lang.value
+    refreshList()
+  })
+
+  const from = document.createElement('input')
+  from.className = 'input'
+  from.type = 'date'
+  from.setAttribute('aria-label', '起始日期')
+  from.style.flex = '0 1 170px'
+  from.value = state.podcastFilterFrom || ''
+  from.addEventListener('change', () => {
+    state.podcastFilterFrom = from.value
+    if (state.tab === 'podcasts') refreshList()
+  })
+
+  const to = document.createElement('input')
+  to.className = 'input'
+  to.type = 'date'
+  to.setAttribute('aria-label', '截止日期')
+  to.style.flex = '0 1 170px'
+  to.value = state.podcastFilterTo || ''
+  to.addEventListener('change', () => {
+    state.podcastFilterTo = to.value
+    if (state.tab === 'podcasts') refreshList()
+  })
+
+  const kw = document.createElement('input')
+  kw.className = 'input'
+  kw.type = 'search'
+  kw.placeholder = '关键词（回车筛选）…'
+  kw.setAttribute('aria-label', '播客关键词')
+  kw.autocomplete = 'off'
+  kw.style.flex = '1 1 220px'
+  kw.value = state.podcastFilterKeyword || ''
+  kw.addEventListener('input', () => { state.podcastFilterKeyword = kw.value })
+  kw.addEventListener('change', () => refreshList())
+  kw.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return
+    e.preventDefault()
+    refreshList()
+  })
+
+  const searchBtn = document.createElement('button')
+  searchBtn.className = 'btn primary'
+  searchBtn.textContent = state.podcastSearching ? '搜索中…' : '搜索可播放剧集'
+  searchBtn.disabled = !!state.podcastSearching
+  searchBtn.addEventListener('click', () => searchPodcastEpisodes())
+
+  const clearBtn = document.createElement('button')
+  clearBtn.className = 'btn'
+  clearBtn.textContent = '清除筛选'
+  clearBtn.addEventListener('click', () => {
+    state.podcastFilterLang = ''
+    state.podcastFilterKeyword = ''
+    state.podcastFilterFrom = ''
+    state.podcastFilterTo = ''
+    refreshList()
+    setInfo('已清除筛选')
+  })
+
+  row3.append(lang, from, to, kw, searchBtn, clearBtn)
+  card.append(row, row2, row3)
   return card
 }
 
@@ -854,7 +955,7 @@ function renderPodcastItem(p, view) {
     addBtn.textContent = '＋'
     addBtn.setAttribute('aria-label', '添加到我添加的')
     addBtn.addEventListener('click', async () => {
-      await addPodcast(p.feedUrl, p.title, false)
+      await addPodcast(p.feedUrl, p.title, false, p.language)
     })
     actions.append(open, addBtn)
   }
@@ -955,6 +1056,126 @@ function getPodcastSourceById(id) {
   return null
 }
 
+function availablePodcastLanguages() {
+  const set = new Set()
+  const all = [...RECOMMENDED_PODCASTS, ...loadPodcasts()]
+  for (const p of all) {
+    const v = String(p?.language || '').trim().toLowerCase()
+    if (v) set.add(v)
+    else set.add('unknown')
+  }
+  return Array.from(set).sort((a, b) => a.localeCompare(b))
+}
+
+function filterPodcastSources(list) {
+  const kw = String(state.podcastFilterKeyword || '').trim().toLowerCase()
+  const lang = String(state.podcastFilterLang || '').trim().toLowerCase()
+  const out = []
+  for (const p of (list || [])) {
+    const pLang = String(p?.language || '').trim().toLowerCase() || 'unknown'
+    if (lang && pLang !== lang) continue
+    if (kw) {
+      const hay = `${p?.title || ''} ${p?.feedUrl || ''}`.toLowerCase()
+      if (!hay.includes(kw)) continue
+    }
+    out.push(p)
+  }
+  return out
+}
+
+function parseDateInput(s, isEnd) {
+  const v = String(s || '').trim()
+  if (!v) return null
+  const ms = Date.parse(`${v}T00:00:00`)
+  if (!Number.isFinite(ms)) return null
+  return isEnd ? (ms + 24 * 60 * 60 * 1000 - 1) : ms
+}
+
+function filterEpisodes(list) {
+  const kw = String(state.podcastFilterKeyword || '').trim().toLowerCase()
+  const from = parseDateInput(state.podcastFilterFrom, false)
+  const to = parseDateInput(state.podcastFilterTo, true)
+  const out = []
+  for (const ep of (list || [])) {
+    if (kw) {
+      const hay = `${ep?.title || ''} ${ep?.podcastTitle || ''} ${ep?.summary || ''}`.toLowerCase()
+      if (!hay.includes(kw)) continue
+    }
+    if (from !== null || to !== null) {
+      const t = Number.isFinite(ep?.publishedAt) ? ep.publishedAt : null
+      if (t === null) continue
+      if (from !== null && t < from) continue
+      if (to !== null && t > to) continue
+    }
+    out.push(ep)
+  }
+  return out
+}
+
+async function searchPodcastEpisodes() {
+  if (state.podcastSearching) return
+  const kw = String(state.podcastFilterKeyword || '').trim().toLowerCase()
+  const lang = String(state.podcastFilterLang || '').trim().toLowerCase()
+  const sourcesAll = [...RECOMMENDED_PODCASTS, ...loadPodcasts()]
+  const uniq = []
+  for (const p of sourcesAll) {
+    const id = String(p?.feedUrl || p?.id || '').trim()
+    if (!id) continue
+    if (uniq.some(x => String(x.feedUrl) === id)) continue
+    uniq.push({ ...p, id, feedUrl: id, language: p?.language })
+  }
+
+  let sources = uniq
+  if (lang) sources = sources.filter(p => (String(p?.language || '').trim().toLowerCase() || 'unknown') === lang)
+  if (kw) {
+    const matched = sources.filter(p => String(p?.title || '').toLowerCase().includes(kw))
+    if (matched.length) sources = matched
+  }
+  sources = sources.slice(0, 10)
+  if (!sources.length) {
+    setInfo('没有可搜索的播客源')
+    return
+  }
+
+  state.podcastSearching = true
+  refreshList()
+  try {
+    setInfo('搜索中…')
+    const episodes = []
+    const seen = new Set()
+    let failed = 0
+    for (const src of sources) {
+      try {
+        const res = await fetch(src.feedUrl, { mode: 'cors' })
+        if (!res.ok) throw new Error('feed')
+        const xml = await res.text()
+        const parsed = parseFeed(xml)
+        const title = parsed?.title || src.title || src.feedUrl
+        for (const ep of (parsed.items || [])) {
+          const key = String(ep?.audioUrl || ep?.guid || ep?.id || ep?.title || '')
+          if (!key || seen.has(key)) continue
+          seen.add(key)
+          episodes.push({ ...ep, podcastTitle: title })
+        }
+      } catch (_) {
+        failed += 1
+      }
+    }
+
+    const filtered = filterEpisodes(episodes)
+      .slice()
+      .sort((a, b) => (b.publishedAt || 0) - (a.publishedAt || 0))
+
+    state.podcastSelectedId = 'search'
+    state.podcastEpisodes = filtered
+    refreshList()
+    setInfo(`已找到 ${filtered.length} 个可播放剧集${failed ? `（${failed} 个源加载失败）` : ''}`)
+  } finally {
+    state.podcastSearching = false
+    refreshList()
+  }
+}
+
 async function openPodcast(id, autoPlay) {
   const list = loadPodcasts()
   const p = getPodcastSourceById(id)
@@ -970,9 +1191,10 @@ async function openPodcast(id, autoPlay) {
     const xml = await res.text()
     const parsed = parseFeed(xml)
     const title = parsed?.title || p.title || p.feedUrl
+    const language = canonicalPodcastLanguage(parsed?.language || p?.language || '')
     const inMine = list.some(x => String(x.id) === String(id))
     if (inMine) {
-      const updatedList = list.map(x => String(x.id) === String(id) ? { ...x, title } : x)
+      const updatedList = list.map(x => String(x.id) === String(id) ? { ...x, title, language: language || x.language || '' } : x)
       savePodcasts(updatedList)
     }
     state.podcastEpisodes = (parsed.items || []).slice(0, 80)
@@ -1001,12 +1223,13 @@ function parseFeed(xmlText) {
   if (rss) return parseRss(doc)
   const feed = doc.querySelector('feed')
   if (feed) return parseAtom(doc)
-  return { title: '', items: [] }
+  return { title: '', language: '', items: [] }
 }
 
 function parseRss(doc) {
   const ch = doc.querySelector('channel')
   const title = textOf(ch?.querySelector('title')) || ''
+  const language = canonicalPodcastLanguage(textOf(ch?.querySelector('language')) || '')
   const items = []
   const nodes = Array.from(doc.querySelectorAll('channel > item'))
   for (const it of nodes) {
@@ -1014,18 +1237,19 @@ function parseRss(doc) {
     const guid = textOf(it.querySelector('guid')) || ''
     const pub = textOf(it.querySelector('pubDate')) || textOf(it.querySelector('date')) || ''
     const publishedAt = Date.parse(pub || '') || null
-    const enc = it.querySelector('enclosure')
-    const audioUrl = normalizeUrl(enc?.getAttribute('url') || '') || normalizeUrl(textOf(it.querySelector('link')) || '')
+    const audioUrl = pickRssAudioUrl(it)
     if (!audioUrl) continue
-    items.push({ kind: 'episode', id: guid || audioUrl, guid: guid || audioUrl, podcastTitle: title, title: t, audioUrl, publishedAt })
+    const summary = stripHtml(textOf(it.querySelector('description')) || textOf(it.querySelector('itunes\\:summary')) || '')
+    items.push({ kind: 'episode', id: guid || audioUrl, guid: guid || audioUrl, podcastTitle: title, title: t, summary, audioUrl, publishedAt })
   }
   items.sort((a, b) => (b.publishedAt || 0) - (a.publishedAt || 0))
-  return { title, items }
+  return { title, language, items }
 }
 
 function parseAtom(doc) {
   const feed = doc.querySelector('feed')
   const title = textOf(feed?.querySelector('title')) || ''
+  const language = canonicalPodcastLanguage(feed?.getAttribute('xml:lang') || '')
   const items = []
   const nodes = Array.from(doc.querySelectorAll('feed > entry'))
   for (const en of nodes) {
@@ -1033,18 +1257,82 @@ function parseAtom(doc) {
     const guid = textOf(en.querySelector('id')) || ''
     const pub = textOf(en.querySelector('published')) || textOf(en.querySelector('updated')) || ''
     const publishedAt = Date.parse(pub || '') || null
-    const links = Array.from(en.querySelectorAll('link'))
-    const enclosure = links.find(l => String(l.getAttribute('rel') || '').toLowerCase() === 'enclosure') || null
-    const audioUrl = normalizeUrl(enclosure?.getAttribute('href') || '') || normalizeUrl(textOf(en.querySelector('link')) || '')
+    const audioUrl = pickAtomAudioUrl(en)
     if (!audioUrl) continue
-    items.push({ kind: 'episode', id: guid || audioUrl, guid: guid || audioUrl, podcastTitle: title, title: t, audioUrl, publishedAt })
+    const summary = stripHtml(textOf(en.querySelector('summary')) || textOf(en.querySelector('content')) || '')
+    items.push({ kind: 'episode', id: guid || audioUrl, guid: guid || audioUrl, podcastTitle: title, title: t, summary, audioUrl, publishedAt })
   }
   items.sort((a, b) => (b.publishedAt || 0) - (a.publishedAt || 0))
-  return { title, items }
+  return { title, language, items }
 }
 
 function textOf(el) {
   return String(el?.textContent || '').trim()
+}
+
+function canonicalPodcastLanguage(raw) {
+  const v = String(raw || '').trim().toLowerCase()
+  if (!v) return ''
+  const base = v.split(/[-_]/)[0]
+  const map = {
+    en: 'english',
+    zh: 'chinese',
+    ja: 'japanese',
+    ko: 'korean',
+    fr: 'french',
+    de: 'german',
+    es: 'spanish',
+    it: 'italian',
+    ru: 'russian',
+    pt: 'portuguese',
+    ar: 'arabic'
+  }
+  return map[base] || v
+}
+
+function stripHtml(s) {
+  const v = String(s || '')
+  if (!v) return ''
+  return v.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+}
+
+function normalizeMediaUrl(u) {
+  const url = normalizeUrl(u)
+  if (!url) return ''
+  if (location.protocol === 'https:' && url.startsWith('http://')) return ''
+  return url
+}
+
+function pickRssAudioUrl(itemEl) {
+  const enc = itemEl.querySelector('enclosure[url]')
+  if (enc) {
+    const type = String(enc.getAttribute('type') || '').trim().toLowerCase()
+    const url = normalizeMediaUrl(enc.getAttribute('url') || '')
+    if (url && (!type || type.startsWith('audio/'))) return url
+  }
+  const media = itemEl.querySelector('media\\:content[url]')
+  if (media) {
+    const type = String(media.getAttribute('type') || '').trim().toLowerCase()
+    const url = normalizeMediaUrl(media.getAttribute('url') || '')
+    if (url && (!type || type.startsWith('audio/'))) return url
+  }
+  return ''
+}
+
+function pickAtomAudioUrl(entryEl) {
+  const links = Array.from(entryEl.querySelectorAll('link'))
+  const enclosure = links.find(l => String(l.getAttribute('rel') || '').trim().toLowerCase() === 'enclosure') || null
+  if (enclosure) {
+    const type = String(enclosure.getAttribute('type') || '').trim().toLowerCase()
+    const url = normalizeMediaUrl(enclosure.getAttribute('href') || '')
+    if (url && (!type || type.startsWith('audio/'))) return url
+  }
+  const audio = links.find(l => String(l.getAttribute('type') || '').trim().toLowerCase().startsWith('audio/')) || null
+  if (audio) {
+    const url = normalizeMediaUrl(audio.getAttribute('href') || '')
+    if (url) return url
+  }
+  return ''
 }
 
 function loadFavorites() {
