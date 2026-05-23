@@ -39,3 +39,38 @@
   background:var(--surface);
 }
 .toggle input{width:18px;height:18px}
+
+.alarm-panel{
+  position:fixed;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:24px 14px;
+  background:rgba(0,0,0,.55);
+  z-index:9999;
+}
+.alarm-panel[hidden]{display:none}
+.alarm-panel > .alarm-title,
+.alarm-panel > .alarm-desc,
+.alarm-panel > .btn{max-width:520px;width:100%}
+.alarm-title{
+  font-size:22px;
+  font-weight:800;
+  color:#fff;
+  text-align:center;
+  letter-spacing:.5px;
+}
+.alarm-desc{
+  margin-top:10px;
+  font-size:14px;
+  line-height:1.6;
+  color:rgba(255,255,255,.92);
+  text-align:center;
+}
+.alarm-panel .btn{
+  margin-top:14px;
+  padding:12px 14px;
+  font-size:16px;
+}
