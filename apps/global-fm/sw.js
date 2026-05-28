@@ -1,9 +1,10 @@
-const CACHE = 'global-fm-v10'
+const CACHE = 'global-fm-v13'
 const ASSETS = [
   './',
   './index.html',
   './global-fm.css',
   './global-fm.js',
+  './recommended-podcasts.json',
   './manifest.webmanifest',
   '../../assets/css/site.css',
   '../../icons/icon.svg'

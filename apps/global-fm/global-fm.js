@@ -35,11 +35,17 @@ const STORE = {
   includeInsecure: 'global-fm:includeInsecure',
   preferredLanguage: 'global-fm:preferredLanguage',
   preferredTag: 'global-fm:preferredTag',
-  podcasts: 'global-fm:podcasts'
+  podcasts: 'global-fm:podcasts',
+  recommendedCache: 'global-fm:recommendedCache',
+  recommendedCacheMeta: 'global-fm:recommendedCacheMeta',
+  recommendedCountry: 'global-fm:recommendedCountry'
 }
 
-const RECOMMENDED_PODCASTS = [
-  { id: 'https://feeds.simplecast.com/54nAGcIl', title: 'The Daily', feedUrl: 'https://feeds.simplecast.com/54nAGcIl', language: 'english' }
+const FALLBACK_RECOMMENDED_PODCASTS = [
+  { id: 'https://feeds.simplecast.com/Sl5CSM3S', title: 'The Daily', feedUrl: 'https://feeds.simplecast.com/Sl5CSM3S', language: '' },
+  { id: 'https://feeds.simplecast.com/tOjNXec5', title: 'The Joe Rogan Experience', feedUrl: 'https://feeds.simplecast.com/tOjNXec5', language: '' },
+  { id: 'https://feeds.simplecast.com/5y9M3Z9t', title: 'Crime Junkie', feedUrl: 'https://feeds.simplecast.com/5y9M3Z9t', language: '' },
+  { id: 'https://feeds.simplecast.com/54nAGcIl', title: 'The Daily (alt)', feedUrl: 'https://feeds.simplecast.com/54nAGcIl', language: '' }
 ]
 
 const state = {
@@ -60,6 +66,8 @@ const state = {
   podcastFilterTo: '',
   podcastSelectedId: null,
   podcastEpisodes: [],
+  recommendedCountry: load(STORE.recommendedCountry, 'english-learning'),
+  recommendedLoading: false,
   apiBase: 'https://de1.api.radio-browser.info/json'
 }
 
@@ -82,6 +90,8 @@ async function init() {
   await loadTags()
   applyPreferredTag()
   setDefaultTab()
+  const cachedRec = loadRecommendedCache()
+  if (!cachedRec || !cachedRec.length) loadBundledRecommended(true)
   if (state.tab === 'discover') await search(true)
   else setInfo('已显示收藏')
 }
@@ -403,7 +413,7 @@ function refreshList() {
   if (tab === 'podcasts') {
     if (state.podcastSelectedId) items = filterEpisodes(state.podcastEpisodes)
     else {
-      const base = (state.podcastView === 'mine') ? loadPodcasts() : RECOMMENDED_PODCASTS
+      const base = (state.podcastView === 'mine') ? loadPodcasts() : getRecommendedPodcasts()
       items = filterPodcastSources(base)
     }
   }
@@ -675,6 +685,22 @@ function savePodcasts(list) {
   save(STORE.podcasts, list)
 }
 
+function loadRecommendedCache() {
+  const list = load(STORE.recommendedCache, null)
+  return Array.isArray(list) ? list : null
+}
+
+function saveRecommendedCache(list, meta) {
+  save(STORE.recommendedCache, Array.isArray(list) ? list : [])
+  save(STORE.recommendedCacheMeta, meta || {})
+}
+
+function getRecommendedPodcasts() {
+  const cached = loadRecommendedCache()
+  if (cached && cached.length) return cached
+  return FALLBACK_RECOMMENDED_PODCASTS
+}
+
 function normalizeUrl(u) {
   try {
     const url = new URL(String(u || '').trim())
@@ -708,6 +734,41 @@ async function addPodcast(feedUrl, title, openAfterAdd, language) {
   } else {
     refreshList()
     setInfo('已添加到“我添加的”')
+  }
+}
+
+async function loadBundledRecommended(silent) {
+  if (state.recommendedLoading) return
+  state.recommendedLoading = true
+  refreshList()
+  try {
+    if (!silent) setInfo('加载推荐中…')
+    const res = await fetch('./recommended-podcasts.json', { cache: 'no-store' })
+    if (!res.ok) throw new Error('recommended')
+    const parsed = await res.json()
+    if (!Array.isArray(parsed)) throw new Error('format')
+    const seen = new Set()
+    const out = []
+    for (const p of parsed) {
+      const feedUrl = normalizeUrl(p?.feedUrl || p?.id || '')
+      if (!feedUrl || seen.has(feedUrl)) continue
+      seen.add(feedUrl)
+      const title = String(p?.title || feedUrl)
+      const language = String(p?.language || '')
+      out.push({ id: feedUrl, title, feedUrl, language })
+    }
+    if (out.length) {
+      saveRecommendedCache(out, { source: 'bundled', loadedAt: Date.now(), count: out.length })
+      if (state.tab === 'podcasts' && state.podcastView === 'recommended' && !state.podcastSelectedId) refreshList()
+      if (!silent) setInfo(`已加载 ${out.length} 个推荐播客`)
+    } else {
+      if (!silent) setInfo('没有可用的推荐播客')
+    }
+  } catch (_) {
+    if (!silent) setInfo('加载失败：无法读取推荐播客列表')
+  } finally {
+    state.recommendedLoading = false
+    refreshList()
   }
 }
 
@@ -812,6 +873,31 @@ function renderPodcastsHeader() {
   })
   row2.append(input, add)
 
+  const rowRec = document.createElement('div')
+  rowRec.className = 'row'
+  rowRec.style.marginTop = '10px'
+  rowRec.style.alignItems = 'center'
+
+  const loadBtn = document.createElement('button')
+  loadBtn.className = 'btn'
+  loadBtn.textContent = state.recommendedLoading ? '加载中…' : '更新推荐'
+  loadBtn.disabled = !!state.recommendedLoading
+  loadBtn.addEventListener('click', async () => {
+    await loadBundledRecommended(false)
+  })
+
+  const recMeta = load(STORE.recommendedCacheMeta, {})
+  const recTip = document.createElement('div')
+  recTip.className = 'muted'
+  recTip.style.flex = '1 1 260px'
+  const count = Number(recMeta?.count) || (loadRecommendedCache()?.length || 0)
+  const date = Number.isFinite(recMeta?.loadedAt) ? fmtDate(recMeta.loadedAt) : ''
+  recTip.textContent = (recMeta?.source === 'bundled')
+    ? `当前：${count} 个（${date || '未记录日期'}）`
+    : `当前：${count || '未加载'} 个（可点“更新推荐”加载更多）`
+
+  rowRec.append(loadBtn, recTip)
+
   const row3 = document.createElement('div')
   row3.className = 'row'
   row3.style.marginTop = '10px'
@@ -889,7 +975,7 @@ function renderPodcastsHeader() {
   })
 
   row3.append(lang, from, to, kw, searchBtn, clearBtn)
-  card.append(row, row2, row3)
+  card.append(row, row2, rowRec, row3)
   return card
 }
 
@@ -1051,14 +1137,14 @@ function fmtDate(ms) {
 function getPodcastSourceById(id) {
   const mine = loadPodcasts().find(x => String(x.id) === String(id))
   if (mine) return mine
-  const rec = RECOMMENDED_PODCASTS.find(x => String(x.id) === String(id))
+  const rec = getRecommendedPodcasts().find(x => String(x.id) === String(id))
   if (rec) return rec
   return null
 }
 
 function availablePodcastLanguages() {
   const set = new Set()
-  const all = [...RECOMMENDED_PODCASTS, ...loadPodcasts()]
+  const all = [...getRecommendedPodcasts(), ...loadPodcasts()]
   for (const p of all) {
     const v = String(p?.language || '').trim().toLowerCase()
     if (v) set.add(v)
@@ -1116,7 +1202,7 @@ async function searchPodcastEpisodes() {
   if (state.podcastSearching) return
   const kw = String(state.podcastFilterKeyword || '').trim().toLowerCase()
   const lang = String(state.podcastFilterLang || '').trim().toLowerCase()
-  const sourcesAll = [...RECOMMENDED_PODCASTS, ...loadPodcasts()]
+  const sourcesAll = [...getRecommendedPodcasts(), ...loadPodcasts()]
   const uniq = []
   for (const p of sourcesAll) {
     const id = String(p?.feedUrl || p?.id || '').trim()
