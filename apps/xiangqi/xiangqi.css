@@ -27,7 +27,7 @@
 .board{
    max-width:calc(48px * 9);
    width:100%;
-   --cell:min(48px, calc(100% / 9));
+   --cell:48px;
    height:calc(var(--cell) * 10);
   position:relative;
   box-sizing:content-box;
@@ -124,7 +124,7 @@
 .field.compact{min-width:140px}
 .field.compact select{width:100%}
 @media (max-width:520px){
-   .board{--cell:min(38px, calc(100% / 9));border-radius:12px}
+   .board{--cell:38px;border-radius:12px}
   .cell::after{width:28px;height:28px}
    .piece{width:32px;height:32px;font-size:16px}
    .river{padding:0 10px}

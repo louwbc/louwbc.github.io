@@ -16,6 +16,8 @@ const ui = {
 const W = 9
 const H = 10
 const MATE = 900000
+const CELL_MAX = 48
+const CELL_MAX_MOBILE = 38
 
 const PIECE_CHAR = {
   rK: '帅', rA: '仕', rB: '相', rN: '马', rR: '车', rC: '炮', rP: '兵',
@@ -91,8 +93,17 @@ function scheduleBoardLinesUpdate() {
   if (boardLinesRaf) cancelAnimationFrame(boardLinesRaf)
   boardLinesRaf = requestAnimationFrame(() => {
     boardLinesRaf = 0
+    syncCellSize()
     updateBoardLinesSvg()
   })
+}
+
+function syncCellSize() {
+  const w = ui.board.clientWidth
+  if (!(w > 0)) return
+  const max = window.matchMedia && window.matchMedia('(max-width:520px)').matches ? CELL_MAX_MOBILE : CELL_MAX
+  const cell = Math.max(18, Math.min(max, w / W))
+  ui.board.style.setProperty('--cell', `${cell}px`)
 }
 
 function updateBoardLinesSvg() {
