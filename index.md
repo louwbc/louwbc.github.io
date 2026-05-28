@@ -11,6 +11,7 @@ title: "首页"
     <a class="btn" href="{{ '/apps/pomodoro/' | relative_url }}">番茄钟</a>
     <a class="btn" href="{{ '/apps/xiangqi/' | relative_url }}">中国象棋</a>
     <a class="btn" href="{{ '/apps/global-fm/' | relative_url }}">全球FM</a>
+    <a class="btn" href="{{ '/apps/pdf-tool/' | relative_url }}">PDF工具</a>
   </div>
 </section>
 
