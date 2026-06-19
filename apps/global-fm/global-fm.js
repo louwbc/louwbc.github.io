@@ -1305,17 +1305,25 @@ function filterEpisodes(list) {
 
 function filterExternalPodcastResults(list) {
   const kw = String(state.podcastFilterKeyword || '').trim().toLowerCase()
+  const searchedKw = String(state.podcastExternalKeyword || '').trim().toLowerCase()
   const lang = String(state.podcastFilterLang || '').trim().toLowerCase()
   const country = String(state.podcastExternalCountry || '').trim().toLowerCase()
+  const kwTokens = tokenizeExternalKeyword(kw)
   const out = []
   for (const p of (list || [])) {
     const pLang = String(p?.language || '').trim().toLowerCase() || 'unknown'
     if (lang && pLang !== lang) continue
     const pCountry = String(p?.countryCode || '').trim().toLowerCase()
     if (country && pCountry !== country) continue
-    if (kw) {
+    // The remote API already searched by keyword. Re-filter only when the user
+    // edits the keyword after results are loaded and hasn't searched again yet.
+    if (kw && kw !== searchedKw) {
       const hay = `${p?.title || ''} ${p?.author || ''} ${p?.summary || ''} ${p?.countryLabel || ''}`.toLowerCase()
-      if (!hay.includes(kw)) continue
+      if (kwTokens.length) {
+        if (!kwTokens.every(token => hay.includes(token))) continue
+      } else if (!hay.includes(kw)) {
+        continue
+      }
     }
     out.push(p)
   }
@@ -1465,6 +1473,19 @@ function dedupeExternalPodcasts(list) {
     out.push(item)
   }
   return out
+}
+
+function tokenizeExternalKeyword(keyword) {
+  const stopWords = new Set([
+    'podcast', 'podcasts', 'show', 'shows', 'audio', 'listen',
+    'english', 'india', 'indian'
+  ])
+  return String(keyword || '')
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .map(x => x.replace(/[^\p{L}\p{N}]+/gu, ''))
+    .filter(x => x && x.length > 1 && !stopWords.has(x))
 }
 
 function sortExternalPodcasts(list, keyword, selectedCountry, selectedLang) {
