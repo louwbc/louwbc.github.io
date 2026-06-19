@@ -1,6 +1,6 @@
 title: "louwbc"
 description: "个人博客 · 番茄钟 · 全球FM"
-version: "1.5"
+version: "1.6"
 lang: "zh-CN"
 markdown: kramdown
 permalink: /blog/:title/

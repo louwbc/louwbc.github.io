@@ -358,5 +358,335 @@
     "bitrate": 64,
     "tags": "college radio,student radio",
     "url_resolved": "https://ice9.securenetsystems.net/KCPR1"
+  },
+  {
+    "stationuuid": "heart-uk-main",
+    "name": "Heart UK",
+    "country": "United Kingdom",
+    "language": "english",
+    "codec": "AAC",
+    "bitrate": 48,
+    "tags": "adult contemporary,pop,hits",
+    "url_resolved": "https://media-ssl.musicradio.com/HeartUK"
+  },
+  {
+    "stationuuid": "smooth-uk-main",
+    "name": "Smooth UK",
+    "country": "United Kingdom",
+    "language": "english",
+    "codec": "AAC",
+    "bitrate": 48,
+    "tags": "easy listening,adult contemporary",
+    "url_resolved": "https://media-ssl.musicradio.com/SmoothUK"
+  },
+  {
+    "stationuuid": "lbc-uk-main",
+    "name": "LBC UK",
+    "country": "United Kingdom",
+    "language": "english",
+    "codec": "AAC",
+    "bitrate": 48,
+    "tags": "news,talk,phone-in",
+    "url_resolved": "https://media-ssl.musicradio.com/LBCUK"
+  },
+  {
+    "stationuuid": "radiox-uk-main",
+    "name": "Radio X UK",
+    "country": "United Kingdom",
+    "language": "english",
+    "codec": "AAC",
+    "bitrate": 48,
+    "tags": "alternative,indie,rock",
+    "url_resolved": "https://media-ssl.musicradio.com/RadioXUK"
+  },
+  {
+    "stationuuid": "gold-uk-main",
+    "name": "Gold UK",
+    "country": "United Kingdom",
+    "language": "english",
+    "codec": "AAC",
+    "bitrate": 48,
+    "tags": "oldies,classics,pop",
+    "url_resolved": "https://media-ssl.musicradio.com/Gold"
+  },
+  {
+    "stationuuid": "classicfm-uk-main",
+    "name": "Classic FM UK",
+    "country": "United Kingdom",
+    "language": "english",
+    "codec": "AAC",
+    "bitrate": 48,
+    "tags": "classical",
+    "url_resolved": "https://media-ssl.musicradio.com/ClassicFM"
+  },
+  {
+    "stationuuid": "heart80s-uk-main",
+    "name": "Heart 80s",
+    "country": "United Kingdom",
+    "language": "english",
+    "codec": "AAC",
+    "bitrate": 48,
+    "tags": "80s,pop,classics",
+    "url_resolved": "https://media-ssl.musicradio.com/Heart80s"
+  },
+  {
+    "stationuuid": "heart90s-uk-main",
+    "name": "Heart 90s",
+    "country": "United Kingdom",
+    "language": "english",
+    "codec": "AAC",
+    "bitrate": 48,
+    "tags": "90s,pop,classics",
+    "url_resolved": "https://media-ssl.musicradio.com/Heart90s"
+  },
+  {
+    "stationuuid": "heartdance-uk-main",
+    "name": "Heart Dance",
+    "country": "United Kingdom",
+    "language": "english",
+    "codec": "AAC",
+    "bitrate": 48,
+    "tags": "dance,club,pop",
+    "url_resolved": "https://media-ssl.musicradio.com/HeartDance"
+  },
+  {
+    "stationuuid": "smoothchill-uk-main",
+    "name": "Smooth Chill",
+    "country": "United Kingdom",
+    "language": "english",
+    "codec": "AAC",
+    "bitrate": 48,
+    "tags": "chillout,easy listening,ambient",
+    "url_resolved": "https://media-ssl.musicradio.com/SmoothChill"
+  },
+  {
+    "stationuuid": "smoothcountry-uk-main",
+    "name": "Smooth Country",
+    "country": "United Kingdom",
+    "language": "english",
+    "codec": "AAC",
+    "bitrate": 48,
+    "tags": "country,easy listening",
+    "url_resolved": "https://media-ssl.musicradio.com/SmoothCountry"
+  },
+  {
+    "stationuuid": "lbcnews-uk-main",
+    "name": "LBC News UK",
+    "country": "United Kingdom",
+    "language": "english",
+    "codec": "AAC",
+    "bitrate": 48,
+    "tags": "news,talk",
+    "url_resolved": "https://media-ssl.musicradio.com/LBCNewsUK"
+  },
+  {
+    "stationuuid": "capitaldance-uk-main",
+    "name": "Capital Dance",
+    "country": "United Kingdom",
+    "language": "english",
+    "codec": "AAC",
+    "bitrate": 48,
+    "tags": "dance,electronic,club",
+    "url_resolved": "https://media-ssl.musicradio.com/CapitalDance"
+  },
+  {
+    "stationuuid": "radiox90s-uk-main",
+    "name": "Radio X 90s",
+    "country": "United Kingdom",
+    "language": "english",
+    "codec": "AAC",
+    "bitrate": 48,
+    "tags": "90s,alternative,rock",
+    "url_resolved": "https://media-ssl.musicradio.com/RadioX90s"
+  },
+  {
+    "stationuuid": "radioxchill-uk-main",
+    "name": "Radio X Chilled",
+    "country": "United Kingdom",
+    "language": "english",
+    "codec": "AAC",
+    "bitrate": 48,
+    "tags": "chillout,alternative",
+    "url_resolved": "https://media-ssl.musicradio.com/RadioXChilled"
+  },
+  {
+    "stationuuid": "kexp-us-main",
+    "name": "KEXP 90.3 Seattle",
+    "country": "United States",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 128,
+    "tags": "indie,alternative,college radio",
+    "url_resolved": "https://kexp-mp3-128.streamguys1.com/kexp128.mp3"
+  },
+  {
+    "stationuuid": "somafm-groovesalad",
+    "name": "SomaFM Groove Salad",
+    "country": "United States",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 128,
+    "tags": "ambient,chillout,electronic",
+    "url_resolved": "https://ice2.somafm.com/groovesalad-128-mp3"
+  },
+  {
+    "stationuuid": "somafm-indiepop",
+    "name": "SomaFM Indie Pop Rocks!",
+    "country": "United States",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 128,
+    "tags": "indie,pop,alternative",
+    "url_resolved": "https://ice2.somafm.com/indiepop-128-mp3"
+  },
+  {
+    "stationuuid": "somafm-secretagent",
+    "name": "SomaFM Secret Agent",
+    "country": "United States",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 128,
+    "tags": "soundtracks,eclectic,retro",
+    "url_resolved": "https://ice2.somafm.com/secretagent-128-mp3"
+  },
+  {
+    "stationuuid": "somafm-u80s",
+    "name": "SomaFM Underground 80s",
+    "country": "United States",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 128,
+    "tags": "80s,new wave,alternative",
+    "url_resolved": "https://ice2.somafm.com/u80s-128-mp3"
+  },
+  {
+    "stationuuid": "wfmu-us-main",
+    "name": "WFMU",
+    "country": "United States",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 128,
+    "tags": "freeform,community radio,eclectic",
+    "url_resolved": "https://stream0.wfmu.org/freeform-128k"
+  },
+  {
+    "stationuuid": "bbc-world-service",
+    "name": "BBC World Service",
+    "country": "United Kingdom",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 0,
+    "tags": "news,world service,talk",
+    "url_resolved": "https://stream.live.vc.bbcmedia.co.uk/bbc_world_service"
+  },
+  {
+    "stationuuid": "abc-news-au-direct",
+    "name": "ABC News Radio",
+    "country": "Australia",
+    "language": "english",
+    "codec": "HLS",
+    "bitrate": 0,
+    "tags": "news,public radio",
+    "url_resolved": "https://streaming.abc-cdn.net.au/audio/hls/newsradio.m3u8"
+  },
+  {
+    "stationuuid": "abc-classic-au-direct",
+    "name": "ABC Jazz",
+    "country": "Australia",
+    "language": "english",
+    "codec": "HLS",
+    "bitrate": 0,
+    "tags": "jazz,public radio",
+    "url_resolved": "https://streaming.abc-cdn.net.au/audio/hls/abcjazz.m3u8"
+  },
+  {
+    "stationuuid": "cna938-sg-direct",
+    "name": "CNA938",
+    "country": "Singapore",
+    "language": "english",
+    "codec": "AAC",
+    "bitrate": 0,
+    "tags": "news,talk,business",
+    "url_resolved": "https://28393.live.streamtheworld.com:443/938NOWAAC.aac"
+  },
+  {
+    "stationuuid": "gold905-sg-direct",
+    "name": "GOLD 905",
+    "country": "Singapore",
+    "language": "english",
+    "codec": "AAC",
+    "bitrate": 0,
+    "tags": "oldies,classics,pop",
+    "url_resolved": "https://22403.live.streamtheworld.com:443/GOLD905AAC.aac"
+  },
+  {
+    "stationuuid": "nts1-london-edge",
+    "name": "NTS 1",
+    "country": "United Kingdom",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 128,
+    "tags": "eclectic,electronic,culture",
+    "url_resolved": "https://audio-edge-jfbmv.sin.d.radiomast.io/nts1"
+  },
+  {
+    "stationuuid": "nts2-london-edge",
+    "name": "NTS 2",
+    "country": "United Kingdom",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 128,
+    "tags": "eclectic,electronic,experimental",
+    "url_resolved": "https://audio-edge-jfbmv.sin.d.radiomast.io/nts2"
+  },
+  {
+    "stationuuid": "somafm-dronzone",
+    "name": "SomaFM Drone Zone",
+    "country": "United States",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 128,
+    "tags": "ambient,drone,chillout",
+    "url_resolved": "https://ice2.somafm.com/dronezone-128-mp3"
+  },
+  {
+    "stationuuid": "somafm-cliqhop",
+    "name": "SomaFM cliqhop idm",
+    "country": "United States",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 128,
+    "tags": "idm,electronic,ambient",
+    "url_resolved": "https://ice2.somafm.com/cliqhop-128-mp3"
+  },
+  {
+    "stationuuid": "somafm-beatblender",
+    "name": "SomaFM Beat Blender",
+    "country": "United States",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 128,
+    "tags": "beats,electronic,house",
+    "url_resolved": "https://ice2.somafm.com/beatblender-128-mp3"
+  },
+  {
+    "stationuuid": "somafm-folkfwd",
+    "name": "SomaFM Folk Forward",
+    "country": "United States",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 128,
+    "tags": "folk,americana,singer-songwriter",
+    "url_resolved": "https://ice2.somafm.com/folkfwd-128-mp3"
+  },
+  {
+    "stationuuid": "somafm-bagel",
+    "name": "SomaFM Bagel Radio",
+    "country": "United States",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 128,
+    "tags": "indie,alternative,pop",
+    "url_resolved": "https://ice2.somafm.com/bagel-128-mp3"
   }
 ]
