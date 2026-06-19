@@ -1123,6 +1123,10 @@ function podcastExternalCountryOptions() {
   return [
     { value: 'in', label: '印度（英语优先）' },
     { value: 'sg', label: '新加坡（英语优先）' },
+    { value: 'ph', label: '菲律宾（英语优先）' },
+    { value: 'my', label: '马来西亚（英语优先）' },
+    { value: 'hk', label: '香港（英语优先）' },
+    { value: 'ae', label: '阿联酋（英语优先）' },
     { value: 'us', label: '美国' },
     { value: 'gb', label: '英国' },
     { value: 'au', label: '澳大利亚' },
@@ -1134,12 +1138,24 @@ function resolveExternalSearchCountries(keyword, selected) {
   const manual = String(selected || '').trim().toLowerCase()
   if (manual === 'in') return ['in', 'us', 'gb', 'ca']
   if (manual === 'sg') return ['sg', 'us', 'gb', 'au']
+  if (manual === 'ph') return ['ph', 'us', 'gb', 'au']
+  if (manual === 'my') return ['my', 'sg', 'gb', 'au']
+  if (manual === 'hk') return ['hk', 'sg', 'gb', 'au']
+  if (manual === 'ae') return ['ae', 'gb', 'us', 'au']
   if (manual) return [manual]
   const kw = String(keyword || '').trim().toLowerCase()
   const indianHints = ['india', 'indian', 'hindi', 'tamil', 'telugu', 'malayalam', 'kannada', 'marathi', 'bengali', 'punjabi', 'bollywood']
   const singaporeHints = ['singapore', 'singaporean', 'sg', 'singlish']
+  const philippinesHints = ['philippines', 'philippine', 'filipino', 'manila', 'tagalog', 'cebuano']
+  const malaysiaHints = ['malaysia', 'malaysian', 'kuala lumpur', 'malay', 'bahasa malaysia']
+  const hongKongHints = ['hong kong', 'hongkong', 'hk', 'cantonese hong kong']
+  const uaeHints = ['uae', 'dubai', 'abu dhabi', 'emirates', 'emirati']
   if (indianHints.some(x => kw.includes(x))) return ['in', 'us', 'gb']
   if (singaporeHints.some(x => kw.includes(x))) return ['sg', 'us', 'gb']
+  if (philippinesHints.some(x => kw.includes(x))) return ['ph', 'us', 'gb']
+  if (malaysiaHints.some(x => kw.includes(x))) return ['my', 'sg', 'gb']
+  if (hongKongHints.some(x => kw.includes(x))) return ['hk', 'sg', 'gb']
+  if (uaeHints.some(x => kw.includes(x))) return ['ae', 'gb', 'us']
   return ['us', 'in', 'gb']
 }
 
