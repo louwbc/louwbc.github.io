@@ -20,6 +20,8 @@ const STORE = {
   recommendedCacheLegacy: 'global-fm:recommendedCache',
   recommendedCacheMeta: 'podcast:recommendedCacheMeta',
   recommendedCacheMetaLegacy: 'global-fm:recommendedCacheMeta',
+  availableCache: 'podcast:availableCache',
+  availableCacheMeta: 'podcast:availableCacheMeta',
   volume: 'podcast:volume',
   volumeLegacy: 'global-fm:volume'
 }
@@ -39,6 +41,7 @@ const state = {
   playing: null,
   playContext: 'episodes',
   recommendedLoading: false,
+  availableLoading: false,
   filterKeyword: '',
   filterLang: '',
   filterFrom: '',
@@ -55,8 +58,8 @@ async function init() {
   ui.audio.volume = Number(ui.vol.value)
   setupPlayer()
   migrateLegacyStores()
-  const cachedRec = loadRecommendedCache()
-  if (!cachedRec || !cachedRec.length) await loadBundledRecommended(true)
+  await loadBundledRecommended(true)
+  await loadBundledAvailable(true)
   refreshList()
   setInfo('已显示推荐播客')
 }
@@ -108,7 +111,11 @@ function refreshList() {
   } else if (state.view === 'external') {
     items = filterExternalPodcastResults(state.externalResults)
   } else {
-    const base = state.view === 'mine' ? loadPodcasts() : getRecommendedPodcasts()
+    const base = state.view === 'mine'
+      ? loadPodcasts()
+      : state.view === 'available'
+        ? getAvailablePodcasts()
+        : getRecommendedPodcasts()
     items = filterPodcastSources(base)
   }
 
@@ -120,6 +127,10 @@ function refreshList() {
     for (const item of items) frag.appendChild(renderExternalPodcastItem(item))
   } else {
     for (const item of items) frag.appendChild(renderPodcastItem(item))
+  }
+
+  if (shouldShowSearchEngineFallback(items)) {
+    frag.appendChild(renderSearchEngineFallbackCard(items))
   }
 
   ui.list.appendChild(frag)
@@ -194,23 +205,27 @@ function renderHeader() {
   recRow.style.marginTop = '10px'
   recRow.style.alignItems = 'center'
 
+  const isAvailableView = state.view === 'available'
   const loadBtn = document.createElement('button')
   loadBtn.className = 'btn'
-  loadBtn.textContent = state.recommendedLoading ? '加载中…' : '更新推荐'
-  loadBtn.disabled = !!state.recommendedLoading
+  loadBtn.textContent = isAvailableView
+    ? (state.availableLoading ? '加载中…' : '更新可用播客')
+    : (state.recommendedLoading ? '加载中…' : '更新推荐')
+  loadBtn.disabled = isAvailableView ? !!state.availableLoading : !!state.recommendedLoading
   loadBtn.addEventListener('click', async () => {
-    await loadBundledRecommended(false)
+    if (isAvailableView) await loadBundledAvailable(false)
+    else await loadBundledRecommended(false)
   })
 
-  const meta = loadRecommendedCacheMeta()
+  const meta = isAvailableView ? loadAvailableCacheMeta() : loadRecommendedCacheMeta()
   const tip = document.createElement('div')
   tip.className = 'muted'
   tip.style.flex = '1 1 260px'
-  const count = Number(meta?.count) || (loadRecommendedCache()?.length || 0)
+  const count = Number(meta?.count) || ((isAvailableView ? loadAvailableCache() : loadRecommendedCache())?.length || 0)
   const date = Number.isFinite(meta?.loadedAt) ? fmtDate(meta.loadedAt) : ''
   tip.textContent = count
-    ? `当前：${count} 个（${date || '未记录日期'}）`
-    : '当前：未加载（可点“更新推荐”）'
+    ? `${isAvailableView ? '当前可用' : '当前推荐'}：${count} 个（${date || '未记录日期'}）`
+    : `${isAvailableView ? '当前可用' : '当前推荐'}：未加载（可点“${isAvailableView ? '更新可用播客' : '更新推荐'}”）`
   recRow.append(loadBtn, tip)
 
   const filterRow = document.createElement('div')
@@ -324,6 +339,7 @@ function renderViewTabs() {
 
   for (const item of [
     { value: 'recommended', label: '推荐', info: '已显示推荐播客' },
+    { value: 'available', label: '可用播客', info: '已显示一批已收录的可用播客链接' },
     { value: 'mine', label: '我添加的', info: '已显示我添加的播客' },
     { value: 'external', label: '搜索更多', info: state.externalResults.length ? '已显示外部搜索结果' : '输入关键词后点“搜索更多”' }
   ]) {
@@ -334,8 +350,9 @@ function renderViewTabs() {
     btn.classList.toggle('active', state.view === item.value)
     btn.setAttribute('aria-selected', state.view === item.value ? 'true' : 'false')
     btn.tabIndex = state.view === item.value ? 0 : -1
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       state.view = item.value
+      if (item.value === 'available' && !getAvailablePodcasts().length) await loadBundledAvailable(true)
       refreshList()
       setInfo(item.info)
     })
@@ -352,6 +369,7 @@ function renderEmptyCard() {
   title.style.fontWeight = '700'
   if (state.selectedId) title.textContent = '没有可播放的剧集'
   else if (state.view === 'mine') title.textContent = '还没有播客源'
+  else if (state.view === 'available') title.textContent = '还没有可用播客'
   else if (state.view === 'external') title.textContent = '没有外部搜索结果'
   else title.textContent = '没有推荐播客'
 
@@ -360,7 +378,8 @@ function renderEmptyCard() {
   tip.style.marginTop = '6px'
   if (state.selectedId) tip.textContent = '这个播客源可能不支持跨域（CORS），或者没有可用音频链接。'
   else if (state.view === 'mine') tip.textContent = '添加一个播客 RSS 地址后，就可以在这里连续收听剧集。'
-  else if (state.view === 'external') tip.textContent = '输入关键词后点“搜索更多”，先找节目，再跳到外部页面继续收听。'
+  else if (state.view === 'available') tip.textContent = '这里会放一批已收录、可直接打开尝试播放的播客 RSS 链接。'
+  else if (state.view === 'external') tip.textContent = '输入关键词后点“搜索更多”，先找节目；如果还不够，下面还能继续扩展到搜索引擎和 RSS 搜索。'
   else tip.textContent = '暂无推荐。你可以切换到“我添加的”或自己添加一个播客 RSS。'
 
   wrap.append(title, tip)
@@ -541,6 +560,52 @@ function renderExternalPodcastItem(p) {
   return card
 }
 
+function shouldShowSearchEngineFallback(items) {
+  if (state.selectedId || state.view !== 'external') return false
+  const kw = String(state.filterKeyword || state.externalKeyword || '').trim()
+  if (!kw) return false
+  return true
+}
+
+function renderSearchEngineFallbackCard(items) {
+  const card = document.createElement('div')
+  card.className = 'card card-pad'
+
+  const title = document.createElement('div')
+  title.className = 'item-title'
+  title.textContent = '继续扩展搜索'
+
+  const tip = document.createElement('div')
+  tip.className = 'item-sub muted'
+  tip.style.marginTop = '6px'
+  const count = Array.isArray(items) ? items.length : 0
+  tip.textContent = count
+    ? `当前目录里已找到 ${count} 个结果；如果你觉得还不够，可以继续用搜索引擎扩搜官网、RSS 和更多长尾播客。`
+    : '目录里暂时没找到结果，可以继续用搜索引擎扩搜官网、RSS 和更多长尾播客。'
+
+  const actions = document.createElement('div')
+  actions.className = 'row'
+  actions.style.marginTop = '12px'
+  actions.style.gap = '8px'
+  actions.style.flexWrap = 'wrap'
+
+  for (const link of buildSearchEngineFallbackLinks(String(state.filterKeyword || state.externalKeyword || '').trim(), state.externalCountry)) {
+    const btn = document.createElement('button')
+    btn.className = 'btn'
+    btn.textContent = link.label
+    btn.addEventListener('click', () => openExternalUrl(link.url))
+    actions.append(btn)
+  }
+
+  const hints = document.createElement('div')
+  hints.className = 'item-sub muted'
+  hints.style.marginTop = '10px'
+  hints.textContent = buildSearchHintText(String(state.filterKeyword || state.externalKeyword || '').trim(), state.externalCountry)
+
+  card.append(title, tip, actions, hints)
+  return card
+}
+
 function currentTitle() {
   if (state.selectedId === 'search') return '搜索结果'
   const source = getPodcastSourceById(state.selectedId)
@@ -600,8 +665,17 @@ function loadRecommendedCache() {
   return Array.isArray(list) ? list : null
 }
 
+function loadAvailableCache() {
+  const list = loadValue([STORE.availableCache], null)
+  return Array.isArray(list) ? list : null
+}
+
 function loadRecommendedCacheMeta() {
   return loadValue([STORE.recommendedCacheMeta, STORE.recommendedCacheMetaLegacy], {})
+}
+
+function loadAvailableCacheMeta() {
+  return loadValue([STORE.availableCacheMeta], {})
 }
 
 function saveRecommendedCache(list, meta) {
@@ -609,10 +683,21 @@ function saveRecommendedCache(list, meta) {
   save(STORE.recommendedCacheMeta, meta || {})
 }
 
+function saveAvailableCache(list, meta) {
+  save(STORE.availableCache, Array.isArray(list) ? list : [])
+  save(STORE.availableCacheMeta, meta || {})
+}
+
 function getRecommendedPodcasts() {
   const cached = loadRecommendedCache()
   if (cached && cached.length) return cached
   return FALLBACK_RECOMMENDED_PODCASTS
+}
+
+function getAvailablePodcasts() {
+  const cached = loadAvailableCache()
+  if (cached && cached.length) return cached
+  return []
 }
 
 function migrateLegacyStores() {
@@ -628,6 +713,23 @@ function migrateLegacyStores() {
     const meta = loadValue([STORE.recommendedCacheMetaLegacy], null)
     if (meta && typeof meta === 'object') save(STORE.recommendedCacheMeta, meta)
   }
+}
+
+function normalizeBundledPodcastList(parsed) {
+  const out = []
+  const seen = new Set()
+  for (const item of (Array.isArray(parsed) ? parsed : [])) {
+    const feedUrl = normalizeUrl(item?.feedUrl || item?.id || '')
+    if (!feedUrl || seen.has(feedUrl)) continue
+    seen.add(feedUrl)
+    out.push({
+      id: feedUrl,
+      title: String(item?.title || feedUrl),
+      feedUrl,
+      language: String(item?.language || '')
+    })
+  }
+  return out
 }
 
 function normalizeUrl(u) {
@@ -669,20 +771,7 @@ async function loadBundledRecommended(silent) {
     const res = await fetch('./recommended-podcasts.json', { cache: 'no-store' })
     if (!res.ok) throw new Error('recommended')
     const parsed = await res.json()
-    if (!Array.isArray(parsed)) throw new Error('format')
-    const out = []
-    const seen = new Set()
-    for (const item of parsed) {
-      const feedUrl = normalizeUrl(item?.feedUrl || item?.id || '')
-      if (!feedUrl || seen.has(feedUrl)) continue
-      seen.add(feedUrl)
-      out.push({
-        id: feedUrl,
-        title: String(item?.title || feedUrl),
-        feedUrl,
-        language: String(item?.language || '')
-      })
-    }
+    const out = normalizeBundledPodcastList(parsed)
     if (out.length) {
       saveRecommendedCache(out, { source: 'bundled', loadedAt: Date.now(), count: out.length })
       if (!silent) setInfo(`已加载 ${out.length} 个推荐播客`)
@@ -697,15 +786,40 @@ async function loadBundledRecommended(silent) {
   }
 }
 
+async function loadBundledAvailable(silent) {
+  if (state.availableLoading) return
+  state.availableLoading = true
+  refreshList()
+  try {
+    if (!silent) setInfo('加载可用播客中…')
+    const res = await fetch('./available-podcasts.json', { cache: 'no-store' })
+    if (!res.ok) throw new Error('available')
+    const parsed = await res.json()
+    const out = normalizeBundledPodcastList(parsed)
+    if (out.length) {
+      saveAvailableCache(out, { source: 'bundled', loadedAt: Date.now(), count: out.length })
+      if (!silent) setInfo(`已加载 ${out.length} 个可用播客`)
+    } else if (!silent) {
+      setInfo('没有可用播客')
+    }
+  } catch (_) {
+    if (!silent) setInfo('加载失败：无法读取可用播客列表')
+  } finally {
+    state.availableLoading = false
+    refreshList()
+  }
+}
+
 function getPodcastSourceById(id) {
   return loadPodcasts().find(x => String(x.id) === String(id))
+    || getAvailablePodcasts().find(x => String(x.id) === String(id))
     || getRecommendedPodcasts().find(x => String(x.id) === String(id))
     || null
 }
 
 function availablePodcastLanguages() {
   const set = new Set()
-  const all = [...getRecommendedPodcasts(), ...loadPodcasts(), ...state.externalResults]
+  const all = [...getRecommendedPodcasts(), ...getAvailablePodcasts(), ...loadPodcasts(), ...state.externalResults]
   for (const item of all) {
     const value = String(item?.language || '').trim().toLowerCase()
     set.add(value || 'unknown')
@@ -856,6 +970,38 @@ function buildExternalSearchPlans(keyword) {
   return plans.filter(plan => plan.queries.length)
 }
 
+function buildSearchEngineFallbackLinks(keyword, countryCode) {
+  const kw = normalizeQuery(keyword)
+  if (!kw) return []
+  const region = externalCountryLabel(countryCode)
+  const scoped = region ? `${kw} ${region}` : kw
+  const rssQuery = `${scoped} rss podcast`
+  const siteQuery = `${scoped} podcast official site`
+  return [
+    { label: 'Google 搜索', url: `https://www.google.com/search?q=${encodeURIComponent(`${scoped} podcast`)}` },
+    { label: 'Bing 搜索', url: `https://www.bing.com/search?q=${encodeURIComponent(`${scoped} podcast`)}` },
+    { label: 'DuckDuckGo', url: `https://duckduckgo.com/?q=${encodeURIComponent(`${scoped} podcast`)}` },
+    { label: '搜 RSS', url: `https://www.google.com/search?q=${encodeURIComponent(rssQuery)}` },
+    { label: '搜官网', url: `https://www.google.com/search?q=${encodeURIComponent(siteQuery)}` }
+  ]
+}
+
+function buildSearchHintText(keyword, countryCode) {
+  const kw = normalizeQuery(keyword)
+  if (!kw) return ''
+  const parts = []
+  const region = externalCountryLabel(countryCode)
+  if (region) parts.push(`地区提示：${region}`)
+  const hints = [
+    `${kw} podcast`,
+    `${kw} rss`,
+    `${kw} official site`
+  ]
+  if (region) hints.push(`${kw} ${region} podcast`)
+  parts.push(`建议搜索词：${hints.join(' / ')}`)
+  return parts.join(' · ')
+}
+
 function buildRelaxedQueries(keyword) {
   const out = []
   const q = normalizeQuery(keyword)
@@ -923,7 +1069,7 @@ async function searchPodcastEpisodes() {
   if (state.searching) return
   const kw = String(state.filterKeyword || '').trim().toLowerCase()
   const lang = String(state.filterLang || '').trim().toLowerCase()
-  let sources = [...getRecommendedPodcasts(), ...loadPodcasts()]
+  let sources = [...getRecommendedPodcasts(), ...getAvailablePodcasts(), ...loadPodcasts()]
   const uniq = []
   for (const item of sources) {
     const id = String(item?.feedUrl || item?.id || '').trim()
