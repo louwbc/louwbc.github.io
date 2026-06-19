@@ -63,6 +63,7 @@ const state = {
   podcastExternalSearching: false,
   podcastExternalResults: [],
   podcastExternalKeyword: '',
+  podcastExternalCountry: '',
   podcastFilterLang: '',
   podcastFilterKeyword: '',
   podcastFilterFrom: '',
@@ -943,6 +944,20 @@ function renderPodcastsHeader() {
     refreshList()
   })
 
+  const country = document.createElement('select')
+  country.className = 'input'
+  country.setAttribute('aria-label', '外部搜索地区')
+  country.style.flex = '0 1 170px'
+  country.appendChild(new Option('全部地区', ''))
+  for (const opt of podcastExternalCountryOptions()) {
+    country.appendChild(new Option(opt.label, opt.value))
+  }
+  country.value = state.podcastExternalCountry || ''
+  country.addEventListener('change', () => {
+    state.podcastExternalCountry = country.value
+    if (state.podcastView === 'external' && state.podcastExternalResults.length) refreshList()
+  })
+
   const from = document.createElement('input')
   from.className = 'input'
   from.type = 'date'
@@ -1009,7 +1024,7 @@ function renderPodcastsHeader() {
     setInfo('已清除筛选')
   })
 
-  row3.append(lang, from, to, kw, searchBtn, moreBtn, clearBtn)
+  row3.append(lang, country, from, to, kw, searchBtn, moreBtn, clearBtn)
   card.append(row, row2, rowRec, row3)
   return card
 }
@@ -1291,12 +1306,15 @@ function filterEpisodes(list) {
 function filterExternalPodcastResults(list) {
   const kw = String(state.podcastFilterKeyword || '').trim().toLowerCase()
   const lang = String(state.podcastFilterLang || '').trim().toLowerCase()
+  const country = String(state.podcastExternalCountry || '').trim().toLowerCase()
   const out = []
   for (const p of (list || [])) {
     const pLang = String(p?.language || '').trim().toLowerCase() || 'unknown'
     if (lang && pLang !== lang) continue
+    const pCountry = String(p?.countryCode || '').trim().toLowerCase()
+    if (country && pCountry !== country) continue
     if (kw) {
-      const hay = `${p?.title || ''} ${p?.author || ''} ${p?.summary || ''}`.toLowerCase()
+      const hay = `${p?.title || ''} ${p?.author || ''} ${p?.summary || ''} ${p?.countryLabel || ''}`.toLowerCase()
       if (!hay.includes(kw)) continue
     }
     out.push(p)
@@ -1320,13 +1338,23 @@ async function searchExternalPodcasts() {
   refreshList()
   try {
     setInfo('外部搜索中…')
-    const url = `https://itunes.apple.com/search?media=podcast&entity=podcast&limit=24&term=${encodeURIComponent(kw)}`
-    const res = await fetch(url)
-    if (!res.ok) throw new Error('search')
-    const json = await res.json()
-    const results = Array.isArray(json?.results) ? json.results : []
+    const countries = resolveExternalSearchCountries(kw, state.podcastExternalCountry)
+    const all = []
+    for (const code of countries) {
+      const url = `https://itunes.apple.com/search?media=podcast&entity=podcast&limit=24&country=${encodeURIComponent(code)}&term=${encodeURIComponent(kw)}`
+      const res = await fetch(url)
+      if (!res.ok) continue
+      const json = await res.json()
+      const results = Array.isArray(json?.results) ? json.results : []
+      for (const item of results) all.push({ ...item, _searchCountry: code })
+    }
     state.podcastExternalKeyword = kw
-    state.podcastExternalResults = results.map(normalizeExternalPodcast).filter(Boolean)
+    state.podcastExternalResults = sortExternalPodcasts(
+      dedupeExternalPodcasts(all.map(normalizeExternalPodcast).filter(Boolean)),
+      kw,
+      state.podcastExternalCountry,
+      state.podcastFilterLang
+    )
     refreshList()
     setInfo(state.podcastExternalResults.length
       ? `已找到 ${state.podcastExternalResults.length} 个外部播客，可跳转继续收听`
@@ -1352,14 +1380,18 @@ function normalizeExternalPodcast(item) {
   const language = mapExternalPodcastLanguage(item)
   const summary = stripHtml(item?.description || item?.artistName || '')
   const searchQuery = fallbackQuery || String(state.podcastFilterKeyword || '').trim()
+  const countryCode = String(item?._searchCountry || item?.country || '').trim().toLowerCase()
+  const countryLabel = externalCountryLabel(countryCode)
   return {
     id: String(item?.collectionId || item?.trackId || openUrl || feedUrl || title),
     title: title || fallbackQuery || '未命名播客',
     author: String(item?.artistName || '').trim(),
     summary,
-    sourceLabel: 'Apple Podcasts',
+    sourceLabel: countryLabel ? `Apple Podcasts · ${countryLabel}` : 'Apple Podcasts',
     genreLabel: genres.join(' / '),
     language,
+    countryCode,
+    countryLabel,
     openUrl: openUrl || feedUrl || buildWebSearchUrl(searchQuery),
     feedUrl,
     webSearchUrl: buildWebSearchUrl(searchQuery)
@@ -1370,10 +1402,19 @@ function mapExternalPodcastLanguage(item) {
   const values = [
     item?.language,
     item?.country,
+    item?._searchCountry,
     Array.isArray(item?.genres) ? item.genres.join(' ') : ''
   ]
   const text = values.filter(Boolean).join(' ').toLowerCase()
   if (!text) return ''
+  if (text.includes('hindi')) return 'hindi'
+  if (text.includes('tamil')) return 'tamil'
+  if (text.includes('telugu')) return 'telugu'
+  if (text.includes('malayalam')) return 'malayalam'
+  if (text.includes('kannada')) return 'kannada'
+  if (text.includes('marathi')) return 'marathi'
+  if (text.includes('bengali')) return 'bengali'
+  if (text.includes('punjabi')) return 'punjabi'
   if (text.includes('chinese') || text.includes('mandarin') || text.includes('cn') || text.includes('zh')) return 'chinese'
   if (text.includes('japanese') || text.includes('jp') || text.includes('ja')) return 'japanese'
   if (text.includes('korean') || text.includes('kr') || text.includes('ko')) return 'korean'
@@ -1385,6 +1426,73 @@ function mapExternalPodcastLanguage(item) {
   if (text.includes('russian') || text.includes('ru')) return 'russian'
   if (text.includes('arabic') || text.includes('ar')) return 'arabic'
   return 'english'
+}
+
+function podcastExternalCountryOptions() {
+  return [
+    { value: 'in', label: '印度（英语优先）' },
+    { value: 'us', label: '美国' },
+    { value: 'gb', label: '英国' },
+    { value: 'au', label: '澳大利亚' },
+    { value: 'ca', label: '加拿大' }
+  ]
+}
+
+function resolveExternalSearchCountries(keyword, selected) {
+  const manual = String(selected || '').trim().toLowerCase()
+  if (manual === 'in') return ['in', 'us', 'gb', 'ca']
+  if (manual) return [manual]
+
+  const kw = String(keyword || '').trim().toLowerCase()
+  const indianHints = ['india', 'indian', 'hindi', 'tamil', 'telugu', 'malayalam', 'kannada', 'marathi', 'bengali', 'punjabi', 'bollywood']
+  if (indianHints.some(x => kw.includes(x))) return ['in', 'us', 'gb']
+  return ['us', 'in', 'gb']
+}
+
+function externalCountryLabel(code) {
+  const v = String(code || '').trim().toLowerCase()
+  const found = podcastExternalCountryOptions().find(x => x.value === v)
+  return found?.label || String(code || '').toUpperCase()
+}
+
+function dedupeExternalPodcasts(list) {
+  const out = []
+  const seen = new Set()
+  for (const item of (list || [])) {
+    const key = String(item?.feedUrl || item?.openUrl || item?.id || '').trim()
+    if (!key || seen.has(key)) continue
+    seen.add(key)
+    out.push(item)
+  }
+  return out
+}
+
+function sortExternalPodcasts(list, keyword, selectedCountry, selectedLang) {
+  const kw = String(keyword || '').trim().toLowerCase()
+  const country = String(selectedCountry || '').trim().toLowerCase()
+  const lang = String(selectedLang || '').trim().toLowerCase()
+  const indianHints = ['india', 'indian', 'english india', 'english indian', 'bollywood', 'startup india']
+  const preferIndianEnglish = country === 'in' || (!country && indianHints.some(x => kw.includes(x)))
+
+  return (list || []).slice().sort((a, b) => {
+    const scoreA = externalPodcastRank(a, preferIndianEnglish, lang)
+    const scoreB = externalPodcastRank(b, preferIndianEnglish, lang)
+    return scoreB - scoreA
+  })
+}
+
+function externalPodcastRank(item, preferIndianEnglish, selectedLang) {
+  let score = 0
+  const lang = String(item?.language || '').trim().toLowerCase()
+  const country = String(item?.countryCode || '').trim().toLowerCase()
+  if (selectedLang && lang === selectedLang) score += 100
+  if (preferIndianEnglish) {
+    if (country === 'in') score += 80
+    if (lang === 'english') score += 60
+    if (lang === 'unknown') score += 20
+  }
+  if (item?.feedUrl) score += 10
+  return score
 }
 
 function buildWebSearchUrl(query) {
