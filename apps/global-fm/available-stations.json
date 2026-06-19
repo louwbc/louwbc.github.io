@@ -1,0 +1,362 @@
+[
+  {
+    "stationuuid": "33178054-56cd-449c-8cf7-412cc7be936a",
+    "name": "CNN",
+    "country": "United States",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 96,
+    "tags": "news",
+    "url_resolved": "https://tunein.cdnstream1.com/2868_96.mp3"
+  },
+  {
+    "stationuuid": "4bb85759-d22b-433b-b256-29ad8a6e9ecd",
+    "name": "CBC Radio One Toronto",
+    "country": "Canada",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 128,
+    "tags": "features,news,public radio",
+    "url_resolved": "https://26733.live.streamtheworld.com/CBLAFM_CBC_SC"
+  },
+  {
+    "stationuuid": "9a8f2d50-fca3-4d7c-99ee-c5e0e97f4d1b",
+    "name": "Times Radio",
+    "country": "United Kingdom",
+    "language": "english",
+    "codec": "AAC",
+    "bitrate": 128,
+    "tags": "news,talk",
+    "url_resolved": "https://timesradio.wireless.radio/stream"
+  },
+  {
+    "stationuuid": "a91e7dfe-5b4d-4df1-be98-6a73d93f8057",
+    "name": "ABC Radio Melbourne",
+    "country": "Australia",
+    "language": "english",
+    "codec": "AAC",
+    "bitrate": 94,
+    "tags": "news,talk,public radio",
+    "url_resolved": "https://mediaserviceslive.akamaized.net/hls/live/2038300/localmelbourne/masterhq.m3u8"
+  },
+  {
+    "stationuuid": "a6bc8a3b-67bf-4042-9af8-f7bad29f0734",
+    "name": "Al Jazeera English Audio",
+    "country": "Qatar",
+    "language": "english",
+    "codec": "HLS",
+    "bitrate": 0,
+    "tags": "international news,documentaries,sports news",
+    "url_resolved": "https://live-hls-audio-web-aje.getaj.net/VOICE-AJE/01.m3u8"
+  },
+  {
+    "stationuuid": "177dda8f-ce5f-4f18-a19e-c6c8b6f5319a",
+    "name": "TalkSPORT",
+    "country": "United Kingdom",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 64,
+    "tags": "sports",
+    "url_resolved": "https://radio.talksport.com/stream"
+  },
+  {
+    "stationuuid": "300556e2-faf8-4b2e-b24d-7525185430c1",
+    "name": "AIR Delhi FM Gold",
+    "country": "India",
+    "language": "english,hindi",
+    "codec": "AAC+",
+    "bitrate": 32,
+    "tags": "news,music,talk",
+    "url_resolved": "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio005/hlspbaudio005_Auto.m3u8"
+  },
+  {
+    "stationuuid": "0923786e-4a3c-4149-b7fa-154fe4f6e410",
+    "name": "AIR Nagpur",
+    "country": "India",
+    "language": "english,hindi,marathi",
+    "codec": "AAC",
+    "bitrate": 92,
+    "tags": "infotainment,music,news",
+    "url_resolved": "https://air.pc.cdn.bitgravity.com/air/live/pbaudio070/playlist.m3u8"
+  },
+  {
+    "stationuuid": "37c0ef87-6e7f-4a80-89e4-51822225a746",
+    "name": "More FM Bay of Plenty",
+    "country": "New Zealand",
+    "language": "english",
+    "codec": "AAC",
+    "bitrate": 130,
+    "tags": "adult contemporary",
+    "url_resolved": "https://mediaworks.streamguys1.com/more-tga-high_icy"
+  },
+  {
+    "stationuuid": "4ad5bdc7-01e5-47c9-a1f9-751671b4707e",
+    "name": "Capital UK",
+    "country": "United Kingdom",
+    "language": "english",
+    "codec": "AAC",
+    "bitrate": 48,
+    "tags": "top hits,pop",
+    "url_resolved": "https://media-ssl.musicradio.com/CapitalUK"
+  },
+  {
+    "stationuuid": "0f1a8621-d35a-4073-83d3-7ee14207a9a9",
+    "name": "KISS UK",
+    "country": "United Kingdom",
+    "language": "english",
+    "codec": "AAC+",
+    "bitrate": 47,
+    "tags": "dance,pop,r&b",
+    "url_resolved": "https://live-bauerkiss.sharp-stream.com/kissnational.aac?direct=true&aw_0_1st.skey=1602676850&rp_source=1&=&&___cb=60456375243858"
+  },
+  {
+    "stationuuid": "02835fc1-4cc9-4fc4-b103-bd846fea2792",
+    "name": "Beam FM Singapore",
+    "country": "Singapore",
+    "language": "english",
+    "codec": "AAC",
+    "bitrate": 64,
+    "tags": "hits,pop,top 40",
+    "url_resolved": "https://beamfm.streeemer.com/listen/beam_fm/radio.aac"
+  },
+  {
+    "stationuuid": "1f219a68-adcc-4224-8088-963529ab5811",
+    "name": "Free FM 80s India",
+    "country": "India",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 320,
+    "tags": "80s",
+    "url_resolved": "https://freefm80.radioca.st/"
+  },
+  {
+    "stationuuid": "34e31c78-ff16-4c2e-93f4-d8cfbc6153c0",
+    "name": "Radio Disney Philippines",
+    "country": "Philippines",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 128,
+    "tags": "pop,top 40",
+    "url_resolved": "https://listen.radioking.com/radio/453221/stream/508076"
+  },
+  {
+    "stationuuid": "d9a20ab2-1f10-4555-a657-4739a3c4273f",
+    "name": "Vibe Radio Philippines",
+    "country": "Philippines",
+    "language": "english,filipino,korean",
+    "codec": "MP3",
+    "bitrate": 0,
+    "tags": "pop,kpop,top 40",
+    "url_resolved": "https://stream.zeno.fm/zf0ac4raqy8uv"
+  },
+  {
+    "stationuuid": "721b72d8-4f71-469d-a965-b715a1332c50",
+    "name": "DWDM Eagle FM 95.5",
+    "country": "Philippines",
+    "language": "english,filipino",
+    "codec": "MP3",
+    "bitrate": 0,
+    "tags": "classics,easy listening,pop,rock",
+    "url_resolved": "https://stream.radiojar.com/yus0r2bghd3vv"
+  },
+  {
+    "stationuuid": "d1a54d2e-623e-4970-ab11-35f7b56c5ec3",
+    "name": "Classic Vinyl HD",
+    "country": "United States",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 320,
+    "tags": "jazz,big band,easy listening,oldies",
+    "url_resolved": "https://icecast.walmradio.com:8443/classic"
+  },
+  {
+    "stationuuid": "ea8059be-d119-4de3-b27b-0d9bd6aedb17",
+    "name": "Adroit Jazz Underground",
+    "country": "United States",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 320,
+    "tags": "contemporary jazz,modern jazz",
+    "url_resolved": "https://icecast.walmradio.com:8443/jazz"
+  },
+  {
+    "stationuuid": "7b5dfc08-7074-45de-bc41-bb83bbb43b2a",
+    "name": "American Road Radio",
+    "country": "United States",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 128,
+    "tags": "blues rock,classic rock,rock",
+    "url_resolved": "https://c5.radioboss.fm:18224/stream"
+  },
+  {
+    "stationuuid": "ceb6b3af-3bfb-4135-bace-9fa6fac9e8ac",
+    "name": "Metal Rock Radio",
+    "country": "United States",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 128,
+    "tags": "metal,rock",
+    "url_resolved": "https://kathy.torontocast.com:2800/;"
+  },
+  {
+    "stationuuid": "8bd6e684-e3f3-4ab8-8089-71e27f6ceb74",
+    "name": "Fine Music Radio",
+    "country": "South Africa",
+    "language": "english,afrikaans",
+    "codec": "HLS",
+    "bitrate": 0,
+    "tags": "classical,jazz",
+    "url_resolved": "https://edge.iono.fm/xhls/fmr_live_high.m3u8"
+  },
+  {
+    "stationuuid": "2babf29a-811c-4a51-93c3-9f3531ef2e97",
+    "name": "Classic FM Calm",
+    "country": "United Kingdom",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 128,
+    "tags": "classical,romantic",
+    "url_resolved": "https://media-ice.musicradio.com/ClassicFMCalmMP3"
+  },
+  {
+    "stationuuid": "b96225b2-8536-4b9b-8add-03582fd2e6a2",
+    "name": "WALM 2 HD Opus",
+    "country": "United States",
+    "language": "english",
+    "codec": "OGG",
+    "bitrate": 192,
+    "tags": "classical music,choral,hymns",
+    "url_resolved": "https://icecast.walmradio.com:8443/walm2_opus"
+  },
+  {
+    "stationuuid": "3b92f8c7-deac-4a81-8a9c-3b0f995d73e4",
+    "name": "America's Country",
+    "country": "United States",
+    "language": "english",
+    "codec": "AAC",
+    "bitrate": 128,
+    "tags": "country,classic country,hot country",
+    "url_resolved": "https://ais-sa2.cdnstream1.com/1976_128.mp3"
+  },
+  {
+    "stationuuid": "a2b92b15-ce28-4007-a756-b431abeb1059",
+    "name": "A Mississippi Blues",
+    "country": "Canada",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 320,
+    "tags": "blues,country,jazz,rock",
+    "url_resolved": "https://cast1.torontocast.com:4450/;?type=http&nocache=1745625391"
+  },
+  {
+    "stationuuid": "962cc6df-0601-11e8-ae97-52543be04c81",
+    "name": "Dance Wave!",
+    "country": "Hungary",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 128,
+    "tags": "club dance,electronic,house,trance",
+    "url_resolved": "https://dancewave.online/dance.mp3"
+  },
+  {
+    "stationuuid": "dd98c499-a0c4-4019-a35e-99caa6940407",
+    "name": "Top 100 Club Charts",
+    "country": "Germany",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 192,
+    "tags": "edm,deep house,techno,club",
+    "url_resolved": "https://breakz-2012-high.rautemusik.fm/?ref=radiobrowser-top100-clubcharts"
+  },
+  {
+    "stationuuid": "dd5a1bb3-ac10-4d77-9b65-e7e7d3d5a952",
+    "name": "Exclusively Bob Marley Hits",
+    "country": "United Arab Emirates",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 0,
+    "tags": "reggae,hits",
+    "url_resolved": "https://nl4.mystreaming.net/er/bobmarleyhits/icecast.audio"
+  },
+  {
+    "stationuuid": "e2c470e1-8dd7-447e-a39b-a8856ada4beb",
+    "name": "Exclusively Duran Duran Hits",
+    "country": "United Arab Emirates",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 0,
+    "tags": "new wave,hits",
+    "url_resolved": "https://nl4.mystreaming.net/er/duranduranhits/icecast.audio"
+  },
+  {
+    "stationuuid": "68f52212-e3b0-479b-9da6-962a6c5e713d",
+    "name": "ROKit Radio Science Fiction",
+    "country": "United Kingdom",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 48,
+    "tags": "science fiction,drama,old time radio",
+    "url_resolved": "https://streaming05.liveboxstream.uk/proxy/roksta12/stream"
+  },
+  {
+    "stationuuid": "dce75ec5-a0f8-4bba-bf4c-2827c871490c",
+    "name": "Strange Radio - Pumpkin FM",
+    "country": "United Kingdom",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 64,
+    "tags": "mystery,science fiction,space",
+    "url_resolved": "https://cast2.asurahosting.com/proxy/strangeradio/stream"
+  },
+  {
+    "stationuuid": "c055fc23-49fb-42a2-a84b-992081fb4ee3",
+    "name": "The Indie Beat Spoken Word",
+    "country": "United States",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 128,
+    "tags": "spoken word,educational,drama",
+    "url_resolved": "https://azura.theindiebeat.fm/listen/the_indie_beat_radio_-_spoken/radio.mp3"
+  },
+  {
+    "stationuuid": "9d874da9-550c-4176-a595-8ee83e0c72bc",
+    "name": "Yabiladi Chaabi Maroc",
+    "country": "Morocco",
+    "language": "english,francaise",
+    "codec": "MP3",
+    "bitrate": 128,
+    "tags": "world music",
+    "url_resolved": "https://radio.yabiladi.com:8102/;stream.mp3"
+  },
+  {
+    "stationuuid": "0349022e-c22a-43c8-b1fc-1e51b113c1b4",
+    "name": "Radio K",
+    "country": "United States",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 256,
+    "tags": "college radio,indie",
+    "url_resolved": "https://radiok.broadcasttool.stream/play_256"
+  },
+  {
+    "stationuuid": "961e5e30-0601-11e8-ae97-52543be04c81",
+    "name": "KZSC 88.1 Santa Cruz",
+    "country": "United States",
+    "language": "english",
+    "codec": "MP3",
+    "bitrate": 128,
+    "tags": "college radio",
+    "url_resolved": "https://kzscfms1-geckohost.radioca.st/kzschigh?type=.mp3"
+  },
+  {
+    "stationuuid": "845448d2-3a08-11e9-9b4e-52543be04c81",
+    "name": "KCPR Cal Poly Radio",
+    "country": "United States",
+    "language": "english",
+    "codec": "AAC+",
+    "bitrate": 64,
+    "tags": "college radio,student radio",
+    "url_resolved": "https://ice9.securenetsystems.net/KCPR1"
+  }
+]

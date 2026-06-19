@@ -11,6 +11,7 @@ const ui = {
   empty: $('#empty'),
   sentinel: $('#sentinel'),
   tabDiscover: $('#tabDiscover'),
+  tabAvailable: $('#tabAvailable'),
   tabFav: $('#tabFav'),
   tabRecent: $('#tabRecent'),
   exportFavBtn: $('#exportFavBtn'),
@@ -37,7 +38,9 @@ const STORE = {
   podcasts: 'global-fm:podcasts',
   recommendedCache: 'global-fm:recommendedCache',
   recommendedCacheMeta: 'global-fm:recommendedCacheMeta',
-  recommendedCountry: 'global-fm:recommendedCountry'
+  recommendedCountry: 'global-fm:recommendedCountry',
+  availableStationsCache: 'global-fm:availableStationsCache',
+  availableStationsMeta: 'global-fm:availableStationsMeta'
 }
 
 const FALLBACK_RECOMMENDED_PODCASTS = [
@@ -71,10 +74,11 @@ const state = {
   podcastEpisodes: [],
   recommendedCountry: load(STORE.recommendedCountry, 'english-learning'),
   recommendedLoading: false,
+  availableLoading: false,
   apiBase: 'https://de1.api.radio-browser.info/json'
 }
 
-const TAB_BTNS = [ui.tabFav, ui.tabDiscover, ui.tabRecent]
+const TAB_BTNS = [ui.tabFav, ui.tabAvailable, ui.tabDiscover, ui.tabRecent]
 
 init()
 
@@ -92,6 +96,7 @@ async function init() {
   applyPreferredLanguage()
   await loadTags()
   applyPreferredTag()
+  await loadBundledAvailable(true)
   setDefaultTab()
   const cachedRec = loadRecommendedCache()
   if (!cachedRec || !cachedRec.length) loadBundledRecommended(true)
@@ -174,8 +179,10 @@ function mergeUniqueStations(primary, secondary) {
 
 function setDefaultTab() {
   const favs = loadFavorites()
-  state.tab = favs.length ? 'favorites' : 'discover'
+  state.tab = favs.length ? 'favorites' : 'available'
   refreshList()
+  if (state.tab === 'favorites') setInfo('已显示收藏')
+  else setInfo(`已显示 ${getAvailableStations().length} 个可用电台`)
 }
 
 function setupTabs() {
@@ -209,7 +216,16 @@ function setTab(tab, focus) {
     if (!mine.length) state.podcastView = 'recommended'
   }
   refreshList()
-  if (state.tab === 'discover' && !state.stations.length) search(true)
+  if (state.tab === 'discover' && !state.stations.length) {
+    search(true)
+  } else if (state.tab === 'available') {
+    if (!getAvailableStations().length) loadBundledAvailable(false)
+    else setInfo(`已显示 ${getAvailableStations().length} 个可用电台`)
+  } else if (state.tab === 'favorites') {
+    setInfo('已显示收藏')
+  } else if (state.tab === 'recent') {
+    setInfo('已显示最近播放')
+  }
   if (focus) {
     const btn = TAB_BTNS.find(x => x.dataset.tab === state.tab)
     btn?.focus()
@@ -411,6 +427,7 @@ function refreshList() {
 
   let items = []
   if (tab === 'discover') items = state.stations
+  if (tab === 'available') items = getAvailableStations()
   if (tab === 'favorites') items = loadFavorites()
   if (tab === 'recent') items = loadRecent()
   if (tab === 'podcasts') {
@@ -466,6 +483,7 @@ function refreshList() {
       ui.empty.appendChild(wrap)
     } else {
       if (tab === 'discover') ui.empty.textContent = '没有结果：可以试试切换分类/语言，或勾选“包含非HTTPS”'
+      else if (tab === 'available') ui.empty.textContent = '还没有可用电台：稍后可再点“可用电台”重新加载'
       else if (tab === 'recent') ui.empty.textContent = '暂无内容：去“发现”播放一个电台，最近会出现在这里'
       else ui.empty.textContent = '暂无内容'
     }
@@ -660,6 +678,7 @@ function jump(step) {
 
 function currentPlayList() {
   if (state.playContext === 'podcasts') return state.podcastEpisodes
+  if (state.playContext === 'available') return getAvailableStations()
   if (state.playContext === 'favorites') return loadFavorites()
   if (state.playContext === 'recent') return loadRecent()
   return state.stations
@@ -702,15 +721,30 @@ function loadRecommendedCache() {
   return Array.isArray(list) ? list : null
 }
 
+function loadAvailableStationsCache() {
+  const list = load(STORE.availableStationsCache, null)
+  return Array.isArray(list) ? list : null
+}
+
 function saveRecommendedCache(list, meta) {
   save(STORE.recommendedCache, Array.isArray(list) ? list : [])
   save(STORE.recommendedCacheMeta, meta || {})
+}
+
+function saveAvailableStationsCache(list, meta) {
+  save(STORE.availableStationsCache, Array.isArray(list) ? list : [])
+  save(STORE.availableStationsMeta, meta || {})
 }
 
 function getRecommendedPodcasts() {
   const cached = loadRecommendedCache()
   if (cached && cached.length) return cached
   return FALLBACK_RECOMMENDED_PODCASTS
+}
+
+function getAvailableStations() {
+  const cached = loadAvailableStationsCache()
+  return Array.isArray(cached) ? cached : []
 }
 
 function normalizeUrl(u) {
@@ -780,6 +814,57 @@ async function loadBundledRecommended(silent) {
     if (!silent) setInfo('加载失败：无法读取推荐播客列表')
   } finally {
     state.recommendedLoading = false
+    refreshList()
+  }
+}
+
+function normalizeBundledStationList(parsed) {
+  if (!Array.isArray(parsed)) return []
+  const out = []
+  const seen = new Set()
+  for (const item of parsed) {
+    const url = normalizeUrl(item?.url_resolved || item?.url || '')
+    const stationuuid = String(item?.stationuuid || url || '').trim()
+    const name = String(item?.name || '').trim()
+    if (!url || !stationuuid || !name) continue
+    if (!String(url).startsWith('https://')) continue
+    if (seen.has(stationuuid) || seen.has(url)) continue
+    seen.add(stationuuid)
+    seen.add(url)
+    out.push({
+      stationuuid,
+      name,
+      country: String(item?.country || '').trim(),
+      language: String(item?.language || 'english').trim(),
+      codec: String(item?.codec || '').trim(),
+      bitrate: Number(item?.bitrate) || 0,
+      tags: String(item?.tags || '').trim(),
+      url_resolved: url
+    })
+  }
+  return out
+}
+
+async function loadBundledAvailable(silent) {
+  if (state.availableLoading) return
+  state.availableLoading = true
+  refreshList()
+  try {
+    if (!silent) setInfo('加载可用电台中…')
+    const res = await fetch('./available-stations.json', { cache: 'no-store' })
+    if (!res.ok) throw new Error('available')
+    const parsed = await res.json()
+    const out = normalizeBundledStationList(parsed)
+    if (out.length) {
+      saveAvailableStationsCache(out, { source: 'bundled', loadedAt: Date.now(), count: out.length })
+      if (!silent) setInfo(`已加载 ${out.length} 个可用电台`)
+    } else if (!silent) {
+      setInfo('没有可用电台')
+    }
+  } catch (_) {
+    if (!silent) setInfo('加载失败：无法读取可用电台列表')
+  } finally {
+    state.availableLoading = false
     refreshList()
   }
 }
