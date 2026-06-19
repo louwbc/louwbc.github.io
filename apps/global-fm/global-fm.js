@@ -60,6 +60,9 @@ const state = {
   playContext: 'discover',
   podcastView: 'recommended',
   podcastSearching: false,
+  podcastExternalSearching: false,
+  podcastExternalResults: [],
+  podcastExternalKeyword: '',
   podcastFilterLang: '',
   podcastFilterKeyword: '',
   podcastFilterFrom: '',
@@ -412,6 +415,7 @@ function refreshList() {
   if (tab === 'recent') items = loadRecent()
   if (tab === 'podcasts') {
     if (state.podcastSelectedId) items = filterEpisodes(state.podcastEpisodes)
+    else if (state.podcastView === 'external') items = filterExternalPodcastResults(state.podcastExternalResults)
     else {
       const base = (state.podcastView === 'mine') ? loadPodcasts() : getRecommendedPodcasts()
       items = filterPodcastSources(base)
@@ -428,6 +432,8 @@ function refreshList() {
       frag.appendChild(renderPodcastsEmptyCard())
     } else if (state.podcastSelectedId) {
       for (const s of items) frag.appendChild(renderEpisodeItem(s))
+    } else if (state.podcastView === 'external') {
+      for (const s of items) frag.appendChild(renderExternalPodcastItem(s))
     } else {
       for (const s of items) frag.appendChild(renderPodcastItem(s, state.podcastView))
     }
@@ -476,7 +482,11 @@ function renderPodcastsEmptyCard() {
   const wrap = document.createElement('div')
   wrap.className = 'card card-pad'
   const title = document.createElement('div')
-  title.textContent = state.podcastSelectedId ? '没有可播放的剧集' : (state.podcastView === 'mine' ? '还没有播客源' : '没有推荐播客')
+  title.textContent = state.podcastSelectedId
+    ? '没有可播放的剧集'
+    : (state.podcastView === 'mine'
+      ? '还没有播客源'
+      : (state.podcastView === 'external' ? '没有外部搜索结果' : '没有推荐播客'))
   title.style.fontWeight = '700'
   const tip = document.createElement('div')
   tip.className = 'muted'
@@ -485,7 +495,9 @@ function renderPodcastsEmptyCard() {
     ? '这个播客源可能不支持跨域（CORS），或者没有可用音频链接。'
     : (state.podcastView === 'mine'
       ? '添加一个播客 RSS 地址后，就可以像电台一样连续收听剧集。'
-      : '暂无推荐。你可以切换到“我添加的”或自己添加一个播客 RSS。')
+      : (state.podcastView === 'external'
+        ? '输入关键词后点“搜索更多”，先找节目，再跳到外部页面继续收听。'
+        : '暂无推荐。你可以切换到“我添加的”或自己添加一个播客 RSS。'))
 
   wrap.append(title, tip)
   if (!state.podcastSelectedId) {
@@ -840,7 +852,20 @@ function renderPodcastsHeader() {
       setInfo('已显示我添加的播客')
     })
 
-    tabs.append(rec, mine)
+    const external = document.createElement('button')
+    external.className = 'btn tab'
+    external.textContent = '搜索更多'
+    external.setAttribute('role', 'tab')
+    external.classList.toggle('active', state.podcastView === 'external')
+    external.setAttribute('aria-selected', state.podcastView === 'external' ? 'true' : 'false')
+    external.tabIndex = state.podcastView === 'external' ? 0 : -1
+    external.addEventListener('click', () => {
+      state.podcastView = 'external'
+      refreshList()
+      setInfo(state.podcastExternalResults.length ? '已显示外部搜索结果' : '输入关键词后点“搜索更多”')
+    })
+
+    tabs.append(rec, mine, external)
     actions.append(tabs)
   }
 
@@ -953,7 +978,8 @@ function renderPodcastsHeader() {
   kw.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter') return
     e.preventDefault()
-    refreshList()
+    if (state.podcastView === 'external') searchExternalPodcasts()
+    else refreshList()
   })
 
   const searchBtn = document.createElement('button')
@@ -961,6 +987,12 @@ function renderPodcastsHeader() {
   searchBtn.textContent = state.podcastSearching ? '搜索中…' : '搜索可播放剧集'
   searchBtn.disabled = !!state.podcastSearching
   searchBtn.addEventListener('click', () => searchPodcastEpisodes())
+
+  const moreBtn = document.createElement('button')
+  moreBtn.className = 'btn'
+  moreBtn.textContent = state.podcastExternalSearching ? '外部搜索中…' : '搜索更多'
+  moreBtn.disabled = !!state.podcastExternalSearching
+  moreBtn.addEventListener('click', () => searchExternalPodcasts())
 
   const clearBtn = document.createElement('button')
   clearBtn.className = 'btn'
@@ -970,11 +1002,14 @@ function renderPodcastsHeader() {
     state.podcastFilterKeyword = ''
     state.podcastFilterFrom = ''
     state.podcastFilterTo = ''
+    state.podcastExternalResults = []
+    state.podcastExternalKeyword = ''
+    if (state.podcastView === 'external') state.podcastView = 'recommended'
     refreshList()
     setInfo('已清除筛选')
   })
 
-  row3.append(lang, from, to, kw, searchBtn, clearBtn)
+  row3.append(lang, from, to, kw, searchBtn, moreBtn, clearBtn)
   card.append(row, row2, rowRec, row3)
   return card
 }
@@ -1101,6 +1136,61 @@ function renderEpisodeItem(ep) {
   return card
 }
 
+function renderExternalPodcastItem(p) {
+  const card = document.createElement('div')
+  card.className = 'card card-pad'
+
+  const title = document.createElement('div')
+  title.className = 'item-title'
+  title.textContent = p.title || '未命名播客'
+
+  const sub = document.createElement('div')
+  sub.className = 'item-sub muted'
+  sub.textContent = [p.author, p.sourceLabel, p.genreLabel].filter(Boolean).join(' · ')
+
+  const desc = document.createElement('div')
+  desc.className = 'item-sub muted'
+  desc.style.marginTop = '8px'
+  desc.textContent = p.summary || '可跳转到外部页面继续收听'
+
+  const links = document.createElement('div')
+  links.className = 'row'
+  links.style.marginTop = '12px'
+  links.style.gap = '8px'
+  links.style.flexWrap = 'wrap'
+
+  const openBtn = document.createElement('button')
+  openBtn.className = 'btn primary'
+  openBtn.textContent = '打开外部页'
+  openBtn.addEventListener('click', () => openExternalUrl(p.openUrl))
+  links.append(openBtn)
+
+  if (p.feedUrl) {
+    const rssBtn = document.createElement('button')
+    rssBtn.className = 'btn'
+    rssBtn.textContent = '查看 RSS'
+    rssBtn.addEventListener('click', () => openExternalUrl(p.feedUrl))
+    links.append(rssBtn)
+
+    const addBtn = document.createElement('button')
+    addBtn.className = 'btn'
+    addBtn.textContent = '添加到我添加的'
+    addBtn.addEventListener('click', async () => {
+      await addPodcast(p.feedUrl, p.title, false, p.language)
+    })
+    links.append(addBtn)
+  }
+
+  const webBtn = document.createElement('button')
+  webBtn.className = 'btn'
+  webBtn.textContent = '网页搜索'
+  webBtn.addEventListener('click', () => openExternalUrl(p.webSearchUrl))
+  links.append(webBtn)
+
+  card.append(title, sub, desc, links)
+  return card
+}
+
 function playEpisode(ep, context) {
   const url = ep?.audioUrl
   if (!url) return
@@ -1144,7 +1234,7 @@ function getPodcastSourceById(id) {
 
 function availablePodcastLanguages() {
   const set = new Set()
-  const all = [...getRecommendedPodcasts(), ...loadPodcasts()]
+  const all = [...getRecommendedPodcasts(), ...loadPodcasts(), ...state.podcastExternalResults]
   for (const p of all) {
     const v = String(p?.language || '').trim().toLowerCase()
     if (v) set.add(v)
@@ -1196,6 +1286,116 @@ function filterEpisodes(list) {
     out.push(ep)
   }
   return out
+}
+
+function filterExternalPodcastResults(list) {
+  const kw = String(state.podcastFilterKeyword || '').trim().toLowerCase()
+  const lang = String(state.podcastFilterLang || '').trim().toLowerCase()
+  const out = []
+  for (const p of (list || [])) {
+    const pLang = String(p?.language || '').trim().toLowerCase() || 'unknown'
+    if (lang && pLang !== lang) continue
+    if (kw) {
+      const hay = `${p?.title || ''} ${p?.author || ''} ${p?.summary || ''}`.toLowerCase()
+      if (!hay.includes(kw)) continue
+    }
+    out.push(p)
+  }
+  return out
+}
+
+async function searchExternalPodcasts() {
+  if (state.podcastExternalSearching) return
+  const kw = String(state.podcastFilterKeyword || '').trim()
+  if (!kw) {
+    state.podcastView = 'external'
+    state.podcastExternalResults = []
+    refreshList()
+    setInfo('先输入关键词，再点“搜索更多”')
+    return
+  }
+
+  state.podcastExternalSearching = true
+  state.podcastView = 'external'
+  refreshList()
+  try {
+    setInfo('外部搜索中…')
+    const url = `https://itunes.apple.com/search?media=podcast&entity=podcast&limit=24&term=${encodeURIComponent(kw)}`
+    const res = await fetch(url)
+    if (!res.ok) throw new Error('search')
+    const json = await res.json()
+    const results = Array.isArray(json?.results) ? json.results : []
+    state.podcastExternalKeyword = kw
+    state.podcastExternalResults = results.map(normalizeExternalPodcast).filter(Boolean)
+    refreshList()
+    setInfo(state.podcastExternalResults.length
+      ? `已找到 ${state.podcastExternalResults.length} 个外部播客，可跳转继续收听`
+      : '没有找到外部播客结果')
+  } catch (_) {
+    state.podcastExternalResults = []
+    refreshList()
+    setInfo('外部搜索失败，请稍后重试')
+  } finally {
+    state.podcastExternalSearching = false
+    refreshList()
+  }
+}
+
+function normalizeExternalPodcast(item) {
+  const title = String(item?.collectionName || item?.trackName || '').trim()
+  const openUrl = normalizeUrl(item?.collectionViewUrl || item?.trackViewUrl || item?.artistViewUrl || '')
+  const feedUrl = normalizeUrl(item?.feedUrl || '')
+  const fallbackQuery = title || String(item?.artistName || '').trim()
+  if (!title && !openUrl && !feedUrl && !fallbackQuery) return null
+
+  const genres = Array.isArray(item?.genres) ? item.genres.filter(Boolean).slice(0, 3) : []
+  const language = mapExternalPodcastLanguage(item)
+  const summary = stripHtml(item?.description || item?.artistName || '')
+  const searchQuery = fallbackQuery || String(state.podcastFilterKeyword || '').trim()
+  return {
+    id: String(item?.collectionId || item?.trackId || openUrl || feedUrl || title),
+    title: title || fallbackQuery || '未命名播客',
+    author: String(item?.artistName || '').trim(),
+    summary,
+    sourceLabel: 'Apple Podcasts',
+    genreLabel: genres.join(' / '),
+    language,
+    openUrl: openUrl || feedUrl || buildWebSearchUrl(searchQuery),
+    feedUrl,
+    webSearchUrl: buildWebSearchUrl(searchQuery)
+  }
+}
+
+function mapExternalPodcastLanguage(item) {
+  const values = [
+    item?.language,
+    item?.country,
+    Array.isArray(item?.genres) ? item.genres.join(' ') : ''
+  ]
+  const text = values.filter(Boolean).join(' ').toLowerCase()
+  if (!text) return ''
+  if (text.includes('chinese') || text.includes('mandarin') || text.includes('cn') || text.includes('zh')) return 'chinese'
+  if (text.includes('japanese') || text.includes('jp') || text.includes('ja')) return 'japanese'
+  if (text.includes('korean') || text.includes('kr') || text.includes('ko')) return 'korean'
+  if (text.includes('french') || text.includes('fr')) return 'french'
+  if (text.includes('german') || text.includes('de')) return 'german'
+  if (text.includes('spanish') || text.includes('es')) return 'spanish'
+  if (text.includes('portuguese') || text.includes('pt')) return 'portuguese'
+  if (text.includes('italian') || text.includes('it')) return 'italian'
+  if (text.includes('russian') || text.includes('ru')) return 'russian'
+  if (text.includes('arabic') || text.includes('ar')) return 'arabic'
+  return 'english'
+}
+
+function buildWebSearchUrl(query) {
+  const q = String(query || '').trim()
+  return `https://www.google.com/search?q=${encodeURIComponent(`${q} podcast`)}`
+}
+
+function openExternalUrl(url) {
+  const href = normalizeUrl(url)
+  if (!href) return
+  window.open(href, '_blank', 'noopener,noreferrer')
 }
 
 async function searchPodcastEpisodes() {
