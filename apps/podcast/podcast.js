@@ -1122,6 +1122,7 @@ function mapExternalPodcastLanguage(item) {
 function podcastExternalCountryOptions() {
   return [
     { value: 'in', label: '印度（英语优先）' },
+    { value: 'sg', label: '新加坡（英语优先）' },
     { value: 'us', label: '美国' },
     { value: 'gb', label: '英国' },
     { value: 'au', label: '澳大利亚' },
@@ -1132,10 +1133,13 @@ function podcastExternalCountryOptions() {
 function resolveExternalSearchCountries(keyword, selected) {
   const manual = String(selected || '').trim().toLowerCase()
   if (manual === 'in') return ['in', 'us', 'gb', 'ca']
+  if (manual === 'sg') return ['sg', 'us', 'gb', 'au']
   if (manual) return [manual]
   const kw = String(keyword || '').trim().toLowerCase()
   const indianHints = ['india', 'indian', 'hindi', 'tamil', 'telugu', 'malayalam', 'kannada', 'marathi', 'bengali', 'punjabi', 'bollywood']
+  const singaporeHints = ['singapore', 'singaporean', 'sg', 'singlish']
   if (indianHints.some(x => kw.includes(x))) return ['in', 'us', 'gb']
+  if (singaporeHints.some(x => kw.includes(x))) return ['sg', 'us', 'gb']
   return ['us', 'in', 'gb']
 }
 
