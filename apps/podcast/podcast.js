@@ -796,14 +796,15 @@ async function searchExternalPodcasts() {
   try {
     setInfo('外部搜索中…')
     const countries = resolveExternalSearchCountries(kw, state.externalCountry)
+    const plans = buildExternalSearchPlans(kw)
     const all = []
-    for (const code of countries) {
-      const url = `https://itunes.apple.com/search?media=podcast&entity=podcast&limit=24&country=${encodeURIComponent(code)}&term=${encodeURIComponent(kw)}`
-      const res = await fetch(url)
-      if (!res.ok) continue
-      const json = await res.json()
-      const results = Array.isArray(json?.results) ? json.results : []
-      for (const item of results) all.push({ ...item, _searchCountry: code })
+    let matchedPlan = ''
+    for (const plan of plans) {
+      const batch = await fetchExternalPodcastBatch(plan.queries, countries)
+      if (!batch.length) continue
+      matchedPlan = plan.label
+      all.push(...batch)
+      break
     }
     state.externalKeyword = kw
     state.externalResults = sortExternalPodcasts(
@@ -814,7 +815,7 @@ async function searchExternalPodcasts() {
     )
     refreshList()
     setInfo(state.externalResults.length
-      ? `已找到 ${state.externalResults.length} 个外部播客，可跳转继续收听`
+      ? `已找到 ${state.externalResults.length} 个外部播客，可跳转继续收听${matchedPlan && matchedPlan !== '原词搜索' ? `（已自动放宽为${matchedPlan}）` : ''}`
       : '没有找到外部播客结果')
   } catch (_) {
     state.externalResults = []
@@ -824,6 +825,98 @@ async function searchExternalPodcasts() {
     state.externalSearching = false
     refreshList()
   }
+}
+
+async function fetchExternalPodcastBatch(queries, countries) {
+  const all = []
+  for (const query of (queries || [])) {
+    for (const code of (countries || [])) {
+      const url = `https://itunes.apple.com/search?media=podcast&entity=podcast&limit=24&country=${encodeURIComponent(code)}&term=${encodeURIComponent(query)}`
+      const res = await fetch(url)
+      if (!res.ok) continue
+      const json = await res.json()
+      const results = Array.isArray(json?.results) ? json.results : []
+      for (const item of results) {
+        all.push({ ...item, _searchCountry: code, _searchQuery: query })
+      }
+    }
+  }
+  return all
+}
+
+function buildExternalSearchPlans(keyword) {
+  const original = normalizeQuery(keyword)
+  const relaxed = buildRelaxedQueries(original)
+  const broad = buildBroadQueries(original)
+  const plans = [
+    { label: '原词搜索', queries: original ? [original] : [] },
+    { label: '近义词搜索', queries: relaxed },
+    { label: '宽松主题搜索', queries: broad }
+  ]
+  return plans.filter(plan => plan.queries.length)
+}
+
+function buildRelaxedQueries(keyword) {
+  const out = []
+  const q = normalizeQuery(keyword)
+  if (!q) return out
+
+  pushUnique(out, q.replace(/\bindian\b/g, 'india'))
+  pushUnique(out, q.replace(/\bindia\b/g, 'indian'))
+  pushUnique(out, q.replace(/\bstartup\b/g, 'entrepreneur'))
+  pushUnique(out, q.replace(/\bstartup\b/g, 'founder'))
+  pushUnique(out, q.replace(/\bstartup\b/g, 'business'))
+
+  if (q.includes('indian startup') || q.includes('india startup')) {
+    pushUnique(out, 'startup india')
+    pushUnique(out, 'india entrepreneur')
+    pushUnique(out, 'indian entrepreneur')
+    pushUnique(out, 'india business podcast')
+  }
+
+  return out.filter(item => item && item !== q).slice(0, 6)
+}
+
+function buildBroadQueries(keyword) {
+  const out = []
+  const q = normalizeQuery(keyword)
+  if (!q) return out
+
+  const tokens = tokenizeExternalKeyword(q)
+  const topicTokens = tokens.filter(token => !isRegionLikeToken(token))
+  const regionTokens = tokens.filter(token => isRegionLikeToken(token))
+
+  if (topicTokens.length) pushUnique(out, topicTokens.join(' '))
+  if (regionTokens.length && topicTokens.length) {
+    pushUnique(out, `${regionTokens.join(' ')} ${topicTokens[0]}`)
+    pushUnique(out, `${topicTokens[0]} ${regionTokens.join(' ')}`)
+  }
+
+  if (tokens.includes('startup')) {
+    pushUnique(out, 'startup podcast')
+    pushUnique(out, 'founder podcast')
+    pushUnique(out, 'entrepreneur podcast')
+  }
+
+  return out.filter(item => item && item !== q).slice(0, 6)
+}
+
+function normalizeQuery(value) {
+  return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ')
+}
+
+function isRegionLikeToken(token) {
+  return [
+    'india', 'indian', 'singapore', 'singaporean', 'philippines', 'philippine',
+    'filipino', 'malaysia', 'malaysian', 'hong', 'kong', 'uae', 'dubai',
+    'abu', 'dhabi', 'emirates', 'emirati', 'manila'
+  ].includes(String(token || '').trim().toLowerCase())
+}
+
+function pushUnique(list, value) {
+  const v = normalizeQuery(value)
+  if (!v) return
+  if (!list.includes(v)) list.push(v)
 }
 
 async function searchPodcastEpisodes() {
