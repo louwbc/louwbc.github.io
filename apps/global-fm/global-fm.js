@@ -13,7 +13,6 @@ const ui = {
   tabDiscover: $('#tabDiscover'),
   tabFav: $('#tabFav'),
   tabRecent: $('#tabRecent'),
-  tabPodcasts: $('#tabPodcasts'),
   exportFavBtn: $('#exportFavBtn'),
   importFavBtn: $('#importFavBtn'),
   importFavFile: $('#importFavFile'),
@@ -75,7 +74,7 @@ const state = {
   apiBase: 'https://de1.api.radio-browser.info/json'
 }
 
-const TAB_BTNS = [ui.tabFav, ui.tabDiscover, ui.tabRecent, ui.tabPodcasts]
+const TAB_BTNS = [ui.tabFav, ui.tabDiscover, ui.tabRecent]
 
 init()
 
