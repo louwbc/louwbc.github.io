@@ -1471,5 +1471,705 @@
     "feedUrl": "https://anchor.fm/s/2ef688c/podcast/rss",
     "language": "english",
     "category": "心理与成长"
+  },
+  {
+    "id": "https://feeds.simplecast.com/Sl5CSM3S",
+    "title": "The Daily",
+    "feedUrl": "https://feeds.simplecast.com/Sl5CSM3S",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://feeds.npr.org/510318/podcast.xml",
+    "title": "Up First from NPR",
+    "feedUrl": "https://feeds.npr.org/510318/podcast.xml",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://rss.pdrl.fm/3f8a3d/feeds.megaphone.fm/BVDWV8747925072",
+    "title": "Morning Wire",
+    "feedUrl": "https://rss.pdrl.fm/3f8a3d/feeds.megaphone.fm/BVDWV8747925072",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://feeds.npr.org/500005/podcast.xml",
+    "title": "NPR News Now",
+    "feedUrl": "https://feeds.npr.org/500005/podcast.xml",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/FOXM2252206613",
+    "title": "Fox News Hourly Update",
+    "feedUrl": "https://feeds.megaphone.fm/FOXM2252206613",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://feeds.simplecast.com/ydACIPHO",
+    "title": "The Headlines",
+    "feedUrl": "https://feeds.simplecast.com/ydACIPHO",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://audio.beyondwords.io/f/11873/36690/read_31866ab3bec137a8aab47eeaaf82c112",
+    "title": "The Daily Brief",
+    "feedUrl": "https://audio.beyondwords.io/f/11873/36690/read_31866ab3bec137a8aab47eeaaf82c112",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://video-api.wsj.com/podcast/rss/wsj/whats-news",
+    "title": "WSJ What’s News",
+    "feedUrl": "https://video-api.wsj.com/podcast/rss/wsj/whats-news",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://anchor.fm/s/a3d99330/podcast/rss",
+    "title": "Caritas News On the Go",
+    "feedUrl": "https://anchor.fm/s/a3d99330/podcast/rss",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://anchor.fm/s/f259bd8c/podcast/rss",
+    "title": "World News Headlines",
+    "feedUrl": "https://anchor.fm/s/f259bd8c/podcast/rss",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://www.omnycontent.com/d/playlist/4809bc8a-e41a-405c-93da-a8cf011df2f4/252e708a-67da-4e4a-b25a-ab9700e6b024/1c2cd0cf-021c-4e91-b3f3-ab9700e96f8a/podcast.rss",
+    "title": "CTV National News",
+    "feedUrl": "https://www.omnycontent.com/d/playlist/4809bc8a-e41a-405c-93da-a8cf011df2f4/252e708a-67da-4e4a-b25a-ab9700e6b024/1c2cd0cf-021c-4e91-b3f3-ab9700e96f8a/podcast.rss",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://feeds.libsyn.com/498233/rss",
+    "title": "CP Newswatch: Canada's Top Stories",
+    "feedUrl": "https://feeds.libsyn.com/498233/rss",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://www.cbc.ca/podcasting/includes/thehouse.xml",
+    "title": "The House",
+    "feedUrl": "https://www.cbc.ca/podcasting/includes/thehouse.xml",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://feeds.captivate.fm/electoral-dysfunction/",
+    "title": "Electoral Dysfunction",
+    "feedUrl": "https://feeds.captivate.fm/electoral-dysfunction/",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/PMO6148729915",
+    "title": "Oh God, What Now?",
+    "feedUrl": "https://feeds.megaphone.fm/PMO6148729915",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://feeds.captivate.fm/politics-at-sam-and-anne/",
+    "title": "Politics At Sam and Anne's",
+    "feedUrl": "https://feeds.captivate.fm/politics-at-sam-and-anne/",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://www.omnycontent.com/d/playlist/2fb3740d-3436-44af-8cc0-a91900716aa5/0843191f-eb47-4690-816b-ac2a005249ec/b4b95086-3d6c-4c73-b427-ac2a005249ee/podcast.rss",
+    "title": "Outsiders",
+    "feedUrl": "https://www.omnycontent.com/d/playlist/2fb3740d-3436-44af-8cc0-a91900716aa5/0843191f-eb47-4690-816b-ac2a005249ec/b4b95086-3d6c-4c73-b427-ac2a005249ee/podcast.rss",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://anchor.fm/s/695134c0/podcast/rss",
+    "title": "Esports Africa News Podcast",
+    "feedUrl": "https://anchor.fm/s/695134c0/podcast/rss",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://feed.podbean.com/thenationalnewstrendingmiddleeast/feed.xml",
+    "title": "Trending Middle East",
+    "feedUrl": "https://feed.podbean.com/thenationalnewstrendingmiddleeast/feed.xml",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://feed.pod.co/bravedynamics",
+    "title": "BRAVE Southeast Asia Tech: Singapore, Indonesia, Vietnam, Philippines, Thailand & Malaysia Startups, Founders & Venture Capit",
+    "feedUrl": "https://feed.pod.co/bravedynamics",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://www.omnycontent.com/d/playlist/4809bc8a-e41a-405c-93da-a8cf011df2f4/5128ac7d-9d5c-4540-806a-aaff012c4582/d0f065a7-01ef-44f4-9358-aaff012c4590/podcast.rss",
+    "title": "CTV Power Play with Vassy Kapelos Podcast",
+    "feedUrl": "https://www.omnycontent.com/d/playlist/4809bc8a-e41a-405c-93da-a8cf011df2f4/5128ac7d-9d5c-4540-806a-aaff012c4582/d0f065a7-01ef-44f4-9358-aaff012c4590/podcast.rss",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://www.cbc.ca/podcasting/includes/cbcpowerandpolitics.xml",
+    "title": "Power & Politics",
+    "feedUrl": "https://www.cbc.ca/podcasting/includes/cbcpowerandpolitics.xml",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://anchor.fm/s/22449dd8/podcast/rss",
+    "title": "Barely Adults Philippines",
+    "feedUrl": "https://anchor.fm/s/22449dd8/podcast/rss",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://anchor.fm/s/7f509d60/podcast/rss",
+    "title": "Friendlily Coach: Executive business English coaching & corporate editing for Middle East leaders",
+    "feedUrl": "https://anchor.fm/s/7f509d60/podcast/rss",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://feeds.npr.org/510355/podcast.xml",
+    "title": "Consider This from NPR",
+    "feedUrl": "https://feeds.npr.org/510355/podcast.xml",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://www.bbc.co.uk/programmes/p002vsnk/episodes/downloads.rss",
+    "title": "Newshour",
+    "feedUrl": "https://www.bbc.co.uk/programmes/p002vsnk/episodes/downloads.rss",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://www.cbc.ca/podcasting/includes/frontburner.xml",
+    "title": "Front Burner",
+    "feedUrl": "https://www.cbc.ca/podcasting/includes/frontburner.xml",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://www.cbc.ca/podcasting/includes/asithappens.xml",
+    "title": "As It Happens",
+    "feedUrl": "https://www.cbc.ca/podcasting/includes/asithappens.xml",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://www.cbc.ca/podcasting/includes/hourlynews.xml",
+    "title": "The World This Hour",
+    "feedUrl": "https://www.cbc.ca/podcasting/includes/hourlynews.xml",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://rss.art19.com/ihip-news",
+    "title": "IHIP News",
+    "feedUrl": "https://rss.art19.com/ihip-news",
+    "language": "english",
+    "category": "地区与全球观察"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/DEARMEDIALLC7892434789",
+    "title": "The Toast",
+    "feedUrl": "https://feeds.megaphone.fm/DEARMEDIALLC7892434789",
+    "language": "english",
+    "category": "访谈与观点"
+  },
+  {
+    "id": "https://rss.libsyn.com/shows/67940/destinations/278377.xml",
+    "title": "REAL AF with Andy Frisella",
+    "feedUrl": "https://rss.libsyn.com/shows/67940/destinations/278377.xml",
+    "language": "english",
+    "category": "访谈与观点"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/RSV1597324942",
+    "title": "The Tucker Carlson Show",
+    "feedUrl": "https://feeds.megaphone.fm/RSV1597324942",
+    "language": "english",
+    "category": "访谈与观点"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/candace",
+    "title": "Candace",
+    "feedUrl": "https://feeds.megaphone.fm/candace",
+    "language": "english",
+    "category": "访谈与观点"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/PDR2572281095",
+    "title": "The MeidasTouch Podcast",
+    "feedUrl": "https://feeds.megaphone.fm/PDR2572281095",
+    "language": "english",
+    "category": "访谈与观点"
+  },
+  {
+    "id": "https://audioboom.com/channels/5166624.rss",
+    "title": "Pod Save America",
+    "feedUrl": "https://audioboom.com/channels/5166624.rss",
+    "language": "english",
+    "category": "访谈与观点"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/WWO3519750118",
+    "title": "The Dan Bongino Show",
+    "feedUrl": "https://feeds.megaphone.fm/WWO3519750118",
+    "language": "english",
+    "category": "访谈与观点"
+  },
+  {
+    "id": "https://www.omnycontent.com/d/playlist/e73c998e-6e60-432f-8610-ae210140c5b1/e1bf9c31-b143-4cab-9326-b435011facc4/207c15f2-8abc-4ee3-af74-b435011fb18c/podcast.rss",
+    "title": "Hey Jonas!",
+    "feedUrl": "https://www.omnycontent.com/d/playlist/e73c998e-6e60-432f-8610-ae210140c5b1/e1bf9c31-b143-4cab-9326-b435011facc4/207c15f2-8abc-4ee3-af74-b435011fb18c/podcast.rss",
+    "language": "english",
+    "category": "访谈与观点"
+  },
+  {
+    "id": "https://feeds.acast.com/public/shows/6958077f1002b08bc8529c23",
+    "title": "Watch What Crappens",
+    "feedUrl": "https://feeds.acast.com/public/shows/6958077f1002b08bc8529c23",
+    "language": "english",
+    "category": "访谈与观点"
+  },
+  {
+    "id": "https://rss.pdrl.fm/7f1e15/audioboom.com/channels/5157535.rss",
+    "title": "The Lincoln Project",
+    "feedUrl": "https://rss.pdrl.fm/7f1e15/audioboom.com/channels/5157535.rss",
+    "language": "english",
+    "category": "访谈与观点"
+  },
+  {
+    "id": "https://audioboom.com/channels/5149464.rss",
+    "title": "Bulwark Takes",
+    "feedUrl": "https://audioboom.com/channels/5149464.rss",
+    "language": "english",
+    "category": "访谈与观点"
+  },
+  {
+    "id": "https://feeds.cohostpodcasting.com/LbbpgNEq",
+    "title": "Voices of Leadership | Leadership Stories | Women Leadership | Female Founders",
+    "feedUrl": "https://feeds.cohostpodcasting.com/LbbpgNEq",
+    "language": "english",
+    "category": "访谈与观点"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/lewisblack",
+    "title": "Lewis Black's Rantcast",
+    "feedUrl": "https://feeds.megaphone.fm/lewisblack",
+    "language": "english",
+    "category": "访谈与观点"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/nickyandmoose",
+    "title": "Nicky And Moose",
+    "feedUrl": "https://feeds.megaphone.fm/nickyandmoose",
+    "language": "english",
+    "category": "访谈与观点"
+  },
+  {
+    "id": "https://podcastfeeds.nbcnews.com/HL4TzgYC",
+    "title": "Dateline NBC",
+    "feedUrl": "https://podcastfeeds.nbcnews.com/HL4TzgYC",
+    "language": "english",
+    "category": "故事与调查"
+  },
+  {
+    "id": "https://feeds.simplecast.com/qm_9xx0g",
+    "title": "Crime Junkie",
+    "feedUrl": "https://feeds.simplecast.com/qm_9xx0g",
+    "language": "english",
+    "category": "故事与调查"
+  },
+  {
+    "id": "https://www.omnycontent.com/d/playlist/e73c998e-6e60-432f-8610-ae210140c5b1/20968bfe-1a62-450f-a762-b3de0110281c/1c0ae3b2-ec1e-4a0c-a144-b3de01102fb1/podcast.rss",
+    "title": "Love Trapped",
+    "feedUrl": "https://www.omnycontent.com/d/playlist/e73c998e-6e60-432f-8610-ae210140c5b1/20968bfe-1a62-450f-a762-b3de0110281c/1c0ae3b2-ec1e-4a0c-a144-b3de01102fb1/podcast.rss",
+    "language": "english",
+    "category": "故事与调查"
+  },
+  {
+    "id": "https://feeds.simplecast.com/ohmVlJZQ",
+    "title": "Morbid",
+    "feedUrl": "https://feeds.simplecast.com/ohmVlJZQ",
+    "language": "english",
+    "category": "故事与调查"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/CBS8186808081",
+    "title": "48 Hours",
+    "feedUrl": "https://feeds.megaphone.fm/CBS8186808081",
+    "language": "english",
+    "category": "故事与调查"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/ESP3456903052",
+    "title": "20/20",
+    "feedUrl": "https://feeds.megaphone.fm/ESP3456903052",
+    "language": "english",
+    "category": "故事与调查"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/ESP3700629806",
+    "title": "Blood and Water",
+    "feedUrl": "https://feeds.megaphone.fm/ESP3700629806",
+    "language": "english",
+    "category": "故事与调查"
+  },
+  {
+    "id": "https://audioboom.com/channels/5100770.rss",
+    "title": "Serialously with Annie Elise",
+    "feedUrl": "https://audioboom.com/channels/5100770.rss",
+    "language": "english",
+    "category": "故事与调查"
+  },
+  {
+    "id": "https://feeds.simplecast.com/P2FwqleH",
+    "title": "Inconceivable Truth",
+    "feedUrl": "https://feeds.simplecast.com/P2FwqleH",
+    "language": "english",
+    "category": "故事与调查"
+  },
+  {
+    "id": "https://wtspod.com/feed.xml",
+    "title": "What's the Story? Podcast",
+    "feedUrl": "https://wtspod.com/feed.xml",
+    "language": "english",
+    "category": "故事与调查"
+  },
+  {
+    "id": "https://feeds.acast.com/public/shows/67585b08102e6d4448d360b1",
+    "title": "TED Health",
+    "feedUrl": "https://feeds.acast.com/public/shows/67585b08102e6d4448d360b1",
+    "language": "english",
+    "category": "科学与自然"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/deliciouslyellapodcast",
+    "title": "The Wellness Scoop",
+    "feedUrl": "https://feeds.megaphone.fm/deliciouslyellapodcast",
+    "language": "english",
+    "category": "科学与自然"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/SSM3257074871",
+    "title": "Pursuit of Wellness",
+    "feedUrl": "https://feeds.megaphone.fm/SSM3257074871",
+    "language": "english",
+    "category": "科学与自然"
+  },
+  {
+    "id": "https://feeds.simplecast.com/lfKHYddi",
+    "title": "Climate Forward Podcast",
+    "feedUrl": "https://feeds.simplecast.com/lfKHYddi",
+    "language": "english",
+    "category": "科学与自然"
+  },
+  {
+    "id": "https://rss.libsyn.com/shows/191481/destinations/1344981.xml",
+    "title": "The Climate Pod",
+    "feedUrl": "https://rss.libsyn.com/shows/191481/destinations/1344981.xml",
+    "language": "english",
+    "category": "科学与自然"
+  },
+  {
+    "id": "https://feeds.simplecast.com/w5_4mil2",
+    "title": "Ask MIT Climate",
+    "feedUrl": "https://feeds.simplecast.com/w5_4mil2",
+    "language": "english",
+    "category": "科学与自然"
+  },
+  {
+    "id": "https://rss.buzzsprout.com/1534030.rss",
+    "title": "Environmental Professionals Radio (EPR)",
+    "feedUrl": "https://rss.buzzsprout.com/1534030.rss",
+    "language": "english",
+    "category": "科学与自然"
+  },
+  {
+    "id": "https://feeds.buzzsprout.com/2115813.rss",
+    "title": "Medical Discovery News",
+    "feedUrl": "https://feeds.buzzsprout.com/2115813.rss",
+    "language": "english",
+    "category": "科学与自然"
+  },
+  {
+    "id": "https://feeds.libsyn.com/251651/rss",
+    "title": "Public Health On Call",
+    "feedUrl": "https://feeds.libsyn.com/251651/rss",
+    "language": "english",
+    "category": "科学与自然"
+  },
+  {
+    "id": "https://www.bwfund.org/feed/podcast/focus-in-sound/",
+    "title": "Focus In Sound",
+    "feedUrl": "https://www.bwfund.org/feed/podcast/focus-in-sound/",
+    "language": "english",
+    "category": "科学与自然"
+  },
+  {
+    "id": "https://anchor.fm/s/db1a9380/podcast/rss",
+    "title": "Rich Habits Podcast",
+    "feedUrl": "https://anchor.fm/s/db1a9380/podcast/rss",
+    "language": "english",
+    "category": "商业与财经"
+  },
+  {
+    "id": "https://anchor.fm/s/8c1524bc/podcast/rss",
+    "title": "Y Combinator Startup Podcast",
+    "feedUrl": "https://anchor.fm/s/8c1524bc/podcast/rss",
+    "language": "english",
+    "category": "商业与财经"
+  },
+  {
+    "id": "https://feeds.simplecast.com/G0yLKQmm",
+    "title": "Idea to Startup",
+    "feedUrl": "https://feeds.simplecast.com/G0yLKQmm",
+    "language": "english",
+    "category": "商业与财经"
+  },
+  {
+    "id": "https://rss.podscribe.ai/p/https://anchor.fm/s/7c624c84/podcast/rss",
+    "title": "This Week in Startups",
+    "feedUrl": "https://rss.podscribe.ai/p/https://anchor.fm/s/7c624c84/podcast/rss",
+    "language": "english",
+    "category": "商业与财经"
+  },
+  {
+    "id": "https://feeds.simplecast.com/crLWzuvK",
+    "title": "The Entrepreneur DNA",
+    "feedUrl": "https://feeds.simplecast.com/crLWzuvK",
+    "language": "english",
+    "category": "商业与财经"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/ARML7476034123",
+    "title": "Launch Your Business",
+    "feedUrl": "https://feeds.megaphone.fm/ARML7476034123",
+    "language": "english",
+    "category": "商业与财经"
+  },
+  {
+    "id": "https://cdn.mises.org/itunes/en_291.xml",
+    "title": "Economics 101",
+    "feedUrl": "https://cdn.mises.org/itunes/en_291.xml",
+    "language": "english",
+    "category": "商业与财经"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/ADV4246219991",
+    "title": "The Investing for Beginners Podcast - Your Path to Financial Freedom",
+    "feedUrl": "https://feeds.megaphone.fm/ADV4246219991",
+    "language": "english",
+    "category": "商业与财经"
+  },
+  {
+    "id": "https://anchor.fm/s/4848d648/podcast/rss",
+    "title": "AI LITERACY - A Podcast about Artificial Intelligence",
+    "feedUrl": "https://anchor.fm/s/4848d648/podcast/rss",
+    "language": "english",
+    "category": "科技与产品"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/marketingai",
+    "title": "The Artificial Intelligence Show",
+    "feedUrl": "https://feeds.megaphone.fm/marketingai",
+    "language": "english",
+    "category": "科技与产品"
+  },
+  {
+    "id": "https://anchor.fm/s/45837198/podcast/rss",
+    "title": "Cybersecurity Basics",
+    "feedUrl": "https://anchor.fm/s/45837198/podcast/rss",
+    "language": "english",
+    "category": "科技与产品"
+  },
+  {
+    "id": "https://anchor.fm/s/50d9d294/podcast/rss",
+    "title": "Marketing Happy Hour",
+    "feedUrl": "https://anchor.fm/s/50d9d294/podcast/rss",
+    "language": "english",
+    "category": "科技与产品"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/ESHO5419936864",
+    "title": "Marketing School - Digital Marketing and Online Marketing Tips",
+    "feedUrl": "https://feeds.megaphone.fm/ESHO5419936864",
+    "language": "english",
+    "category": "科技与产品"
+  },
+  {
+    "id": "https://www.nasa.gov/rss/dyn/Rocket-Ranch.rss",
+    "title": "The Rocket Ranch",
+    "feedUrl": "https://www.nasa.gov/rss/dyn/Rocket-Ranch.rss",
+    "language": "english",
+    "category": "科技与产品"
+  },
+  {
+    "id": "https://rss.buzzsprout.com/2554514.rss",
+    "title": "I'll Read What She's Reading",
+    "feedUrl": "https://rss.buzzsprout.com/2554514.rss",
+    "language": "english",
+    "category": "文化与语言"
+  },
+  {
+    "id": "https://feeds.redcircle.com/389f1077-b933-4dc4-bf1a-238417adcd45",
+    "title": "Great Audiobooks",
+    "feedUrl": "https://feeds.redcircle.com/389f1077-b933-4dc4-bf1a-238417adcd45",
+    "language": "english",
+    "category": "文化与语言"
+  },
+  {
+    "id": "https://anchor.fm/s/882257e4/podcast/rss",
+    "title": "Spanish from Zero",
+    "feedUrl": "https://anchor.fm/s/882257e4/podcast/rss",
+    "language": "english",
+    "category": "文化与语言"
+  },
+  {
+    "id": "https://anchor.fm/s/51d84fcc/podcast/rss",
+    "title": "Chill Spanish Listening Practice",
+    "feedUrl": "https://anchor.fm/s/51d84fcc/podcast/rss",
+    "language": "english",
+    "category": "文化与语言"
+  },
+  {
+    "id": "https://downtobusinessenglish.com/rss.xml",
+    "title": "Down to Business English",
+    "feedUrl": "https://downtobusinessenglish.com/rss.xml",
+    "language": "english",
+    "category": "文化与语言"
+  },
+  {
+    "id": "https://feeds.acast.com/public/shows/69b7c0ad4266c9b1c7621f83",
+    "title": "German Stories - Learn German with Stories",
+    "feedUrl": "https://feeds.acast.com/public/shows/69b7c0ad4266c9b1c7621f83",
+    "language": "english",
+    "category": "文化与语言"
+  },
+  {
+    "id": "https://rss.libsyn.com/shows/46945/destinations/157023.xml",
+    "title": "The Cult of Pedagogy Podcast",
+    "feedUrl": "https://rss.libsyn.com/shows/46945/destinations/157023.xml",
+    "language": "english",
+    "category": "亲子与教育"
+  },
+  {
+    "id": "https://rss.buzzsprout.com/1890886.rss",
+    "title": "Schoolutions: Curious Educators. Evidence-Based Strategies. Classrooms Where Every Child Thrives.",
+    "feedUrl": "https://rss.buzzsprout.com/1890886.rss",
+    "language": "english",
+    "category": "亲子与教育"
+  },
+  {
+    "id": "https://anchor.fm/s/4ba681c8/podcast/rss",
+    "title": "Brain-Based Learning, Teaching and Education",
+    "feedUrl": "https://anchor.fm/s/4ba681c8/podcast/rss",
+    "language": "english",
+    "category": "亲子与教育"
+  },
+  {
+    "id": "https://rss.buzzsprout.com/2463058.rss",
+    "title": "Psychology at Work | Career Success, Leadership, Communication Skills",
+    "feedUrl": "https://rss.buzzsprout.com/2463058.rss",
+    "language": "english",
+    "category": "心理与成长"
+  },
+  {
+    "id": "https://rss.buzzsprout.com/861409.rss",
+    "title": "Parentline NI - Your Guide to Parenting",
+    "feedUrl": "https://rss.buzzsprout.com/861409.rss",
+    "language": "english",
+    "category": "亲子与教育"
+  },
+  {
+    "id": "https://anchor.fm/s/f1460784/podcast/rss",
+    "title": "Real Human Design Stories",
+    "feedUrl": "https://anchor.fm/s/f1460784/podcast/rss",
+    "language": "english",
+    "category": "设计与创意"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/REC1768830757",
+    "title": "6 Figure Creative",
+    "feedUrl": "https://feeds.megaphone.fm/REC1768830757",
+    "language": "english",
+    "category": "设计与创意"
+  },
+  {
+    "id": "https://feeds.buzzsprout.com/539050.rss",
+    "title": "The Crazy One",
+    "feedUrl": "https://feeds.buzzsprout.com/539050.rss",
+    "language": "english",
+    "category": "设计与创意"
+  },
+  {
+    "id": "https://podforcreatives.libsyn.com/rss",
+    "title": "A Podcast for Creatives",
+    "feedUrl": "https://podforcreatives.libsyn.com/rss",
+    "language": "english",
+    "category": "设计与创意"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/COMG4264321676",
+    "title": "The West London Sport QPR Podcast",
+    "feedUrl": "https://feeds.megaphone.fm/COMG4264321676",
+    "language": "english",
+    "category": "体育"
+  },
+  {
+    "id": "https://feeds.castos.com/v7g0",
+    "title": "The Roaring Peacock: Leeds United Podcast",
+    "feedUrl": "https://feeds.castos.com/v7g0",
+    "language": "english",
+    "category": "体育"
+  },
+  {
+    "id": "https://anchor.fm/s/12ce9ef8/podcast/rss",
+    "title": "cricket analysis",
+    "feedUrl": "https://anchor.fm/s/12ce9ef8/podcast/rss",
+    "language": "english",
+    "category": "体育"
+  },
+  {
+    "id": "https://feeds.acast.com/public/shows/5f3ba7270747431056a5497d",
+    "title": "Where to Go",
+    "feedUrl": "https://feeds.acast.com/public/shows/5f3ba7270747431056a5497d",
+    "language": "english",
+    "category": "旅行与世界"
+  },
+  {
+    "id": "https://feeds.transistor.fm/wander_every_day",
+    "title": "Wander Every Day: Real Talk, Real Trips",
+    "feedUrl": "https://feeds.transistor.fm/wander_every_day",
+    "language": "english",
+    "category": "旅行与世界"
+  },
+  {
+    "id": "https://feed.podbean.com/adventuretravel/feed.xml",
+    "title": "The 10Adventures Podcast",
+    "feedUrl": "https://feed.podbean.com/adventuretravel/feed.xml",
+    "language": "english",
+    "category": "旅行与世界"
+  },
+  {
+    "id": "https://feeds.castos.com/3dwx2",
+    "title": "Riding the Big Wheel",
+    "feedUrl": "https://feeds.castos.com/3dwx2",
+    "language": "english",
+    "category": "旅行与世界"
   }
 ]

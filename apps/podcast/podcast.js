@@ -226,7 +226,7 @@ function renderHeader() {
   const loadBtn = document.createElement('button')
   loadBtn.className = 'btn'
   loadBtn.textContent = cacheMode === 'indie'
-    ? (state.indieLoading ? '加载中…' : '更新独立播客200')
+    ? (state.indieLoading ? '加载中…' : '更新独立播客300')
     : (state.recommendedLoading ? '加载中…' : '更新推荐')
   loadBtn.disabled = cacheMode === 'indie'
     ? !!state.indieLoading
@@ -246,10 +246,10 @@ function renderHeader() {
     ? loadIndieCache()
       : loadRecommendedCache()
   const cacheLabel = cacheMode === 'indie'
-    ? '当前独立播客200'
+    ? '当前独立播客300'
       : '当前推荐'
   const actionLabel = cacheMode === 'indie'
-    ? '更新独立播客200'
+    ? '更新独立播客300'
       : '更新推荐'
   const count = Number(meta?.count) || (cacheList?.length || 0)
   const date = Number.isFinite(meta?.loadedAt) ? fmtDate(meta.loadedAt) : ''
@@ -387,7 +387,7 @@ function renderViewTabs() {
 
   for (const item of [
     { value: 'recommended', label: '推荐', info: '已显示推荐播客' },
-    { value: 'indie', label: '独立播客200', info: '已显示 200 个海外知名独立播客，可按分类筛选' },
+    { value: 'indie', label: '独立播客300', info: '已显示 300 个海外知名独立播客，可按分类筛选' },
     { value: 'mine', label: '我添加的', info: '已显示我添加的播客' },
     { value: 'external', label: '搜索更多', info: state.externalResults.length ? '已显示外部搜索结果' : '输入关键词后点“搜索更多”' }
   ]) {
@@ -426,7 +426,7 @@ function renderEmptyCard() {
   tip.style.marginTop = '6px'
   if (state.selectedId) tip.textContent = '这个播客源可能不支持跨域（CORS），或者没有可用音频链接。'
   else if (state.view === 'mine') tip.textContent = '添加一个播客 RSS 地址后，就可以在这里连续收听剧集。'
-  else if (state.view === 'indie') tip.textContent = '这里会固定放 200 个海外知名独立播客，用户不用搜索，直接点选，也可以按分类筛选。'
+  else if (state.view === 'indie') tip.textContent = '这里会固定放 300 个海外知名独立播客，用户不用搜索，直接点选，也可以按分类筛选。'
   else if (state.view === 'external') tip.textContent = '输入关键词后点“搜索更多”，先找节目；如果还不够，下面还能继续扩展到搜索引擎和 RSS 搜索。'
   else tip.textContent = '暂无推荐。你可以切换到“我添加的”或自己添加一个播客 RSS。'
 
@@ -841,11 +841,11 @@ async function loadBundledIndie(silent) {
   state.indieLoading = true
   refreshList()
   try {
-    if (!silent) setInfo('加载独立播客200中…')
+    if (!silent) setInfo('加载独立播客300中…')
     const res = await fetch('./indie-podcasts.json', { cache: 'no-store' })
     if (!res.ok) throw new Error('indie')
     const parsed = await res.json()
-    const out = normalizeBundledPodcastList(parsed).slice(0, 200)
+    const out = normalizeBundledPodcastList(parsed).slice(0, 300)
     if (out.length) {
       saveIndieCache(out, { source: 'bundled', loadedAt: Date.now(), count: out.length })
       if (!silent) setInfo(`已加载 ${out.length} 个独立播客`)
