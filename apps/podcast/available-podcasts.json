@@ -1029,7 +1029,8 @@
     "id": "https://feeds.simplecast.com/BqbsxVfO",
     "title": "99% Invisible",
     "feedUrl": "https://feeds.simplecast.com/BqbsxVfO",
-    "language": "english"
+    "language": "english",
+    "author": "Roman Mars"
   },
   {
     "id": "https://feeds.simplecast.com/lfKHYddi",
@@ -2062,5 +2063,68 @@
     "title": "The Unmistakable Creative Podcast",
     "feedUrl": "https://feeds.acast.com/public/shows/the-unmistakable-creative-podcast",
     "language": "english"
+  },
+  {
+    "id": "https://cdn.atp.fm/rss/public?luzom3fz",
+    "title": "Accidental Tech Podcast",
+    "feedUrl": "https://cdn.atp.fm/rss/public?luzom3fz",
+    "language": "english",
+    "author": "Marco Arment, Casey Liss, John Siracusa"
+  },
+  {
+    "id": "https://daringfireball.net/thetalkshow/rss",
+    "title": "The Talk Show With John Gruber",
+    "feedUrl": "https://daringfireball.net/thetalkshow/rss",
+    "language": "english",
+    "author": "John Gruber"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/FSI1483080183",
+    "title": "Syntax",
+    "feedUrl": "https://feeds.megaphone.fm/FSI1483080183",
+    "language": "english",
+    "author": "Wes Bos, Scott Tolinski"
+  },
+  {
+    "id": "https://changelog.com/podcast/feed",
+    "title": "The Changelog: Software Development, Open Source",
+    "feedUrl": "https://changelog.com/podcast/feed",
+    "language": "english",
+    "author": "Adam Stacoviak, Jerod Santo"
+  },
+  {
+    "id": "https://lexfridman.com/feed/podcast/",
+    "title": "Lex Fridman Podcast",
+    "feedUrl": "https://lexfridman.com/feed/podcast/",
+    "language": "english",
+    "author": "Lex Fridman"
+  },
+  {
+    "id": "https://podcast.darknetdiaries.com/",
+    "title": "Darknet Diaries",
+    "feedUrl": "https://podcast.darknetdiaries.com/",
+    "language": "english",
+    "author": "Jack Rhysider"
+  },
+  {
+    "id": "https://shoptalkshow.com/feed/podcast/default-podcast/",
+    "title": "ShopTalk",
+    "feedUrl": "https://shoptalkshow.com/feed/podcast/default-podcast/",
+    "language": "english",
+    "author": "Chris Coyier, Dave Rupert"
+  },
+  {
+    "id": "https://songexploder.net/feed",
+    "title": "Song Exploder",
+    "feedUrl": "https://songexploder.net/feed",
+    "language": "english",
+    "author": "Hrishikesh Hirway"
+  },
+  {
+    "id": "https://feeds.noagendaassets.com/noagenda.xml",
+    "title": "No Agenda",
+    "feedUrl": "https://feeds.noagendaassets.com/noagenda.xml",
+    "language": "english",
+    "author": "Adam Curry, John C. Dvorak"
   }
 ]

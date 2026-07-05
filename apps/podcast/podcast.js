@@ -411,7 +411,7 @@ function renderPodcastItem(p) {
   title.textContent = p.title || '未命名播客'
   const sub = document.createElement('div')
   sub.className = 'item-sub muted'
-  sub.textContent = [p.language || '', p.feedUrl || ''].filter(Boolean).join(' · ')
+  sub.textContent = [p.author || '', p.language || '', p.feedUrl || ''].filter(Boolean).join(' · ')
   main.append(title, sub)
 
   const actions = document.createElement('div')
@@ -726,7 +726,8 @@ function normalizeBundledPodcastList(parsed) {
       id: feedUrl,
       title: String(item?.title || feedUrl),
       feedUrl,
-      language: String(item?.language || '')
+      language: String(item?.language || ''),
+      author: String(item?.author || '')
     })
   }
   return out
