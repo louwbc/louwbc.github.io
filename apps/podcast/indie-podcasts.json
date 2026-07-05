@@ -1,0 +1,675 @@
+[
+  {
+    "id": "https://feeds.megaphone.fm/GLT1412515089",
+    "title": "The Joe Rogan Experience",
+    "feedUrl": "https://feeds.megaphone.fm/GLT1412515089",
+    "language": "english",
+    "author": "Joe Rogan"
+  },
+  {
+    "id": "https://feeds.simplecast.com/hNaFxXpO",
+    "title": "SmartLess",
+    "feedUrl": "https://feeds.simplecast.com/hNaFxXpO",
+    "language": "english",
+    "author": "Jason Bateman, Sean Hayes, Will Arnett"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/thispastweekend",
+    "title": "This Past Weekend w/ Theo Von",
+    "feedUrl": "https://feeds.megaphone.fm/thispastweekend",
+    "language": "english",
+    "author": "Theo Von"
+  },
+  {
+    "id": "https://www.omnycontent.com/d/playlist/e73c998e-6e60-432f-8610-ae210140c5b1/bdde8bb3-169d-43b1-91d3-b24c0047969c/f450d41f-16bc-4ecd-8f6c-b24c004796e2/podcast.rss",
+    "title": "My Favorite Murder with Karen Kilgariff and Georgia Hardstark",
+    "feedUrl": "https://www.omnycontent.com/d/playlist/e73c998e-6e60-432f-8610-ae210140c5b1/bdde8bb3-169d-43b1-91d3-b24c0047969c/f450d41f-16bc-4ecd-8f6c-b24c004796e2/podcast.rss",
+    "language": "english",
+    "author": "Karen Kilgariff, Georgia Hardstark"
+  },
+  {
+    "id": "https://rss.art19.com/armchair-expert",
+    "title": "Armchair Expert with Dax Shepard",
+    "feedUrl": "https://rss.art19.com/armchair-expert",
+    "language": "english",
+    "author": "Dax Shepard"
+  },
+  {
+    "id": "https://feeds.simplecast.com/dHoohVNH",
+    "title": "Conan O’Brien Needs A Friend",
+    "feedUrl": "https://feeds.simplecast.com/dHoohVNH",
+    "language": "english",
+    "author": "Conan O’Brien"
+  },
+  {
+    "id": "https://rss2.flightcast.com/xmsftuzjjykcmqwolaqn6mdn",
+    "title": "The Diary Of A CEO with Steven Bartlett",
+    "feedUrl": "https://rss2.flightcast.com/xmsftuzjjykcmqwolaqn6mdn",
+    "language": "english",
+    "author": "Steven Bartlett"
+  },
+  {
+    "id": "https://feeds.simplecast.com/UCwaTX1J",
+    "title": "The Mel Robbins Podcast",
+    "feedUrl": "https://feeds.simplecast.com/UCwaTX1J",
+    "language": "english",
+    "author": "Mel Robbins"
+  },
+  {
+    "id": "https://feeds.simplecast.com/kEKXbjuJ",
+    "title": "The Ezra Klein Show",
+    "feedUrl": "https://feeds.simplecast.com/kEKXbjuJ",
+    "language": "english",
+    "author": "Ezra Klein"
+  },
+  {
+    "id": "https://rss.libsyn.com/shows/65162/destinations/259291.xml",
+    "title": "The Learning Leader Show With Ryan Hawk",
+    "feedUrl": "https://rss.libsyn.com/shows/65162/destinations/259291.xml",
+    "language": "english",
+    "author": "Ryan Hawk"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/YAP9756236278",
+    "title": "Habits and Hustle",
+    "feedUrl": "https://feeds.megaphone.fm/YAP9756236278",
+    "language": "english",
+    "author": "Jennifer Cohen"
+  },
+  {
+    "id": "https://www.spreaker.com/show/6958246/episodes/feed",
+    "title": "Passion Struck with John R. Miles",
+    "feedUrl": "https://www.spreaker.com/show/6958246/episodes/feed",
+    "language": "english",
+    "author": "John R. Miles"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/TPG1669083856",
+    "title": "Money Rehab with Nicole Lapin",
+    "feedUrl": "https://feeds.megaphone.fm/TPG1669083856",
+    "language": "english",
+    "author": "Nicole Lapin"
+  },
+  {
+    "id": "https://rss.libsyn.com/shows/128607/destinations/2422538.xml",
+    "title": "The Joe Budden Podcast",
+    "feedUrl": "https://rss.libsyn.com/shows/128607/destinations/2422538.xml",
+    "language": "english",
+    "author": "Joe Budden"
+  },
+  {
+    "id": "https://feeds.simplecast.com/mKn_QmLS",
+    "title": "Call Her Daddy",
+    "feedUrl": "https://feeds.simplecast.com/mKn_QmLS",
+    "language": "english",
+    "author": "Alex Cooper"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/LIFEISLOVELLC4342849321",
+    "title": "The Jamie Kern Lima Show",
+    "feedUrl": "https://feeds.megaphone.fm/LIFEISLOVELLC4342849321",
+    "language": "english",
+    "author": "Jamie Kern Lima"
+  },
+  {
+    "id": "https://rss.pdrl.fm/ac69ac/feeds.megaphone.fm/WWO7410387571",
+    "title": "The Shawn Ryan Show",
+    "feedUrl": "https://rss.pdrl.fm/ac69ac/feeds.megaphone.fm/WWO7410387571",
+    "language": "english",
+    "author": "Shawn Ryan"
+  },
+  {
+    "id": "https://feeds.simplecast.com/dloY8UYJ",
+    "title": "MrBallen Podcast: Strange, Dark & Mysterious Stories",
+    "feedUrl": "https://feeds.simplecast.com/dloY8UYJ",
+    "language": "english",
+    "author": "MrBallen"
+  },
+  {
+    "id": "https://rss.podscribe.ai/p/https://anchor.fm/s/7c624c84/podcast/rss",
+    "title": "This Week in Startups",
+    "feedUrl": "https://rss.podscribe.ai/p/https://anchor.fm/s/7c624c84/podcast/rss",
+    "language": "english",
+    "author": "Jason Calacanis"
+  },
+  {
+    "id": "https://api.substack.com/feed/podcast/10845.rss",
+    "title": "Lenny's Podcast: Product | Career | Growth",
+    "feedUrl": "https://api.substack.com/feed/podcast/10845.rss",
+    "language": "english",
+    "author": "Lenny Rachitsky"
+  },
+  {
+    "id": "https://rss.buzzsprout.com/1779875.rss",
+    "title": "The Product Manager",
+    "feedUrl": "https://rss.buzzsprout.com/1779875.rss",
+    "language": "english",
+    "author": "Hannah Clark"
+  },
+  {
+    "id": "https://anchor.fm/s/ff7e9014/podcast/rss",
+    "title": "Product Thinking",
+    "feedUrl": "https://anchor.fm/s/ff7e9014/podcast/rss",
+    "language": "english",
+    "author": "Melissa Perri"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/ESHO5419936864",
+    "title": "Marketing School - Digital Marketing and Online Marketing Tips",
+    "feedUrl": "https://feeds.megaphone.fm/ESHO5419936864",
+    "language": "english",
+    "author": "Neil Patel, Eric Siu"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/YAP4895144602",
+    "title": "The Goal Digger Podcast | Top Business and Marketing Podcast for Creatives, Entrepreneurs, and Women in Business",
+    "feedUrl": "https://feeds.megaphone.fm/YAP4895144602",
+    "language": "english",
+    "author": "Jenna Kutcher"
+  },
+  {
+    "id": "https://rss.buzzsprout.com/1931351.rss",
+    "title": "Badass Women in Business",
+    "feedUrl": "https://rss.buzzsprout.com/1931351.rss",
+    "language": "english"
+  },
+  {
+    "id": "https://anchor.fm/s/826d4a98/podcast/rss",
+    "title": "Women In Business Hub - Mindset and Money Glow Up!",
+    "feedUrl": "https://anchor.fm/s/826d4a98/podcast/rss",
+    "language": "english"
+  },
+  {
+    "id": "https://feeds.acast.com/public/shows/the-unmistakable-creative-podcast",
+    "title": "The Unmistakable Creative Podcast",
+    "feedUrl": "https://feeds.acast.com/public/shows/the-unmistakable-creative-podcast",
+    "language": "english",
+    "author": "Srinivas Rao"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/TPG2212080179",
+    "title": "Creative Pep Talk",
+    "feedUrl": "https://feeds.megaphone.fm/TPG2212080179",
+    "language": "english",
+    "author": "Andy J. Pizza"
+  },
+  {
+    "id": "https://feed.pod.co/creative-boom",
+    "title": "The Creative Boom Podcast",
+    "feedUrl": "https://feed.pod.co/creative-boom",
+    "language": "english",
+    "author": "Katy Cowan"
+  },
+  {
+    "id": "https://feeds.acast.com/public/shows/design-matters",
+    "title": "Design Matters with Debbie Millman",
+    "feedUrl": "https://feeds.acast.com/public/shows/design-matters",
+    "language": "english",
+    "author": "Debbie Millman"
+  },
+  {
+    "id": "https://feeds.captivate.fm/thefutur/",
+    "title": "The Futur with Chris Do",
+    "feedUrl": "https://feeds.captivate.fm/thefutur/",
+    "language": "english",
+    "author": "Chris Do"
+  },
+  {
+    "id": "https://feeds.redcircle.com/61351e12-cbc1-4a9e-8739-7ee7f5c37942",
+    "title": "Being Boss: Mindset, Habits, Tactics, and Lifestyle for Creative Entrepreneurs",
+    "feedUrl": "https://feeds.redcircle.com/61351e12-cbc1-4a9e-8739-7ee7f5c37942",
+    "language": "english",
+    "author": "Emily Thompson, Kathleen Shannon"
+  },
+  {
+    "id": "https://feeds.simplecast.com/HuZ8ZhD4",
+    "title": "Being Freelance",
+    "feedUrl": "https://feeds.simplecast.com/HuZ8ZhD4",
+    "language": "english",
+    "author": "Steve Folland"
+  },
+  {
+    "id": "https://podforcreatives.libsyn.com/rss",
+    "title": "A Podcast for Creatives",
+    "feedUrl": "https://podforcreatives.libsyn.com/rss",
+    "language": "english"
+  },
+  {
+    "id": "https://honestdesigners.libsyn.com/rss",
+    "title": "The Honest Designers Show",
+    "feedUrl": "https://honestdesigners.libsyn.com/rss",
+    "language": "english",
+    "author": "Tom Ross, Ian Barnard, Lisa Glanz"
+  },
+  {
+    "id": "https://feeds.simplecast.com/4MvgQ73R",
+    "title": "UI Breakfast: UI/UX Design and Product Strategy",
+    "feedUrl": "https://feeds.simplecast.com/4MvgQ73R",
+    "language": "english",
+    "author": "Jane Portman"
+  },
+  {
+    "id": "https://feeds.libsyn.com/73897/rss",
+    "title": "User Defenders – UX Design & Personal Growth",
+    "feedUrl": "https://feeds.libsyn.com/73897/rss",
+    "language": "english",
+    "author": "Jason Ogle"
+  },
+  {
+    "id": "https://feeds.transistor.fm/brand-design-masters-podcast",
+    "title": "Brand Design Masters - Personal Branding, Creative Entrepreneurship, Small Business Marketing & Career Success for Designers and Content Creators",
+    "feedUrl": "https://feeds.transistor.fm/brand-design-masters-podcast",
+    "language": "english",
+    "author": "Philip VanDusen"
+  },
+  {
+    "id": "https://feeds.buzzsprout.com/539050.rss",
+    "title": "The Crazy One",
+    "feedUrl": "https://feeds.buzzsprout.com/539050.rss",
+    "language": "english",
+    "author": "Stephen Gates"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/REC1768830757",
+    "title": "6 Figure Creative",
+    "feedUrl": "https://feeds.megaphone.fm/REC1768830757",
+    "language": "english"
+  },
+  {
+    "id": "https://hurryslowly.co/feed/podcast/",
+    "title": "Hurry Slowly",
+    "feedUrl": "https://hurryslowly.co/feed/podcast/",
+    "language": "english",
+    "author": "Jocelyn K. Glei"
+  },
+  {
+    "id": "https://feeds.captivate.fm/productivityist",
+    "title": "A Productive Conversation",
+    "feedUrl": "https://feeds.captivate.fm/productivityist",
+    "language": "english",
+    "author": "Mike Vardy"
+  },
+  {
+    "id": "https://cdn.atp.fm/rss/public?luzom3fz",
+    "title": "Accidental Tech Podcast",
+    "feedUrl": "https://cdn.atp.fm/rss/public?luzom3fz",
+    "language": "english",
+    "author": "Marco Arment, Casey Liss, John Siracusa"
+  },
+  {
+    "id": "https://daringfireball.net/thetalkshow/rss",
+    "title": "The Talk Show With John Gruber",
+    "feedUrl": "https://daringfireball.net/thetalkshow/rss",
+    "language": "english",
+    "author": "John Gruber"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/FSI1483080183",
+    "title": "Syntax",
+    "feedUrl": "https://feeds.megaphone.fm/FSI1483080183",
+    "language": "english",
+    "author": "Wes Bos, Scott Tolinski"
+  },
+  {
+    "id": "https://changelog.com/podcast/feed",
+    "title": "The Changelog: Software Development, Open Source",
+    "feedUrl": "https://changelog.com/podcast/feed",
+    "language": "english",
+    "author": "Adam Stacoviak, Jerod Santo"
+  },
+  {
+    "id": "https://lexfridman.com/feed/podcast/",
+    "title": "Lex Fridman Podcast",
+    "feedUrl": "https://lexfridman.com/feed/podcast/",
+    "language": "english",
+    "author": "Lex Fridman"
+  },
+  {
+    "id": "https://podcast.darknetdiaries.com/",
+    "title": "Darknet Diaries",
+    "feedUrl": "https://podcast.darknetdiaries.com/",
+    "language": "english",
+    "author": "Jack Rhysider"
+  },
+  {
+    "id": "https://shoptalkshow.com/feed/podcast/default-podcast/",
+    "title": "ShopTalk",
+    "feedUrl": "https://shoptalkshow.com/feed/podcast/default-podcast/",
+    "language": "english",
+    "author": "Chris Coyier, Dave Rupert"
+  },
+  {
+    "id": "https://songexploder.net/feed",
+    "title": "Song Exploder",
+    "feedUrl": "https://songexploder.net/feed",
+    "language": "english",
+    "author": "Hrishikesh Hirway"
+  },
+  {
+    "id": "https://feeds.noagendaassets.com/noagenda.xml",
+    "title": "No Agenda",
+    "feedUrl": "https://feeds.noagendaassets.com/noagenda.xml",
+    "language": "english",
+    "author": "Adam Curry, John C. Dvorak"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/GLT4787413333",
+    "title": "The Rest Is History",
+    "feedUrl": "https://feeds.megaphone.fm/GLT4787413333",
+    "language": "english",
+    "author": "Tom Holland, Dominic Sandbrook"
+  },
+  {
+    "id": "https://rss.amperwave.net/v2/feed/audacynetwork/e69da14a26973f1dc761432876205254",
+    "title": "History That Doesn't Suck",
+    "feedUrl": "https://rss.amperwave.net/v2/feed/audacynetwork/e69da14a26973f1dc761432876205254",
+    "language": "english",
+    "author": "Greg Jackson"
+  },
+  {
+    "id": "https://www.spreaker.com/show/3591729/episodes/feed",
+    "title": "The Fantastic History Of Food",
+    "feedUrl": "https://www.spreaker.com/show/3591729/episodes/feed",
+    "language": "english"
+  },
+  {
+    "id": "https://feeds.transistor.fm/royal-history-geeks",
+    "title": "Royal History Geeks",
+    "feedUrl": "https://feeds.transistor.fm/royal-history-geeks",
+    "language": "english"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/ARML4180090624",
+    "title": "For the Love of History - world history, women's history, weird history",
+    "feedUrl": "https://feeds.megaphone.fm/ARML4180090624",
+    "language": "english"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/reh",
+    "title": "Renaissance English History Podcast: A Show About the Tudors",
+    "feedUrl": "https://feeds.megaphone.fm/reh",
+    "language": "english",
+    "author": "Heather Teysko"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/QCD6036500916",
+    "title": "Philosophize This!",
+    "feedUrl": "https://feeds.megaphone.fm/QCD6036500916",
+    "language": "english",
+    "author": "Stephen West"
+  },
+  {
+    "id": "https://feed.podbean.com/TheDeeperThinkingPodcast/feed.xml",
+    "title": "The Deeper Thinking Podcast",
+    "feedUrl": "https://feed.podbean.com/TheDeeperThinkingPodcast/feed.xml",
+    "language": "english"
+  },
+  {
+    "id": "https://www.omnycontent.com/d/playlist/8e6d7e9c-00fb-4434-b699-b07a012cac5b/1c515561-6a90-4cfb-8f70-b07d0142b4bf/34077f42-ce99-472a-9884-b07d0149f32f/podcast.rss",
+    "title": "The Big Interview with Dan Rather",
+    "feedUrl": "https://www.omnycontent.com/d/playlist/8e6d7e9c-00fb-4434-b699-b07a012cac5b/1c515561-6a90-4cfb-8f70-b07d0142b4bf/34077f42-ce99-472a-9884-b07d0149f32f/podcast.rss",
+    "language": "english",
+    "author": "Dan Rather"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/fly-on-the-wall",
+    "title": "Fly on the Wall with Dana Carvey and David Spade",
+    "feedUrl": "https://feeds.megaphone.fm/fly-on-the-wall",
+    "language": "english",
+    "author": "Dana Carvey, David Spade"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/thereallygoodpodcast",
+    "title": "The Really Good Podcast with Bobbi Althoff",
+    "feedUrl": "https://feeds.megaphone.fm/thereallygoodpodcast",
+    "language": "english",
+    "author": "Bobbi Althoff"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/lewisblack",
+    "title": "Lewis Black's Rantcast",
+    "feedUrl": "https://feeds.megaphone.fm/lewisblack",
+    "language": "english",
+    "author": "Lewis Black"
+  },
+  {
+    "id": "https://feed.podbean.com/talkingcodswalloppod/feed.xml",
+    "title": "Talking Codswallop",
+    "feedUrl": "https://feed.podbean.com/talkingcodswalloppod/feed.xml",
+    "language": "english"
+  },
+  {
+    "id": "https://wtspod.com/feed.xml",
+    "title": "What's the Story? Podcast",
+    "feedUrl": "https://wtspod.com/feed.xml",
+    "language": "english"
+  },
+  {
+    "id": "http://www.ricksteves.com/rss/podcast",
+    "title": "Travel with Rick Steves",
+    "feedUrl": "http://www.ricksteves.com/rss/podcast",
+    "language": "english",
+    "author": "Rick Steves"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/SKIFT8999081027",
+    "title": "The Skift Travel Podcast",
+    "feedUrl": "https://feeds.megaphone.fm/SKIFT8999081027",
+    "language": "english"
+  },
+  {
+    "id": "https://feeds.transistor.fm/wander_every_day",
+    "title": "Wander Every Day: Real Talk, Real Trips",
+    "feedUrl": "https://feeds.transistor.fm/wander_every_day",
+    "language": "english"
+  },
+  {
+    "id": "https://anchor.fm/s/658f5f10/podcast/rss",
+    "title": "Travel Stories Untold",
+    "feedUrl": "https://anchor.fm/s/658f5f10/podcast/rss",
+    "language": "english"
+  },
+  {
+    "id": "https://feeds.captivate.fm/oneofftravelstories/",
+    "title": "One Off Travel Stories",
+    "feedUrl": "https://feeds.captivate.fm/oneofftravelstories/",
+    "language": "english"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/RRE8465566885",
+    "title": "Raising Good Humans",
+    "feedUrl": "https://feeds.megaphone.fm/RRE8465566885",
+    "language": "english",
+    "author": "Dr. Aliza Pressman"
+  },
+  {
+    "id": "https://rss.libsyn.com/shows/49002/destinations/168817.xml",
+    "title": "The Overwhelmed Brain",
+    "feedUrl": "https://rss.libsyn.com/shows/49002/destinations/168817.xml",
+    "language": "english",
+    "author": "Paul Colaianni"
+  },
+  {
+    "id": "https://rss.buzzsprout.com/2023530.rss",
+    "title": "Women's Mental Health Podcast",
+    "feedUrl": "https://rss.buzzsprout.com/2023530.rss",
+    "language": "english",
+    "author": "Dr. Katayune Kaeni"
+  },
+  {
+    "id": "https://feeds.captivate.fm/yourparentingmojo/",
+    "title": "Your Parenting Mojo - Respectful, research-based parenting ideas to help kids thrive",
+    "feedUrl": "https://feeds.captivate.fm/yourparentingmojo/",
+    "language": "english",
+    "author": "Jen Lumanlan"
+  },
+  {
+    "id": "https://feed.podbean.com/selfmadelife/feed.xml",
+    "title": "The Self Made Life Podcast",
+    "feedUrl": "https://feed.podbean.com/selfmadelife/feed.xml",
+    "language": "english"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/nickyandmoose",
+    "title": "Nicky And Moose",
+    "feedUrl": "https://feeds.megaphone.fm/nickyandmoose",
+    "language": "english",
+    "author": "Nicky Saunders, Moose"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/designbetter",
+    "title": "Design Better",
+    "feedUrl": "https://feeds.megaphone.fm/designbetter",
+    "language": "english",
+    "author": "Aarron Walter, Eli Woolery"
+  },
+  {
+    "id": "https://rss.buzzsprout.com/2352799.rss",
+    "title": "DesignThinkers Podcast",
+    "feedUrl": "https://rss.buzzsprout.com/2352799.rss",
+    "language": "english"
+  },
+  {
+    "id": "https://anchor.fm/s/2e747010/podcast/rss",
+    "title": "The Deeply Graphic Designcast - DGDC",
+    "feedUrl": "https://anchor.fm/s/2e747010/podcast/rss",
+    "language": "english"
+  },
+  {
+    "id": "https://anchor.fm/s/f1460784/podcast/rss",
+    "title": "Real Human Design Stories",
+    "feedUrl": "https://anchor.fm/s/f1460784/podcast/rss",
+    "language": "english"
+  },
+  {
+    "id": "https://feeds.fireside.fm/talesfromthebacklog/rss",
+    "title": "Tales from the Backlog",
+    "feedUrl": "https://feeds.fireside.fm/talesfromthebacklog/rss",
+    "language": "english"
+  },
+  {
+    "id": "https://feeds.fireside.fm/monkeytail/rss",
+    "title": "Rogue Gamers Podcast",
+    "feedUrl": "https://feeds.fireside.fm/monkeytail/rss",
+    "language": "english"
+  },
+  {
+    "id": "https://feed.podbean.com/baseballbydesign/feed.xml",
+    "title": "Baseball By Design: Stories of Minor League Logos and Nicknames",
+    "feedUrl": "https://feed.podbean.com/baseballbydesign/feed.xml",
+    "language": "english",
+    "author": "Paul Caputo"
+  },
+  {
+    "id": "https://rss.buzzsprout.com/819853.rss",
+    "title": "The Double Pivot: Soccer analysis, analytics, and commentary",
+    "feedUrl": "https://rss.buzzsprout.com/819853.rss",
+    "language": "english",
+    "author": "Michael Caley, Michael Cox"
+  },
+  {
+    "id": "https://feeds.acast.com/public/shows/67d25d2b2649312dd5f4c900",
+    "title": "American Soccer Analysis",
+    "feedUrl": "https://feeds.acast.com/public/shows/67d25d2b2649312dd5f4c900",
+    "language": "english"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/COMG4127829564",
+    "title": "The Final Word Cricket Podcast",
+    "feedUrl": "https://feeds.megaphone.fm/COMG4127829564",
+    "language": "english",
+    "author": "Adam Collins, Geoff Lemon"
+  },
+  {
+    "id": "https://feeds.acast.com/public/shows/65118b05e7b19e00113ac2c0",
+    "title": "Stick to Football",
+    "feedUrl": "https://feeds.acast.com/public/shows/65118b05e7b19e00113ac2c0",
+    "language": "english",
+    "author": "Gary Neville, Roy Keane, Jill Scott, Ian Wright, Jamie Carragher"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/itscalledsoccer",
+    "title": "It's Called Soccer!",
+    "feedUrl": "https://feeds.megaphone.fm/itscalledsoccer",
+    "language": "english",
+    "author": "Rebecca Lowe, Gary Neville, Jamie Carragher, Robbie Mustoe, Micah Richards"
+  },
+  {
+    "id": "https://feeds.megaphone.fm/ISP9367104214",
+    "title": "The R Ashwin Podcast",
+    "feedUrl": "https://feeds.megaphone.fm/ISP9367104214",
+    "language": "english",
+    "author": "Ravichandran Ashwin"
+  },
+  {
+    "id": "https://anchor.fm/s/22449dd8/podcast/rss",
+    "title": "Barely Adults Philippines",
+    "feedUrl": "https://anchor.fm/s/22449dd8/podcast/rss",
+    "language": "english"
+  },
+  {
+    "id": "https://atunwadigital-rss.streamguys1.com/content/nigeriainfo/morningcrossfire.xml",
+    "title": "Morning Crossfire With Kofi Bartels",
+    "feedUrl": "https://atunwadigital-rss.streamguys1.com/content/nigeriainfo/morningcrossfire.xml",
+    "language": "english",
+    "author": "Kofi Bartels"
+  },
+  {
+    "id": "https://rss.iono.fm/rss/chan/4652",
+    "title": "True Crime South Africa",
+    "feedUrl": "https://rss.iono.fm/rss/chan/4652",
+    "language": "english",
+    "author": "Nicole Engelbrecht"
+  },
+  {
+    "id": "https://feeds.fexingo.com/history/the-story-of-south-africa.xml",
+    "title": "The Story of South Africa: Empire, Apartheid, and Transformation — Fexingo History",
+    "feedUrl": "https://feeds.fexingo.com/history/the-story-of-south-africa.xml",
+    "language": "english",
+    "author": "Fexingo History"
+  },
+  {
+    "id": "https://feed.podbean.com/southafricatechmarketers/feed.xml",
+    "title": "South Africa Tech Marketers",
+    "feedUrl": "https://feed.podbean.com/southafricatechmarketers/feed.xml",
+    "language": "english"
+  },
+  {
+    "id": "https://media.rss.com/africatechsummit/feed.xml",
+    "title": "Africa Tech Summit Podcast",
+    "feedUrl": "https://media.rss.com/africatechsummit/feed.xml",
+    "language": "english"
+  },
+  {
+    "id": "https://api.substack.com/feed/podcast/922535.rss",
+    "title": "SEA of Startups",
+    "feedUrl": "https://api.substack.com/feed/podcast/922535.rss",
+    "language": "english"
+  },
+  {
+    "id": "https://feeds.acast.com/public/shows/69ef36b7119a778978ce66c1",
+    "title": "The Learner Journals: Real Language Learning Stories, Tips and Strategies",
+    "feedUrl": "https://feeds.acast.com/public/shows/69ef36b7119a778978ce66c1",
+    "language": "english"
+  },
+  {
+    "id": "https://feeds.captivate.fm/the-language-scientists/",
+    "title": "The Language Scientists",
+    "feedUrl": "https://feeds.captivate.fm/the-language-scientists/",
+    "language": "english"
+  },
+  {
+    "id": "https://feeds.simplecast.com/gVWKQwJq",
+    "title": "Digital Social Hour",
+    "feedUrl": "https://feeds.simplecast.com/gVWKQwJq",
+    "language": "english",
+    "author": "Sean Kelly"
+  },
+  {
+    "id": "https://rss.pdrl.fm/acfcd4/feeds.twit.tv/twit.xml",
+    "title": "This Week in Tech (Audio)",
+    "feedUrl": "https://rss.pdrl.fm/acfcd4/feeds.twit.tv/twit.xml",
+    "language": "english",
+    "author": "Leo Laporte"
+  }
+]
