@@ -238,11 +238,26 @@ function renderHeader() {
   const tip = document.createElement('div')
   tip.className = 'muted'
   tip.style.flex = '1 1 260px'
-  const count = Number(meta?.count) || ((isAvailableView ? loadAvailableCache() : loadRecommendedCache())?.length || 0)
+  const cacheList = cacheMode === 'indie'
+    ? loadIndieCache()
+    : cacheMode === 'available'
+      ? loadAvailableCache()
+      : loadRecommendedCache()
+  const cacheLabel = cacheMode === 'indie'
+    ? '当前独立播客100'
+    : cacheMode === 'available'
+      ? '当前可用'
+      : '当前推荐'
+  const actionLabel = cacheMode === 'indie'
+    ? '更新独立播客100'
+    : cacheMode === 'available'
+      ? '更新可用播客'
+      : '更新推荐'
+  const count = Number(meta?.count) || (cacheList?.length || 0)
   const date = Number.isFinite(meta?.loadedAt) ? fmtDate(meta.loadedAt) : ''
   tip.textContent = count
-    ? `${isAvailableView ? '当前可用' : '当前推荐'}：${count} 个（${date || '未记录日期'}）`
-    : `${isAvailableView ? '当前可用' : '当前推荐'}：未加载（可点“${isAvailableView ? '更新可用播客' : '更新推荐'}”）`
+    ? `${cacheLabel}：${count} 个（${date || '未记录日期'}）`
+    : `${cacheLabel}：未加载（可点“${actionLabel}”）`
   recRow.append(loadBtn, tip)
 
   const filterRow = document.createElement('div')
