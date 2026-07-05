@@ -22,6 +22,7 @@ const STORE = {
   recommendedCacheMetaLegacy: 'global-fm:recommendedCacheMeta',
   indieCache: 'podcast:indieCache',
   indieCacheMeta: 'podcast:indieCacheMeta',
+  indieRemoved: 'podcast:indieRemoved',
   volume: 'podcast:volume',
   volumeLegacy: 'global-fm:volume'
 }
@@ -431,11 +432,30 @@ function renderEmptyCard() {
   else tip.textContent = '暂无推荐。你可以切换到“我添加的”或自己添加一个播客 RSS。'
 
   wrap.append(title, tip)
+
+  if (state.selectedId && state.view === 'indie') {
+    const actions = document.createElement('div')
+    actions.className = 'row'
+    actions.style.marginTop = '12px'
+    actions.style.gap = '8px'
+    actions.style.flexWrap = 'wrap'
+
+    const delBtn = document.createElement('button')
+    delBtn.className = 'btn'
+    delBtn.textContent = '从独立播客300删除'
+    delBtn.addEventListener('click', () => {
+      removeIndiePodcast(state.selectedId)
+    })
+    actions.append(delBtn)
+    wrap.append(actions)
+  }
+
   return wrap
 }
 
 function renderPodcastItem(p) {
   const isMine = state.view === 'mine'
+  const isIndie = state.view === 'indie'
   const card = document.createElement('div')
   card.className = 'card card-pad item'
   card.tabIndex = 0
@@ -492,6 +512,17 @@ function renderPodcastItem(p) {
     })
     actions.append(del)
   } else {
+    if (isIndie) {
+      const delBtn = document.createElement('button')
+      delBtn.className = 'btn icon-btn'
+      delBtn.textContent = '✕'
+      delBtn.setAttribute('aria-label', '从独立播客300删除')
+      delBtn.addEventListener('click', () => {
+        removeIndiePodcast(p.id)
+      })
+      actions.append(delBtn)
+    }
+
     const addBtn = document.createElement('button')
     addBtn.className = 'btn icon-btn'
     addBtn.textContent = '＋'
@@ -726,6 +757,20 @@ function loadIndieCacheMeta() {
   return loadValue([STORE.indieCacheMeta], {})
 }
 
+function loadIndieRemovedIds() {
+  const list = loadValue([STORE.indieRemoved], [])
+  if (!Array.isArray(list)) return []
+  const seen = new Set()
+  const out = []
+  for (const item of list) {
+    const value = String(item || '').trim()
+    if (!value || seen.has(value)) continue
+    seen.add(value)
+    out.push(value)
+  }
+  return out
+}
+
 function saveRecommendedCache(list, meta) {
   save(STORE.recommendedCache, Array.isArray(list) ? list : [])
   save(STORE.recommendedCacheMeta, meta || {})
@@ -736,6 +781,10 @@ function saveIndieCache(list, meta) {
   save(STORE.indieCacheMeta, meta || {})
 }
 
+function saveIndieRemovedIds(list) {
+  save(STORE.indieRemoved, Array.isArray(list) ? list : [])
+}
+
 function getRecommendedPodcasts() {
   const cached = loadRecommendedCache()
   if (cached && cached.length) return cached
@@ -744,8 +793,41 @@ function getRecommendedPodcasts() {
 
 function getIndiePodcasts() {
   const cached = loadIndieCache()
-  if (cached && cached.length) return cached
+  if (cached && cached.length) {
+    const removed = new Set(loadIndieRemovedIds())
+    if (!removed.size) return cached
+    return cached.filter(item => !removed.has(String(item?.id || '')))
+  }
   return []
+}
+
+function removeIndiePodcast(id) {
+  const value = String(id || '').trim()
+  if (!value) return
+  const source = getPodcastSourceById(value)
+  const label = source?.title || '这个播客'
+  if (!confirm(`从独立播客300删除“${label}”？`)) return
+
+  const removed = loadIndieRemovedIds()
+  if (!removed.includes(value)) saveIndieRemovedIds([value, ...removed])
+
+  const list = loadIndieCache()
+  if (Array.isArray(list) && list.length) {
+    const next = list.filter(item => String(item?.id || '') !== value)
+    saveIndieCache(next, {
+      ...loadIndieCacheMeta(),
+      count: next.length,
+      removedAt: Date.now()
+    })
+  }
+
+  if (String(state.selectedId) === value) {
+    state.selectedId = null
+    state.episodes = []
+  }
+
+  refreshList()
+  setInfo('已从独立播客300删除')
 }
 
 function migrateLegacyStores() {
@@ -845,7 +927,10 @@ async function loadBundledIndie(silent) {
     const res = await fetch('./indie-podcasts.json', { cache: 'no-store' })
     if (!res.ok) throw new Error('indie')
     const parsed = await res.json()
-    const out = normalizeBundledPodcastList(parsed).slice(0, 300)
+    const removed = new Set(loadIndieRemovedIds())
+    const out = normalizeBundledPodcastList(parsed)
+      .filter(item => !removed.has(String(item?.id || '')))
+      .slice(0, 300)
     if (out.length) {
       saveIndieCache(out, { source: 'bundled', loadedAt: Date.now(), count: out.length })
       if (!silent) setInfo(`已加载 ${out.length} 个独立播客`)
