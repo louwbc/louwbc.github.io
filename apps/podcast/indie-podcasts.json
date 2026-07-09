@@ -1634,10 +1634,11 @@
     "category": "地区与全球观察"
   },
   {
-    "id": "https://anchor.fm/s/7f509d60/podcast/rss",
-    "title": "Friendlily Coach: Executive business English coaching & corporate editing for Middle East leaders",
-    "feedUrl": "https://anchor.fm/s/7f509d60/podcast/rss",
+    "id": "https://rss.pdrl.fm/5e32e9/feeds.megaphone.fm/theyoungturks",
+    "title": "The Young Turks",
+    "feedUrl": "https://rss.pdrl.fm/5e32e9/feeds.megaphone.fm/theyoungturks",
     "language": "english",
+    "author": "TYT Network",
     "category": "地区与全球观察"
   },
   {
