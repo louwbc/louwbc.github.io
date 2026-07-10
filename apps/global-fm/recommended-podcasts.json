@@ -57,5 +57,6 @@
   { "id": "https://feeds.megaphone.fm/TPG1669083856", "title": "Money Rehab with Nicole Lapin", "feedUrl": "https://feeds.megaphone.fm/TPG1669083856", "language": "english" },
   { "id": "https://feeds.npr.org/500005/podcast.xml", "title": "NPR News Now", "feedUrl": "https://feeds.npr.org/500005/podcast.xml", "language": "english" },
   { "id": "https://feeds.megaphone.fm/YAP9756236278", "title": "Habits and Hustle", "feedUrl": "https://feeds.megaphone.fm/YAP9756236278", "language": "english" },
-  { "id": "https://feeds.acast.com/public/shows/6958077f1002b08bc8529c23", "title": "Watch What Crappens", "feedUrl": "https://feeds.acast.com/public/shows/6958077f1002b08bc8529c23", "language": "english" }
+  { "id": "https://feeds.acast.com/public/shows/6958077f1002b08bc8529c23", "title": "Watch What Crappens", "feedUrl": "https://feeds.acast.com/public/shows/6958077f1002b08bc8529c23", "language": "english" },
+  { "id": "https://rss.pdrl.fm/5e32e9/feeds.megaphone.fm/theyoungturks", "title": "The Young Turks", "feedUrl": "https://rss.pdrl.fm/5e32e9/feeds.megaphone.fm/theyoungturks", "language": "english" }
 ]

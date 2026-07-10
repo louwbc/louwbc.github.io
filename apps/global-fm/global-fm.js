@@ -98,8 +98,7 @@ async function init() {
   applyPreferredTag()
   await loadBundledAvailable(true)
   setDefaultTab()
-  const cachedRec = loadRecommendedCache()
-  if (!cachedRec || !cachedRec.length) loadBundledRecommended(true)
+  loadBundledRecommended(true)
   if (state.tab === 'discover') await search(true)
   else setInfo('已显示收藏')
 }
