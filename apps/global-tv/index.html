@@ -7,7 +7,7 @@
   <title>全球电视</title>
   <link rel="icon" href="../../icons/icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../../assets/css/site.css?v=20260528c">
-  <link rel="stylesheet" href="./global-tv.css?v=20260710g">
+  <link rel="stylesheet" href="./global-tv.css?v=20260710i">
 </head>
 <body class="audio-only">
   <header class="topbar">
@@ -33,7 +33,7 @@
       <div class="hero-copy">
         <div class="eyebrow">Live TV Audio First</div>
         <h1 class="hero-title">全球电视直播</h1>
-        <p class="hero-text">这里现在只保留英语频道，做成一个“只听版”入口，直接收听全球电视直播节目；如果某个频道不适合站内播放，也可以打开官方直播页继续听。</p>
+        <p class="hero-text">这里现在只保留英语频道，并且完全按“只听”来设计。你只需要选择频道并收听声音，不再提供任何画面播放体验；如果某个频道不适合站内直连，也可以打开官方直播页继续听。</p>
       </div>
       <div class="hero-meta">
         <div class="meta-pill">英语频道 300 台精选</div>
@@ -70,7 +70,7 @@
         <section class="card player-card">
           <div class="player-top">
             <div>
-              <div class="muted overline">正在播放</div>
+              <div class="muted overline">正在收听</div>
               <h2 id="nowTitle" class="now-title">请选择一个频道</h2>
               <div id="nowMeta" class="muted now-meta"></div>
             </div>
@@ -78,21 +78,19 @@
           </div>
           <div class="stage-wrap" id="stageWrap">
             <div class="stage-shell">
-              <video
-                id="playerVideo"
-                title="全球电视直播播放器"
+              <audio
+                id="playerAudio"
+                title="全球电视直播音频播放器"
                 controls
-                preload="none"
-                playsinline
-                webkit-playsinline></video>
+                preload="none"></audio>
               <div class="stage-placeholder" id="stagePlaceholder">
                 <div class="placeholder-title">准备收听全球电视直播</div>
-                <div class="muted">选择下方频道并点击“收听”后，这里会直接播放直播声音。当前页面只提供听播模式，不提供展开画面。</div>
+                <div class="muted">选择下方频道并点击“收听”后，这里会直接播放直播声音。当前页面是纯音频模式，不提供任何画面播放。</div>
               </div>
             </div>
           </div>
           <div class="player-note">
-            <div id="nowNote" class="muted">提示：当前页面只保留声音优先体验；部分频道会跳转到官方直播页继续收听。</div>
+            <div id="nowNote" class="muted">提示：当前页面只保留音频播放；部分频道会跳转到官方直播页继续收听。</div>
           </div>
         </section>
       </div>
@@ -112,7 +110,19 @@
     </section>
   </main>
 
+  <div class="floating-player" id="floatingPlayer" hidden>
+    <div class="floating-player-meta">
+      <div class="floating-player-overline">随时控制</div>
+      <div class="floating-player-title" id="floatingTitle">未开始收听</div>
+      <div class="floating-player-sub" id="floatingMeta"></div>
+    </div>
+    <div class="floating-player-actions">
+      <button class="btn primary" id="floatingPlayPauseBtn" type="button" disabled>开始收听</button>
+      <button class="btn" id="floatingOfficialBtn" type="button" disabled>官网</button>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <script src="./global-tv.js?v=20260710g" type="module"></script>
+  <script src="./global-tv.js?v=20260710i" type="module"></script>
 </body>
 </html>
