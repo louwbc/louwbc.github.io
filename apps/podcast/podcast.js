@@ -18,8 +18,11 @@ const STORE = {
   podcastsLegacy: 'global-fm:podcasts',
   recommendedCache: 'podcast:recommendedCache',
   recommendedCacheLegacy: 'global-fm:recommendedCache',
+  recommendedCustom: 'podcast:recommendedCustom',
   recommendedCacheMeta: 'podcast:recommendedCacheMeta',
   recommendedCacheMetaLegacy: 'global-fm:recommendedCacheMeta',
+  discoveryCache: 'podcast:discoveryCache',
+  discoveryCacheMeta: 'podcast:discoveryCacheMeta',
   indieCache: 'podcast:indieCache',
   indieCacheMeta: 'podcast:indieCacheMeta',
   indieRemoved: 'podcast:indieRemoved',
@@ -58,6 +61,7 @@ const state = {
   playing: null,
   playContext: 'episodes',
   recommendedLoading: false,
+  discoveryLoading: false,
   indieLoading: false,
   filterKeyword: '',
   filterLang: '',
@@ -77,6 +81,7 @@ async function init() {
   setupPlayer()
   migrateLegacyStores()
   await loadBundledRecommended(true)
+  await loadBundledDiscovery(true)
   await loadBundledIndie(true)
   refreshList()
   setInfo('已显示推荐播客')
@@ -133,6 +138,8 @@ function refreshList() {
       ? loadPodcasts()
       : state.view === 'indie'
         ? getIndiePodcasts()
+        : state.view === 'discovery'
+          ? getDiscoveryPodcasts()
         : getRecommendedPodcasts()
     items = filterPodcastSources(base)
   }
@@ -223,36 +230,55 @@ function renderHeader() {
   recRow.style.marginTop = '10px'
   recRow.style.alignItems = 'center'
 
-  const cacheMode = state.view === 'indie' ? 'indie' : 'recommended'
+  const cacheMode = state.view === 'indie'
+    ? 'indie'
+    : state.view === 'discovery'
+      ? 'discovery'
+      : 'recommended'
   const loadBtn = document.createElement('button')
   loadBtn.className = 'btn'
   loadBtn.textContent = cacheMode === 'indie'
     ? (state.indieLoading ? '加载中…' : '更新独立播客300')
-    : (state.recommendedLoading ? '加载中…' : '更新推荐')
+    : cacheMode === 'discovery'
+      ? (state.discoveryLoading ? '加载中…' : '更新优质发现')
+      : (state.recommendedLoading ? '加载中…' : '更新推荐')
   loadBtn.disabled = cacheMode === 'indie'
     ? !!state.indieLoading
-    : !!state.recommendedLoading
+    : cacheMode === 'discovery'
+      ? !!state.discoveryLoading
+      : !!state.recommendedLoading
   loadBtn.addEventListener('click', async () => {
     if (cacheMode === 'indie') await loadBundledIndie(false)
+    else if (cacheMode === 'discovery') await loadBundledDiscovery(false)
     else await loadBundledRecommended(false)
   })
 
   const meta = cacheMode === 'indie'
     ? loadIndieCacheMeta()
+    : cacheMode === 'discovery'
+      ? loadDiscoveryCacheMeta()
       : loadRecommendedCacheMeta()
   const tip = document.createElement('div')
   tip.className = 'muted'
   tip.style.flex = '1 1 260px'
   const cacheList = cacheMode === 'indie'
     ? loadIndieCache()
+    : cacheMode === 'discovery'
+      ? loadDiscoveryCache()
       : loadRecommendedCache()
   const cacheLabel = cacheMode === 'indie'
     ? '当前独立播客300'
+    : cacheMode === 'discovery'
+      ? '当前优质发现'
       : '当前推荐'
   const actionLabel = cacheMode === 'indie'
     ? '更新独立播客300'
+    : cacheMode === 'discovery'
+      ? '更新优质发现'
       : '更新推荐'
-  const count = Number(meta?.count) || (cacheList?.length || 0)
+  const count = cacheMode === 'recommended'
+    ? getRecommendedPodcasts().length
+    : (Number(meta?.count) || (cacheList?.length || 0))
   const date = Number.isFinite(meta?.loadedAt) ? fmtDate(meta.loadedAt) : ''
   tip.textContent = count
     ? `${cacheLabel}：${count} 个（${date || '未记录日期'}）`
@@ -278,12 +304,12 @@ function renderHeader() {
   })
 
   let category = null
-  if (!state.selectedId && state.view === 'indie') {
+  if (!state.selectedId && (state.view === 'indie' || state.view === 'discovery')) {
     category = document.createElement('select')
     category.className = 'input'
     category.style.flex = '0 1 190px'
     category.appendChild(new Option('全部分类', ''))
-    for (const value of availableIndieCategories()) {
+    for (const value of availableViewCategories()) {
       category.appendChild(new Option(value, value))
     }
     category.value = state.filterCategory
@@ -388,6 +414,7 @@ function renderViewTabs() {
 
   for (const item of [
     { value: 'recommended', label: '推荐', info: '已显示推荐播客' },
+    { value: 'discovery', label: '优质发现', info: '已显示优质播客候选池，可加入推荐或直接打开外部页' },
     { value: 'indie', label: '独立播客300', info: '已显示 300 个海外知名独立播客，可按分类筛选' },
     { value: 'mine', label: '我添加的', info: '已显示我添加的播客' },
     { value: 'external', label: '搜索更多', info: state.externalResults.length ? '已显示外部搜索结果' : '输入关键词后点“搜索更多”' }
@@ -402,6 +429,7 @@ function renderViewTabs() {
     btn.addEventListener('click', async () => {
       state.view = item.value
       if (item.value === 'indie' && !getIndiePodcasts().length) await loadBundledIndie(true)
+      if (item.value === 'discovery' && !getDiscoveryPodcasts().length) await loadBundledDiscovery(true)
       refreshList()
       setInfo(item.info)
     })
@@ -418,6 +446,7 @@ function renderEmptyCard() {
   title.style.fontWeight = '700'
   if (state.selectedId) title.textContent = '没有可播放的剧集'
   else if (state.view === 'mine') title.textContent = '还没有播客源'
+  else if (state.view === 'discovery') title.textContent = '还没有优质发现候选'
   else if (state.view === 'indie') title.textContent = '还没有独立播客'
   else if (state.view === 'external') title.textContent = '没有外部搜索结果'
   else title.textContent = '没有推荐播客'
@@ -427,6 +456,7 @@ function renderEmptyCard() {
   tip.style.marginTop = '6px'
   if (state.selectedId) tip.textContent = '这个播客源可能不支持跨域（CORS），或者没有可用音频链接。'
   else if (state.view === 'mine') tip.textContent = '添加一个播客 RSS 地址后，就可以在这里连续收听剧集。'
+  else if (state.view === 'discovery') tip.textContent = '这里会放更多优质播客候选，即使有些只能外部打开，也可以先加入推荐，再推荐给用户。'
   else if (state.view === 'indie') tip.textContent = '这里会固定放 300 个海外知名独立播客，用户不用搜索，直接点选，也可以按分类筛选。'
   else if (state.view === 'external') tip.textContent = '输入关键词后点“搜索更多”，先找节目；如果还不够，下面还能继续扩展到搜索引擎和 RSS 搜索。'
   else tip.textContent = '暂无推荐。你可以切换到“我添加的”或自己添加一个播客 RSS。'
@@ -456,20 +486,23 @@ function renderEmptyCard() {
 function renderPodcastItem(p) {
   const isMine = state.view === 'mine'
   const isIndie = state.view === 'indie'
+  const isDiscovery = state.view === 'discovery'
+  const canPlayInApp = !!p.feedUrl
+  const canOpenExternal = !!p.openUrl && p.openUrl !== p.feedUrl
   const card = document.createElement('div')
   card.className = 'card card-pad item'
   card.tabIndex = 0
   card.setAttribute('role', 'button')
-  card.setAttribute('aria-label', `打开播客 ${p.title || '未命名播客'}`)
+  card.setAttribute('aria-label', `${canPlayInApp ? '打开播客' : '打开外部页面'} ${p.title || '未命名播客'}`)
   card.addEventListener('click', (e) => {
     if (e.target.closest('button')) return
-    openPodcast(p.id)
+    handlePodcastOpen(p.id, false)
   })
   card.addEventListener('keydown', (e) => {
     if (e.target.closest('button')) return
     if (e.key !== 'Enter' && e.key !== ' ') return
     e.preventDefault()
-    openPodcast(p.id)
+    handlePodcastOpen(p.id, false)
   })
 
   const main = document.createElement('div')
@@ -479,18 +512,26 @@ function renderPodcastItem(p) {
   title.textContent = p.title || '未命名播客'
   const sub = document.createElement('div')
   sub.className = 'item-sub muted'
-  sub.textContent = [p.category || '', p.author || '', p.language || '', p.feedUrl || ''].filter(Boolean).join(' · ')
+  sub.textContent = [p.category || '', p.author || '', p.language || '', p.sourceLabel || '', p.feedUrl || p.openUrl || ''].filter(Boolean).join(' · ')
   main.append(title, sub)
+
+  if (p.summary) {
+    const summary = document.createElement('div')
+    summary.className = 'item-sub muted'
+    summary.style.marginTop = '8px'
+    summary.textContent = p.summary
+    main.append(summary)
+  }
 
   const actions = document.createElement('div')
   actions.className = 'item-actions'
 
   const openBtn = document.createElement('button')
-  openBtn.className = 'btn primary icon-btn'
-  openBtn.textContent = '▶'
-  openBtn.setAttribute('aria-label', '打开并播放')
+  openBtn.className = !canPlayInApp || isDiscovery ? 'btn primary' : 'btn primary icon-btn'
+  openBtn.textContent = canPlayInApp ? (isDiscovery ? '打开' : '▶') : '外部页'
+  openBtn.setAttribute('aria-label', canPlayInApp ? '打开并播放' : '打开外部页面')
   openBtn.addEventListener('click', async () => {
-    await openPodcast(p.id, true)
+    await handlePodcastOpen(p.id, true)
   })
   actions.append(openBtn)
 
@@ -523,14 +564,47 @@ function renderPodcastItem(p) {
       actions.append(delBtn)
     }
 
-    const addBtn = document.createElement('button')
-    addBtn.className = 'btn icon-btn'
-    addBtn.textContent = '＋'
-    addBtn.setAttribute('aria-label', '添加到我添加的')
-    addBtn.addEventListener('click', async () => {
-      await addPodcast(p.feedUrl, p.title, false, p.language)
-    })
-    actions.append(addBtn)
+    if (canPlayInApp) {
+      const addBtn = document.createElement('button')
+      addBtn.className = isDiscovery ? 'btn' : 'btn icon-btn'
+      addBtn.textContent = isDiscovery ? '添加到我添加的' : '＋'
+      addBtn.setAttribute('aria-label', '添加到我添加的')
+      addBtn.addEventListener('click', async () => {
+        await addPodcast(p.feedUrl, p.title, false, p.language)
+      })
+      actions.append(addBtn)
+    }
+
+    if (isDiscovery) {
+      const recommendBtn = document.createElement('button')
+      recommendBtn.className = 'btn'
+      recommendBtn.textContent = isInCustomRecommended(p) ? '已推荐' : '加入推荐'
+      recommendBtn.disabled = isInCustomRecommended(p)
+      recommendBtn.addEventListener('click', () => {
+        addToRecommended(p)
+      })
+      actions.append(recommendBtn)
+    }
+
+    if (canOpenExternal) {
+      const externalBtn = document.createElement('button')
+      externalBtn.className = 'btn'
+      externalBtn.textContent = '官网'
+      externalBtn.addEventListener('click', () => {
+        openExternalUrl(p.openUrl)
+      })
+      actions.append(externalBtn)
+    }
+
+    if (p.isCustomRecommended) {
+      const removeBtn = document.createElement('button')
+      removeBtn.className = 'btn'
+      removeBtn.textContent = '移出推荐'
+      removeBtn.addEventListener('click', () => {
+        removeCustomRecommended(p.id)
+      })
+      actions.append(removeBtn)
+    }
   }
 
   card.append(main, actions)
@@ -628,6 +702,13 @@ function renderExternalPodcastItem(p) {
     })
     actions.append(addBtn)
   }
+
+  const recommendBtn = document.createElement('button')
+  recommendBtn.className = 'btn'
+  recommendBtn.textContent = isInCustomRecommended(p) ? '已推荐' : '加入推荐'
+  recommendBtn.disabled = isInCustomRecommended(p)
+  recommendBtn.addEventListener('click', () => addToRecommended(p))
+  actions.append(recommendBtn)
 
   const webBtn = document.createElement('button')
   webBtn.className = 'btn'
@@ -744,6 +825,16 @@ function loadRecommendedCache() {
   return Array.isArray(list) ? list : null
 }
 
+function loadRecommendedCustom() {
+  const list = loadValue([STORE.recommendedCustom], [])
+  return Array.isArray(list) ? list : []
+}
+
+function loadDiscoveryCache() {
+  const list = loadValue([STORE.discoveryCache], null)
+  return Array.isArray(list) ? list : null
+}
+
 function loadIndieCache() {
   const list = loadValue([STORE.indieCache], null)
   return Array.isArray(list) ? list : null
@@ -751,6 +842,10 @@ function loadIndieCache() {
 
 function loadRecommendedCacheMeta() {
   return loadValue([STORE.recommendedCacheMeta, STORE.recommendedCacheMetaLegacy], {})
+}
+
+function loadDiscoveryCacheMeta() {
+  return loadValue([STORE.discoveryCacheMeta], {})
 }
 
 function loadIndieCacheMeta() {
@@ -776,6 +871,15 @@ function saveRecommendedCache(list, meta) {
   save(STORE.recommendedCacheMeta, meta || {})
 }
 
+function saveRecommendedCustom(list) {
+  save(STORE.recommendedCustom, Array.isArray(list) ? list : [])
+}
+
+function saveDiscoveryCache(list, meta) {
+  save(STORE.discoveryCache, Array.isArray(list) ? list : [])
+  save(STORE.discoveryCacheMeta, meta || {})
+}
+
 function saveIndieCache(list, meta) {
   save(STORE.indieCache, Array.isArray(list) ? list : [])
   save(STORE.indieCacheMeta, meta || {})
@@ -786,9 +890,39 @@ function saveIndieRemovedIds(list) {
 }
 
 function getRecommendedPodcasts() {
+  const custom = loadRecommendedCustom().map(item => ({ ...item, isCustomRecommended: true }))
   const cached = loadRecommendedCache()
+  if (cached && cached.length) return dedupePodcastSources([...custom, ...cached])
+  return dedupePodcastSources([...custom, ...FALLBACK_RECOMMENDED_PODCASTS])
+}
+
+function getDiscoveryPodcasts() {
+  const cached = loadDiscoveryCache()
   if (cached && cached.length) return cached
-  return FALLBACK_RECOMMENDED_PODCASTS
+  return []
+}
+
+function isInCustomRecommended(item) {
+  const id = String(item?.id || item?.feedUrl || item?.openUrl || '').trim()
+  if (!id) return false
+  return loadRecommendedCustom().some(source => String(source?.id || source?.feedUrl || source?.openUrl || '').trim() === id)
+}
+
+function addToRecommended(item) {
+  const out = dedupePodcastSources([{ ...item, isCustomRecommended: true }, ...loadRecommendedCustom()])
+  const next = out.slice(0, 120)
+  saveRecommendedCustom(next)
+  refreshList()
+  setInfo('已加入推荐')
+}
+
+function removeCustomRecommended(id) {
+  const value = String(id || '').trim()
+  if (!value) return
+  const next = loadRecommendedCustom().filter(item => String(item?.id || item?.feedUrl || item?.openUrl || '').trim() !== value)
+  saveRecommendedCustom(next)
+  refreshList()
+  setInfo('已移出推荐')
 }
 
 function getIndiePodcasts() {
@@ -846,19 +980,30 @@ function migrateLegacyStores() {
 }
 
 function normalizeBundledPodcastList(parsed) {
+  return dedupePodcastSources(Array.isArray(parsed) ? parsed : [])
+}
+
+function dedupePodcastSources(list) {
   const out = []
   const seen = new Set()
-  for (const item of (Array.isArray(parsed) ? parsed : [])) {
-    const feedUrl = normalizeUrl(item?.feedUrl || item?.id || '')
-    if (!feedUrl || seen.has(feedUrl)) continue
-    seen.add(feedUrl)
+  for (const item of (Array.isArray(list) ? list : [])) {
+    const feedUrl = normalizeUrl(item?.feedUrl || '')
+    const openUrl = normalizeUrl(item?.openUrl || '')
+    const id = String(item?.id || feedUrl || openUrl || '').trim()
+    const key = feedUrl || openUrl || id
+    if (!key || seen.has(key)) continue
+    seen.add(key)
     out.push({
-      id: feedUrl,
-      title: String(item?.title || feedUrl),
-      feedUrl,
+      id: id || key,
+      title: String(item?.title || key),
+      feedUrl: feedUrl || '',
+      openUrl: openUrl || '',
       language: String(item?.language || ''),
       author: String(item?.author || ''),
-      category: String(item?.category || '')
+      category: String(item?.category || ''),
+      sourceLabel: String(item?.sourceLabel || ''),
+      summary: String(item?.summary || ''),
+      isCustomRecommended: !!item?.isCustomRecommended
     })
   }
   return out
@@ -918,6 +1063,30 @@ async function loadBundledRecommended(silent) {
   }
 }
 
+async function loadBundledDiscovery(silent) {
+  if (state.discoveryLoading) return
+  state.discoveryLoading = true
+  refreshList()
+  try {
+    if (!silent) setInfo('加载优质发现中…')
+    const res = await fetch('./discovery-podcasts.json', { cache: 'no-store' })
+    if (!res.ok) throw new Error('discovery')
+    const parsed = await res.json()
+    const out = normalizeBundledPodcastList(parsed)
+    if (out.length) {
+      saveDiscoveryCache(out, { source: 'bundled', loadedAt: Date.now(), count: out.length })
+      if (!silent) setInfo(`已加载 ${out.length} 个优质发现候选`)
+    } else if (!silent) {
+      setInfo('没有优质发现候选')
+    }
+  } catch (_) {
+    if (!silent) setInfo('加载失败：无法读取优质发现列表')
+  } finally {
+    state.discoveryLoading = false
+    refreshList()
+  }
+}
+
 async function loadBundledIndie(silent) {
   if (state.indieLoading) return
   state.indieLoading = true
@@ -947,6 +1116,7 @@ async function loadBundledIndie(silent) {
 
 function getPodcastSourceById(id) {
   return loadPodcasts().find(x => String(x.id) === String(id))
+    || getDiscoveryPodcasts().find(x => String(x.id) === String(id))
     || getIndiePodcasts().find(x => String(x.id) === String(id))
     || getRecommendedPodcasts().find(x => String(x.id) === String(id))
     || null
@@ -954,12 +1124,29 @@ function getPodcastSourceById(id) {
 
 function availablePodcastLanguages() {
   const set = new Set()
-  const all = [...getRecommendedPodcasts(), ...getIndiePodcasts(), ...loadPodcasts(), ...state.externalResults]
+  const all = [...getRecommendedPodcasts(), ...getDiscoveryPodcasts(), ...getIndiePodcasts(), ...loadPodcasts(), ...state.externalResults]
   for (const item of all) {
     const value = String(item?.language || '').trim().toLowerCase()
     set.add(value || 'unknown')
   }
   return Array.from(set).sort((a, b) => a.localeCompare(b))
+}
+
+function availableViewCategories() {
+  const list = state.view === 'discovery' ? getDiscoveryPodcasts() : getIndiePodcasts()
+  const set = new Set()
+  for (const item of list) {
+    const value = normalizePodcastCategory(item?.category || '')
+    if (value) set.add(value)
+  }
+  if (state.view !== 'indie') return Array.from(set).sort((a, b) => a.localeCompare(b, 'zh-CN'))
+  const out = []
+  for (const value of INDIE_CATEGORY_ORDER) {
+    if (!set.has(value)) continue
+    out.push(value)
+    set.delete(value)
+  }
+  return out.concat(Array.from(set).sort((a, b) => a.localeCompare(b, 'zh-CN')))
 }
 
 function availableIndieCategories() {
@@ -984,7 +1171,9 @@ function normalizePodcastCategory(value) {
 function filterPodcastSources(list) {
   const kw = String(state.filterKeyword || '').trim().toLowerCase()
   const lang = String(state.filterLang || '').trim().toLowerCase()
-  const category = state.view === 'indie' ? normalizePodcastCategory(state.filterCategory) : ''
+  const category = state.view === 'indie' || state.view === 'discovery'
+    ? normalizePodcastCategory(state.filterCategory)
+    : ''
   const out = []
   for (const item of (list || [])) {
     const itemLang = String(item?.language || '').trim().toLowerCase() || 'unknown'
@@ -992,7 +1181,7 @@ function filterPodcastSources(list) {
     const itemCategory = normalizePodcastCategory(item?.category || '')
     if (category && itemCategory !== category) continue
     if (kw) {
-      const hay = `${item?.title || ''} ${item?.author || ''} ${item?.category || ''} ${item?.feedUrl || ''}`.toLowerCase()
+      const hay = `${item?.title || ''} ${item?.author || ''} ${item?.category || ''} ${item?.sourceLabel || ''} ${item?.summary || ''} ${item?.feedUrl || ''} ${item?.openUrl || ''}`.toLowerCase()
       if (!hay.includes(kw)) continue
     }
     out.push(item)
@@ -1226,12 +1415,12 @@ async function searchPodcastEpisodes() {
   if (state.searching) return
   const kw = String(state.filterKeyword || '').trim().toLowerCase()
   const lang = String(state.filterLang || '').trim().toLowerCase()
-  let sources = [...getRecommendedPodcasts(), ...getIndiePodcasts(), ...loadPodcasts()]
+  let sources = [...getRecommendedPodcasts(), ...getDiscoveryPodcasts(), ...getIndiePodcasts(), ...loadPodcasts()]
   const uniq = []
   for (const item of sources) {
-    const id = String(item?.feedUrl || item?.id || '').trim()
-    if (!id || uniq.some(x => String(x.feedUrl) === id)) continue
-    uniq.push({ ...item, id, feedUrl: id })
+    const feedUrl = String(item?.feedUrl || '').trim()
+    if (!feedUrl || uniq.some(x => String(x.feedUrl) === feedUrl)) continue
+    uniq.push({ ...item, id: String(item?.id || feedUrl), feedUrl })
   }
   sources = uniq
   if (lang) sources = sources.filter(item => (String(item?.language || '').trim().toLowerCase() || 'unknown') === lang)
@@ -1288,9 +1477,28 @@ async function searchPodcastEpisodes() {
   }
 }
 
+async function handlePodcastOpen(id, autoPlay) {
+  const source = getPodcastSourceById(id)
+  if (!source) return
+  if (!source.feedUrl) {
+    if (source.openUrl) {
+      openExternalUrl(source.openUrl)
+      setInfo(`已打开 ${source.title || '播客'} 的外部页面`)
+    }
+    return
+  }
+  await openPodcast(id, autoPlay)
+}
+
 async function openPodcast(id, autoPlay) {
   const source = getPodcastSourceById(id)
-  if (!source?.feedUrl) return
+  if (!source?.feedUrl) {
+    if (source?.openUrl) {
+      openExternalUrl(source.openUrl)
+      setInfo(`已打开 ${source.title || '播客'} 的外部页面`)
+    }
+    return
+  }
   state.selectedId = id
   state.episodes = []
   refreshList()
