@@ -3,8 +3,10 @@ const $ = (s) => document.querySelector(s)
 const ui = {
   info: $('#info'),
   searchInput: $('#searchInput'),
+  languageSelect: $('#languageSelect'),
   regionSelect: $('#regionSelect'),
   categorySelect: $('#categorySelect'),
+  availabilitySelect: $('#availabilitySelect'),
   tabAll: $('#tabAll'),
   tabFavorites: $('#tabFavorites'),
   tabRecent: $('#tabRecent'),
@@ -48,8 +50,10 @@ async function init() {
 
 function setupControls() {
   ui.searchInput.addEventListener('input', refreshList)
+  ui.languageSelect.addEventListener('change', refreshList)
   ui.regionSelect.addEventListener('change', refreshList)
   ui.categorySelect.addEventListener('change', refreshList)
+  ui.availabilitySelect.addEventListener('change', refreshList)
 
   for (const btn of [ui.tabAll, ui.tabFavorites, ui.tabRecent]) {
     btn.addEventListener('click', () => {
@@ -135,7 +139,9 @@ async function loadChannels() {
     refreshList()
     if (state.channels.length) {
       selectChannel(state.channels[0], false)
-      setInfo(`已载入 ${state.channels.length} 个全球电视直播频道`)
+      const playableCount = state.channels.filter((item) => item.kind === 'hls').length
+      const externalCount = state.channels.filter((item) => item.kind === 'external').length
+      setInfo(`已载入 ${state.channels.length} 个可用频道，其中 ${playableCount} 个可站内收听，${externalCount} 个需打开官网`)
     } else {
       setInfo('没有可用频道')
     }
@@ -171,6 +177,7 @@ function normalizeChannels(list) {
 }
 
 function populateFilters(channels) {
+  fillSelect(ui.languageSelect, extractUnique(channels, 'language'), '所有语言')
   fillSelect(ui.regionSelect, extractUnique(channels, 'region'), '所有地区')
   fillSelect(ui.categorySelect, extractUnique(channels, 'category'), '所有分类')
 }
@@ -227,9 +234,13 @@ function refreshList() {
 }
 
 function buildListMeta(count) {
-  if (state.view === 'favorites') return `收藏中共 ${count} 个频道`
-  if (state.view === 'recent') return `最近观看共 ${count} 个频道`
-  return `当前共 ${count} 个频道`
+  const visible = getVisibleChannels()
+  const playableCount = visible.filter((item) => item.kind === 'hls').length
+  const externalCount = visible.filter((item) => item.kind === 'external').length
+  const suffix = `站内可播 ${playableCount} 个 · 官网打开 ${externalCount} 个`
+  if (state.view === 'favorites') return `收藏中共 ${count} 个频道 · ${suffix}`
+  if (state.view === 'recent') return `最近观看共 ${count} 个频道 · ${suffix}`
+  return `当前共 ${count} 个频道 · ${suffix}`
 }
 
 function getVisibleChannels() {
@@ -245,12 +256,16 @@ function getVisibleChannels() {
   }
 
   const keyword = String(ui.searchInput.value || '').trim().toLowerCase()
+  const language = ui.languageSelect.value
   const region = ui.regionSelect.value
   const category = ui.categorySelect.value
+  const availability = ui.availabilitySelect.value
 
   return base.filter((channel) => {
+    if (language && channel.language !== language) return false
     if (region && channel.region !== region) return false
     if (category && channel.category !== category) return false
+    if (availability && channel.kind !== availability) return false
     if (!keyword) return true
     const hay = `${channel.title} ${channel.region} ${channel.language} ${channel.category} ${channel.note}`.toLowerCase()
     return hay.includes(keyword)
@@ -288,7 +303,7 @@ function renderChannelItem(channel) {
 
   const tags = document.createElement('div')
   tags.className = 'channel-tags'
-  for (const label of [channel.kind === 'external' ? '官方页' : '站内收听', '直播']) {
+  for (const label of [getKindLabel(channel.kind), '直播']) {
     const chip = document.createElement('span')
     chip.className = 'tag'
     chip.textContent = label
@@ -478,6 +493,10 @@ function updateFloatingControls() {
     return
   }
   ui.floatingPlayPauseBtn.textContent = ui.playerAudio.paused ? '继续播放' : '暂停'
+}
+
+function getKindLabel(kind) {
+  return kind === 'external' ? '官网打开' : '站内可播'
 }
 
 function toggleFavorite(id) {
