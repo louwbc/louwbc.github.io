@@ -5,6 +5,7 @@ const ui = {
   searchInput: $('#searchInput'),
   languageSelect: $('#languageSelect'),
   regionSelect: $('#regionSelect'),
+  countrySelect: $('#countrySelect'),
   categorySelect: $('#categorySelect'),
   availabilitySelect: $('#availabilitySelect'),
   tabAll: $('#tabAll'),
@@ -52,6 +53,7 @@ function setupControls() {
   ui.searchInput.addEventListener('input', refreshList)
   ui.languageSelect.addEventListener('change', refreshList)
   ui.regionSelect.addEventListener('change', refreshList)
+  ui.countrySelect.addEventListener('change', refreshList)
   ui.categorySelect.addEventListener('change', refreshList)
   ui.availabilitySelect.addEventListener('change', refreshList)
 
@@ -161,6 +163,7 @@ function normalizeChannels(list) {
     const id = String(item?.id || '').trim()
     const title = String(item?.title || '').trim()
     const region = String(item?.region || '').trim()
+    const country = inferCountry(item)
     const language = String(item?.language || '').trim()
     const category = String(item?.category || '').trim()
     const kind = String(item?.kind || '').trim()
@@ -171,7 +174,7 @@ function normalizeChannels(list) {
     if (kind === 'hls' && !streamUrl) continue
     if (!watchUrl) continue
     seen.add(id)
-    out.push({ id, title, region, language, category, kind, streamUrl, watchUrl, note })
+    out.push({ id, title, region, country, language, category, kind, streamUrl, watchUrl, note })
   }
   return out
 }
@@ -179,6 +182,7 @@ function normalizeChannels(list) {
 function populateFilters(channels) {
   fillSelect(ui.languageSelect, extractUnique(channels, 'language'), '所有语言')
   fillSelect(ui.regionSelect, extractUnique(channels, 'region'), '所有地区')
+  fillSelect(ui.countrySelect, extractUnique(channels, 'country'), '所有国家')
   fillSelect(ui.categorySelect, extractUnique(channels, 'category'), '所有分类')
 }
 
@@ -258,16 +262,18 @@ function getVisibleChannels() {
   const keyword = String(ui.searchInput.value || '').trim().toLowerCase()
   const language = ui.languageSelect.value
   const region = ui.regionSelect.value
+  const country = ui.countrySelect.value
   const category = ui.categorySelect.value
   const availability = ui.availabilitySelect.value
 
   return base.filter((channel) => {
     if (language && channel.language !== language) return false
     if (region && channel.region !== region) return false
+    if (country && channel.country !== country) return false
     if (category && channel.category !== category) return false
     if (availability && channel.kind !== availability) return false
     if (!keyword) return true
-    const hay = `${channel.title} ${channel.region} ${channel.language} ${channel.category} ${channel.note}`.toLowerCase()
+    const hay = `${channel.title} ${channel.region} ${channel.country} ${channel.language} ${channel.category} ${channel.note}`.toLowerCase()
     return hay.includes(keyword)
   })
 }
@@ -295,7 +301,7 @@ function renderChannelItem(channel) {
 
   const sub = document.createElement('div')
   sub.className = 'channel-sub'
-  sub.textContent = [channel.region, channel.language, channel.category].filter(Boolean).join(' · ')
+  sub.textContent = [channel.region, channel.country, channel.language, channel.category].filter(Boolean).join(' · ')
 
   const note = document.createElement('div')
   note.className = 'channel-note'
@@ -361,7 +367,7 @@ function selectChannel(channel, autoplay) {
 
 function renderPlayer(channel, autoplay) {
   ui.nowTitle.textContent = channel.title
-  ui.nowMeta.textContent = [channel.region, channel.language, channel.category].filter(Boolean).join(' · ')
+  ui.nowMeta.textContent = [channel.region, channel.country, channel.language, channel.category].filter(Boolean).join(' · ')
   ui.nowNote.textContent = channel.note || '官方公开直播频道'
   destroyHls()
 
@@ -479,7 +485,7 @@ function updateFloatingControls() {
   }
 
   ui.floatingTitle.textContent = channel.title
-  ui.floatingMeta.textContent = [channel.region, channel.language, channel.category].filter(Boolean).join(' · ')
+  ui.floatingMeta.textContent = [channel.region, channel.country, channel.language, channel.category].filter(Boolean).join(' · ')
 
   if (channel.kind === 'external') {
     ui.floatingPlayPauseBtn.disabled = true
@@ -498,6 +504,127 @@ function updateFloatingControls() {
 function getKindLabel(kind) {
   return kind === 'external' ? '官网打开' : '站内可播'
 }
+
+function inferCountry(item) {
+  const explicit = String(item?.country || '').trim()
+  if (explicit) return explicit
+
+  const text = normalizeMatchText([
+    item?.id,
+    item?.title,
+    item?.note,
+    item?.watchUrl,
+    item?.streamUrl
+  ].filter(Boolean).join(' '))
+
+  for (const [pattern, label] of COUNTRY_PATTERNS) {
+    if (pattern.test(text)) return label
+  }
+
+  const host = getHostname(item?.watchUrl || item?.streamUrl || '')
+  for (const [suffix, label] of COUNTRY_DOMAIN_SUFFIXES) {
+    if (host.endsWith(suffix)) return label
+  }
+
+  return ''
+}
+
+function normalizeMatchText(value) {
+  return String(value || '').trim().toLowerCase()
+}
+
+function getHostname(value) {
+  try {
+    return new URL(String(value || '').trim()).hostname.toLowerCase()
+  } catch (_) {
+    return ''
+  }
+}
+
+const COUNTRY_PATTERNS = [
+  [/\bdw\b|deutsche welle|germany|german|berlin/, '德国'],
+  [/france\s*24|franceinfo|tv5 monde|paris/, '法国'],
+  [/\bnhk\b|world-japan|japan|tokyo/, '日本'],
+  [/\btrt\b|turkiye|turkey|istanbul/, '土耳其'],
+  [/\bcgtn\b|\bcctv\b|china|beijing/, '中国'],
+  [/al jazeera|doha|qatar/, '卡塔尔'],
+  [/al arabiya|saudi|riyadh/, '沙特阿拉伯'],
+  [/africanews/, '非洲多国'],
+  [/reuters/, '英国'],
+  [/euronews/, '欧洲多国'],
+  [/wion|india today|ndtv|news18|times now|mirror now|republic world|cnbc tv18|cnn-news18|\bindia\b|\bdelhi\b|\bmumbai\b/, '印度'],
+  [/arirang|south korea|seoul|korea/, '韩国'],
+  [/\bcna\b|channel newsasia|singapore/, '新加坡'],
+  [/sky news weather/, '英国'],
+  [/sky news extra|skynewsau|2gb|3aw|6pr|4bc|5aa|sydney|melbourne|perth|adelaide|brisbane|australia|australian/, '澳大利亚'],
+  [/new zealand|\bnz\b|auckland|wellington|christchurch/, '新西兰'],
+  [/cbc|cp24|ctv news|global news canada|toronto|vancouver|montreal|ottawa/, '加拿大'],
+  [/abc news live|nbc news now|cbs news|fox weather|scripps news|newsmax|court tv|law \& crime|cheddar|weather nation|accuweather|pbs|30a|baltimore|portland|seattle|boston|chicago|miami|philadelphia|sacramento|bay area|san diego|las vegas|milwaukee|denver|albuquerque|austin|tucson|manchester nh|st\.?\s*paul|atlanta|los angeles|new york|washington|phoenix|orlando|dallas|houston|america|united states|\busa\b/, '美国'],
+  [/hong kong|\bhk\b/, '中国香港'],
+  [/philippines|philippine|manila|cebu/, '菲律宾'],
+  [/malaysia|kuala lumpur/, '马来西亚'],
+  [/uae|dubai|abu dhabi|emirates/, '阿联酋'],
+  [/ireland|dublin/, '爱尔兰'],
+  [/italy|rome|milan/, '意大利'],
+  [/spain|madrid|barcelona/, '西班牙'],
+  [/portugal|lisbon/, '葡萄牙'],
+  [/netherlands|amsterdam|dutch/, '荷兰'],
+  [/belgium|brussels/, '比利时'],
+  [/switzerland|zurich|geneva/, '瑞士'],
+  [/sweden|stockholm/, '瑞典'],
+  [/norway|oslo/, '挪威'],
+  [/denmark|copenhagen/, '丹麦'],
+  [/finland|helsinki/, '芬兰'],
+  [/austria|vienna/, '奥地利'],
+  [/poland|warsaw/, '波兰'],
+  [/czech|prague/, '捷克'],
+  [/romania|bucharest/, '罗马尼亚'],
+  [/greece|athens/, '希腊'],
+  [/israel|jerusalem|tel aviv/, '以色列'],
+  [/south africa|johannesburg|cape town/, '南非'],
+  [/kenya|nairobi/, '肯尼亚'],
+  [/nigeria|lagos|abuja/, '尼日利亚']
+]
+
+const COUNTRY_DOMAIN_SUFFIXES = [
+  ['.jp', '日本'],
+  ['.tr', '土耳其'],
+  ['.cn', '中国'],
+  ['.hk', '中国香港'],
+  ['.kr', '韩国'],
+  ['.sg', '新加坡'],
+  ['.in', '印度'],
+  ['.au', '澳大利亚'],
+  ['.nz', '新西兰'],
+  ['.ca', '加拿大'],
+  ['.fr', '法国'],
+  ['.de', '德国'],
+  ['.uk', '英国'],
+  ['.ie', '爱尔兰'],
+  ['.it', '意大利'],
+  ['.es', '西班牙'],
+  ['.pt', '葡萄牙'],
+  ['.nl', '荷兰'],
+  ['.be', '比利时'],
+  ['.ch', '瑞士'],
+  ['.se', '瑞典'],
+  ['.no', '挪威'],
+  ['.dk', '丹麦'],
+  ['.fi', '芬兰'],
+  ['.pl', '波兰'],
+  ['.cz', '捷克'],
+  ['.ro', '罗马尼亚'],
+  ['.gr', '希腊'],
+  ['.il', '以色列'],
+  ['.za', '南非'],
+  ['.ke', '肯尼亚'],
+  ['.ng', '尼日利亚'],
+  ['.ae', '阿联酋'],
+  ['.qa', '卡塔尔'],
+  ['.sa', '沙特阿拉伯'],
+  ['.ph', '菲律宾'],
+  ['.my', '马来西亚']
+]
 
 function toggleFavorite(id) {
   const list = loadList(STORE.favorites)

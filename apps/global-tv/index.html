@@ -7,7 +7,7 @@
   <title>全球电视</title>
   <link rel="icon" href="../../icons/icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../../assets/css/site.css?v=20260528c">
-  <link rel="stylesheet" href="./global-tv.css?v=20260715a">
+  <link rel="stylesheet" href="./global-tv.css?v=20260715b">
 </head>
 <body class="audio-only">
   <header class="topbar">
@@ -15,7 +15,7 @@
       <div class="brand">
         <svg viewBox="0 0 24 24" class="logo" aria-hidden="true"><path d="M4 6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-3.8l1.3 2.3a1 1 0 0 1-1.7 1l-1.8-3.3H7a3 3 0 0 1-3-3V6zm3-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H7zM8 8h8v2H8V8zm0 4h5v2H8v-2z" fill="currentColor"/></svg>
         <div class="brand-title">全球电视</div>
-        <span class="version-chip" aria-label="当前版本">v2.3</span>
+        <span class="version-chip" aria-label="当前版本">v2.4</span>
       </div>
       <nav class="nav">
         <a href="../../">首页</a>
@@ -34,11 +34,11 @@
       <div class="hero-copy">
         <div class="eyebrow">Live TV Audio First</div>
         <h1 class="hero-title">全球电视直播</h1>
-        <p class="hero-text">这里现在只保留英语频道，并且完全按“只听”来设计。频道库已经扩充到 800 个可用源，同时去掉了宗教类；你只需要选择频道并收听声音，不再提供任何画面播放体验。</p>
+        <p class="hero-text">这里现在只保留英语频道，并且完全按“只听”来设计。频道库已经扩充到 800 个可用源，同时去掉了宗教类；你可以按语言、地区、国家和分类来筛选，然后直接收听声音，不再提供任何画面播放体验。</p>
       </div>
       <div class="hero-meta">
         <div class="meta-pill">可用频道 800 台</div>
-        <div class="meta-pill">支持按语言与分类筛选</div>
+        <div class="meta-pill">支持按语言、地区、国家与分类筛选</div>
         <div class="meta-pill">不含宗教类</div>
         <div class="meta-pill">只提供听播模式</div>
         <div class="meta-pill">收藏 + 最近观看</div>
@@ -48,12 +48,15 @@
 
     <section class="card card-pad controls-panel" style="margin-top:12px">
       <div class="row filters-row">
-        <input id="searchInput" class="input" type="search" placeholder="搜索频道、地区或节目类型…" autocomplete="off" aria-label="搜索频道">
+        <input id="searchInput" class="input" type="search" placeholder="搜索频道、地区、国家或节目类型…" autocomplete="off" aria-label="搜索频道">
         <select id="languageSelect" class="input" aria-label="语言">
           <option value="">所有语言</option>
         </select>
         <select id="regionSelect" class="input" aria-label="地区">
           <option value="">所有地区</option>
+        </select>
+        <select id="countrySelect" class="input" aria-label="国家">
+          <option value="">所有国家</option>
         </select>
         <select id="categorySelect" class="input" aria-label="分类">
           <option value="">所有分类</option>
@@ -134,6 +137,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <script src="./global-tv.js?v=20260715a" type="module"></script>
+  <script src="./global-tv.js?v=20260715b" type="module"></script>
 </body>
 </html>
