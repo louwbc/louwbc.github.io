@@ -7,7 +7,7 @@
   <title>全球电视</title>
   <link rel="icon" href="../../icons/icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../../assets/css/site.css?v=20260528c">
-  <link rel="stylesheet" href="./global-tv.css?v=20260715c">
+  <link rel="stylesheet" href="./global-tv.css?v=20260715d">
 </head>
 <body class="audio-only">
   <header class="topbar">
@@ -15,7 +15,7 @@
       <div class="brand">
         <svg viewBox="0 0 24 24" class="logo" aria-hidden="true"><path d="M4 6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-3.8l1.3 2.3a1 1 0 0 1-1.7 1l-1.8-3.3H7a3 3 0 0 1-3-3V6zm3-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H7zM8 8h8v2H8V8zm0 4h5v2H8v-2z" fill="currentColor"/></svg>
         <div class="brand-title">全球电视</div>
-        <span class="version-chip" aria-label="当前版本">v2.5</span>
+        <span class="version-chip" aria-label="当前版本">v2.6</span>
       </div>
       <nav class="nav">
         <a href="../../">首页</a>
@@ -95,18 +95,20 @@
             <button class="btn primary" id="favCurrentBtn" type="button" disabled>加入收藏</button>
           </div>
           <div class="stage-wrap" id="stageWrap">
-            <div class="stage-shell">
+            <div class="stage-shell" id="stageShell">
               <audio
                 id="playerAudio"
                 title="全球电视直播音频播放器"
                 controls
                 preload="none"></audio>
-              <video
-                id="playerVideo"
-                title="全球电视直播视频播放器"
-                controls
-                playsinline
-                preload="none"></video>
+              <div class="video-mount" id="videoMount">
+                <video
+                  id="playerVideo"
+                  title="全球电视直播视频播放器"
+                  controls
+                  playsinline
+                  preload="none"></video>
+              </div>
               <div class="stage-placeholder" id="stagePlaceholder">
                 <div class="placeholder-title">准备收听全球电视直播</div>
                 <div class="muted">选择下方频道后，默认会先按只听音频来播放；如果你切到“看电视”模式，这里也可以直接显示直播画面。</div>
@@ -135,18 +137,23 @@
   </main>
 
   <div class="floating-player" id="floatingPlayer" hidden>
-    <div class="floating-player-meta">
-      <div class="floating-player-overline">随时控制</div>
-      <div class="floating-player-title" id="floatingTitle">未开始收听</div>
-      <div class="floating-player-sub" id="floatingMeta"></div>
+    <div class="floating-player-media" id="floatingVideoWrap" hidden>
+      <div class="floating-video-mount" id="floatingVideoMount"></div>
     </div>
-    <div class="floating-player-actions">
-      <button class="btn primary" id="floatingPlayPauseBtn" type="button" disabled>开始收听</button>
-      <button class="btn" id="floatingOfficialBtn" type="button" disabled>官网</button>
+    <div class="floating-player-body">
+      <div class="floating-player-meta">
+        <div class="floating-player-overline">随时控制</div>
+        <div class="floating-player-title" id="floatingTitle">未开始收听</div>
+        <div class="floating-player-sub" id="floatingMeta"></div>
+      </div>
+      <div class="floating-player-actions">
+        <button class="btn primary" id="floatingPlayPauseBtn" type="button" disabled>开始收听</button>
+        <button class="btn" id="floatingOfficialBtn" type="button" disabled>官网</button>
+      </div>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <script src="./global-tv.js?v=20260715c" type="module"></script>
+  <script src="./global-tv.js?v=20260715d" type="module"></script>
 </body>
 </html>

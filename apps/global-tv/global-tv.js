@@ -19,10 +19,15 @@ const ui = {
   nowMeta: $('#nowMeta'),
   nowNote: $('#nowNote'),
   favCurrentBtn: $('#favCurrentBtn'),
+  stageWrap: $('#stageWrap'),
+  stageShell: $('#stageShell'),
   playerAudio: $('#playerAudio'),
+  videoMount: $('#videoMount'),
   playerVideo: $('#playerVideo'),
   stagePlaceholder: $('#stagePlaceholder'),
   floatingPlayer: $('#floatingPlayer'),
+  floatingVideoWrap: $('#floatingVideoWrap'),
+  floatingVideoMount: $('#floatingVideoMount'),
   floatingTitle: $('#floatingTitle'),
   floatingMeta: $('#floatingMeta'),
   floatingPlayPauseBtn: $('#floatingPlayPauseBtn'),
@@ -43,7 +48,10 @@ const state = {
   view: 'all',
   currentId: null,
   hls: null,
-  playbackMode: loadPlaybackMode()
+  playbackMode: loadPlaybackMode(),
+  stageInView: true,
+  videoDocked: false,
+  stageObserver: null
 }
 
 init()
@@ -51,6 +59,7 @@ init()
 async function init() {
   setupControls()
   setupPlayer()
+  setupStageObserver()
   applyPlaybackMode(state.playbackMode, { persist: false, rerender: false })
   setDefaultStageMessage()
   await loadChannels()
@@ -388,6 +397,7 @@ function renderPlayer(channel, autoplay) {
     resetAllMedia()
     setStageMessage(`该频道需要在官方页面继续${getPlaybackVerb()}`, `这个频道暂不支持站内直连${getPlaybackModeLabel()}。我已经保留了官方直播入口，点击“打开官方直播”即可继续${getPlaybackVerb()}。`)
     setInfo(`已选中 ${channel.title}，请打开官方直播页继续${getPlaybackVerb()}`)
+    syncFloatingVideoDock()
     if (autoplay) openExternalUrl(channel.watchUrl)
     return
   }
@@ -396,6 +406,7 @@ function renderPlayer(channel, autoplay) {
     resetAllMedia()
     setStageMessage(getReadyStageTitle(), `点击“${getPlayButtonLabel()}”即可开始${getPlaybackVerb()} ${channel.title}。${getReadyStageDescription()}`)
     setInfo(`已选中 ${channel.title}`)
+    syncFloatingVideoDock()
     return
   }
 
@@ -422,6 +433,7 @@ function playHlsChannel(channel) {
   resetAllMedia(media)
   ui.stagePlaceholder.hidden = true
   media.muted = false
+  syncFloatingVideoDock()
 
   const HlsCtor = window.Hls
   if (HlsCtor && typeof HlsCtor.isSupported === 'function' && HlsCtor.isSupported()) {
@@ -468,6 +480,7 @@ function destroyHls() {
     state.hls = null
   }
   resetAllMedia()
+  syncFloatingVideoDock()
 }
 
 function refreshCurrentActions() {
@@ -487,7 +500,9 @@ function updateFloatingControls() {
   const channel = getCurrentChannel()
   const hasCurrent = !!channel
   const media = getPlaybackMedia()
+  syncFloatingVideoDock()
   ui.floatingPlayer.hidden = !hasCurrent
+  ui.floatingPlayer.classList.toggle('with-video', state.videoDocked)
   if (!hasCurrent) {
     ui.floatingTitle.textContent = `未开始${getPlaybackVerb()}`
     ui.floatingMeta.textContent = ''
@@ -537,6 +552,7 @@ function applyPlaybackMode(mode, options = {}) {
   document.body.classList.toggle('audio-only', nextMode === 'audio')
   document.body.classList.toggle('video-mode', nextMode === 'video')
   updateModeButtons()
+  syncFloatingVideoDock()
   if (persist) save(STORE.playbackMode, nextMode)
   if (!rerender) return
   const current = getCurrentChannel()
@@ -659,6 +675,54 @@ function getHostname(value) {
   } catch (_) {
     return ''
   }
+}
+
+function setupStageObserver() {
+  if (!ui.stageWrap) return
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0]
+      state.stageInView = !!entry?.isIntersecting && entry.intersectionRatio > 0.35
+      syncFloatingVideoDock()
+    }, {
+      threshold: [0, 0.35, 0.75, 1]
+    })
+    observer.observe(ui.stageWrap)
+    state.stageObserver = observer
+    return
+  }
+
+  const handle = () => {
+    const rect = ui.stageWrap.getBoundingClientRect()
+    const vh = window.innerHeight || document.documentElement.clientHeight || 0
+    const visibleTop = Math.max(rect.top, 0)
+    const visibleBottom = Math.min(rect.bottom, vh)
+    const visibleHeight = Math.max(0, visibleBottom - visibleTop)
+    const ratio = rect.height > 0 ? visibleHeight / rect.height : 0
+    state.stageInView = ratio > 0.35
+    syncFloatingVideoDock()
+  }
+  window.addEventListener('scroll', handle, { passive: true })
+  window.addEventListener('resize', handle)
+  handle()
+}
+
+function syncFloatingVideoDock() {
+  const shouldDock = shouldDockVideo()
+  const targetMount = shouldDock ? ui.floatingVideoMount : ui.videoMount
+  if (targetMount && ui.playerVideo.parentElement !== targetMount) {
+    targetMount.appendChild(ui.playerVideo)
+  }
+  state.videoDocked = shouldDock
+  ui.floatingVideoWrap.hidden = !shouldDock
+  ui.floatingPlayer.classList.toggle('with-video', shouldDock)
+}
+
+function shouldDockVideo() {
+  const channel = getCurrentChannel()
+  if (state.playbackMode !== 'video') return false
+  if (!channel || channel.kind !== 'hls') return false
+  return !state.stageInView
 }
 
 const COUNTRY_PATTERNS = [
