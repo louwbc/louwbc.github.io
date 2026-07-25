@@ -46,7 +46,7 @@ const STORE = {
   playbackMode: 'global-tv:playbackMode'
 }
 
-const FAVORITES_LIMIT = 50
+const FAVORITES_LIMIT = 100
 
 const state = {
   channels: [],
