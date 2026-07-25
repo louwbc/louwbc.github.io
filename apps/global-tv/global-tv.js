@@ -43,6 +43,8 @@ const STORE = {
   playbackMode: 'global-tv:playbackMode'
 }
 
+const FAVORITES_LIMIT = 50
+
 const state = {
   channels: [],
   view: 'all',
@@ -92,7 +94,8 @@ function setupControls() {
   ui.favCurrentBtn.addEventListener('click', () => {
     const channel = getCurrentChannel()
     if (!channel) return
-    toggleFavorite(channel.id)
+    const result = toggleFavorite(channel.id)
+    handleFavoriteToggleResult(result, channel.title)
     refreshCurrentActions()
     refreshList()
   })
@@ -157,6 +160,7 @@ async function loadChannels() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const parsed = await res.json()
     state.channels = normalizeChannels(parsed)
+    const favoriteSync = syncStoredFavorites(state.channels)
     populateFilters(state.channels)
     refreshTabs()
     refreshList()
@@ -164,7 +168,8 @@ async function loadChannels() {
       selectChannel(state.channels[0], false)
       const playableCount = state.channels.filter((item) => item.kind === 'hls').length
       const externalCount = state.channels.filter((item) => item.kind === 'external').length
-      setInfo(`已载入 ${state.channels.length} 个可用频道，其中 ${playableCount} 个可站内收听，${externalCount} 个需打开官网`)
+      const syncText = favoriteSync.removedCount ? `，已清理 ${favoriteSync.removedCount} 个失效收藏` : ''
+      setInfo(`已载入 ${state.channels.length} 个可用频道，其中 ${playableCount} 个可站内收听，${externalCount} 个需打开官网${syncText}`)
     } else {
       setInfo('没有可用频道')
     }
@@ -248,7 +253,7 @@ function refreshList() {
 
   if (!channels.length) {
     ui.empty.textContent = state.view === 'favorites'
-      ? '你还没有收藏频道。'
+      ? getFavoritesEmptyMessage()
       : (state.view === 'recent' ? '还没有最近观看记录。' : '当前筛选条件下没有频道。')
     return
   }
@@ -269,7 +274,7 @@ function buildListMeta(count) {
 }
 
 function getVisibleChannels() {
-  const favorites = new Set(loadList(STORE.favorites))
+  const favorites = new Set(loadFavoriteIds())
   const recent = loadList(STORE.recent)
   const byId = new Map(state.channels.map((item) => [item.id, item]))
 
@@ -366,7 +371,8 @@ function renderChannelItem(channel) {
   favBtn.textContent = isFavorite(channel.id) ? '已收藏' : '收藏'
   favBtn.addEventListener('click', (e) => {
     e.stopPropagation()
-    toggleFavorite(channel.id)
+    const result = toggleFavorite(channel.id)
+    handleFavoriteToggleResult(result, channel.title)
     refreshCurrentActions()
     refreshList()
   })
@@ -490,6 +496,28 @@ function refreshCurrentActions() {
   ui.favCurrentBtn.disabled = !hasCurrent
   ui.favCurrentBtn.textContent = hasCurrent && isFavorite(channel.id) ? '取消收藏' : '加入收藏'
   ui.floatingOfficialBtn.disabled = !hasCurrent || !channel.watchUrl
+}
+
+function getFavoritesEmptyMessage() {
+  return loadFavoriteIds().length
+    ? '当前筛选条件下没有匹配的收藏频道。'
+    : '你还没有收藏频道。'
+}
+
+function handleFavoriteToggleResult(result, title) {
+  const label = String(title || '当前频道').trim()
+  if (!result || result.status === 'noop') return
+  if (result.status === 'added') {
+    setInfo(`已收藏 ${label}`)
+    return
+  }
+  if (result.status === 'removed') {
+    setInfo(`已取消收藏 ${label}`)
+    return
+  }
+  if (result.status === 'limit_reached') {
+    setInfo(`收藏已达 ${result.limit} 个上限，请先取消一些收藏后再添加 ${label}`)
+  }
 }
 
 function getCurrentChannel() {
@@ -811,13 +839,27 @@ const COUNTRY_DOMAIN_SUFFIXES = [
 ]
 
 function toggleFavorite(id) {
-  const list = loadList(STORE.favorites)
-  const next = list.includes(id) ? list.filter((item) => item !== id) : [id, ...list]
-  save(STORE.favorites, next.slice(0, 50))
+  const value = String(id || '').trim()
+  if (!value) return { status: 'noop' }
+
+  const list = loadFavoriteIds()
+  if (list.includes(value)) {
+    const next = list.filter((item) => item !== value)
+    save(STORE.favorites, next)
+    return { status: 'removed', count: next.length }
+  }
+
+  if (list.length >= FAVORITES_LIMIT) {
+    return { status: 'limit_reached', limit: FAVORITES_LIMIT, count: list.length }
+  }
+
+  const next = [value, ...list]
+  save(STORE.favorites, next)
+  return { status: 'added', count: next.length }
 }
 
 function isFavorite(id) {
-  return loadList(STORE.favorites).includes(id)
+  return loadFavoriteIds().includes(id)
 }
 
 function saveRecent(id) {
@@ -842,6 +884,21 @@ function loadList(key) {
     out.push(value)
   }
   return out
+}
+
+function loadFavoriteIds() {
+  return loadList(STORE.favorites)
+}
+
+function syncStoredFavorites(channels) {
+  const validIds = new Set((Array.isArray(channels) ? channels : []).map((item) => String(item?.id || '').trim()).filter(Boolean))
+  const current = loadFavoriteIds()
+  const next = current.filter((id) => validIds.has(id)).slice(0, FAVORITES_LIMIT)
+  if (next.length !== current.length) save(STORE.favorites, next)
+  return {
+    ids: next,
+    removedCount: current.length - next.length
+  }
 }
 
 function load(key, fallback) {
