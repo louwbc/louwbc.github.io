@@ -64,6 +64,7 @@ init()
 async function init() {
   setupControls()
   setupPlayer()
+  setupKeyboardShortcuts()
   setupStageObserver()
   applyPlaybackMode(state.playbackMode, { persist: false, rerender: false })
   setDefaultStageMessage()
@@ -165,6 +166,31 @@ function setupPlayer() {
       updateFloatingControls()
     })
   }
+}
+
+function setupKeyboardShortcuts() {
+  window.addEventListener('keydown', async (event) => {
+    if (shouldIgnoreKeyboardShortcut(event)) return
+
+    if (event.code === 'KeyN') {
+      event.preventDefault()
+      playRelativeChannel(1)
+      return
+    }
+
+    if (event.code === 'KeyP') {
+      event.preventDefault()
+      playRelativeChannel(-1)
+      return
+    }
+
+    if (event.code === 'Space') {
+      const channel = getCurrentChannel()
+      if (!channel || channel.kind === 'external') return
+      event.preventDefault()
+      await toggleCurrentPlayback()
+    }
+  })
 }
 
 async function loadChannels() {
@@ -321,6 +347,10 @@ function getVisibleChannels() {
   })
 }
 
+function getNavigableChannels() {
+  return getVisibleChannels()
+}
+
 function getFavoriteChannels() {
   const byId = new Map(state.channels.map((item) => [item.id, item]))
   return loadFavoriteIds().map((id) => byId.get(id)).filter(Boolean)
@@ -412,6 +442,23 @@ function selectChannel(channel, autoplay) {
   refreshCurrentActions()
   updateFloatingControls()
   refreshList()
+}
+
+function playRelativeChannel(step) {
+  const list = getNavigableChannels()
+  if (!list.length) {
+    setInfo('当前列表里没有可切换的频道')
+    return
+  }
+
+  const currentId = getCurrentChannel()?.id || ''
+  const currentIndex = list.findIndex((item) => item.id === currentId)
+  const baseIndex = currentIndex >= 0 ? currentIndex : (step > 0 ? -1 : 0)
+  const nextIndex = modulo(baseIndex + step, list.length)
+  const target = list[nextIndex]
+  if (!target) return
+  selectChannel(target, true)
+  setInfo(`已切到 ${target.title}`)
 }
 
 function renderPlayer(channel, autoplay) {
@@ -518,6 +565,27 @@ function refreshCurrentActions() {
   ui.favCurrentBtn.disabled = !hasCurrent
   ui.favCurrentBtn.textContent = hasCurrent && isFavorite(channel.id) ? '取消收藏' : '加入收藏'
   ui.floatingOfficialBtn.disabled = !hasCurrent || !channel.watchUrl
+}
+
+async function toggleCurrentPlayback() {
+  const channel = getCurrentChannel()
+  if (!channel || channel.kind === 'external') return
+  const media = getPlaybackMedia()
+  if (media.paused) {
+    if (!hasMediaSource(media)) {
+      playHlsChannel(channel)
+      updateFloatingControls()
+      return
+    }
+    try {
+      await media.play()
+    } catch (_) {
+      setInfo(`${channel.title} 还没有开始${getPlaybackVerb()}`)
+    }
+  } else {
+    media.pause()
+  }
+  updateFloatingControls()
 }
 
 function getFavoritesEmptyMessage() {
@@ -884,6 +952,20 @@ function shouldDockVideo() {
   if (state.playbackMode !== 'video') return false
   if (!channel || channel.kind !== 'hls') return false
   return !state.stageInView
+}
+
+function shouldIgnoreKeyboardShortcut(event) {
+  if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return true
+  const target = event.target
+  if (!(target instanceof HTMLElement)) return false
+  if (target.isContentEditable) return true
+  const tag = target.tagName
+  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'BUTTON'
+}
+
+function modulo(value, length) {
+  if (!length) return 0
+  return ((value % length) + length) % length
 }
 
 const COUNTRY_PATTERNS = [
