@@ -14,6 +14,7 @@ const ui = {
   exportFavoritesBtn: $('#exportFavoritesBtn'),
   importFavoritesBtn: $('#importFavoritesBtn'),
   importFavoritesInput: $('#importFavoritesInput'),
+  playerFullscreenBtn: $('#playerFullscreenBtn'),
   openOfficialBtn: $('#openOfficialBtn'),
   modeAudioBtn: $('#modeAudioBtn'),
   modeVideoBtn: $('#modeVideoBtn'),
@@ -34,6 +35,7 @@ const ui = {
   floatingTitle: $('#floatingTitle'),
   floatingMeta: $('#floatingMeta'),
   floatingPlayPauseBtn: $('#floatingPlayPauseBtn'),
+  floatingFullscreenBtn: $('#floatingFullscreenBtn'),
   floatingOfficialBtn: $('#floatingOfficialBtn'),
   channelList: $('#channelList'),
   listMeta: $('#listMeta'),
@@ -105,6 +107,9 @@ function setupControls() {
     if (!channel?.watchUrl) return
     openExternalUrl(channel.watchUrl)
   })
+  ui.playerFullscreenBtn.addEventListener('click', () => {
+    togglePlayerFullscreen()
+  })
 
   ui.favCurrentBtn.addEventListener('click', () => {
     const channel = getCurrentChannel()
@@ -141,6 +146,12 @@ function setupControls() {
     if (!channel?.watchUrl) return
     openExternalUrl(channel.watchUrl)
   })
+  ui.floatingFullscreenBtn.addEventListener('click', () => {
+    togglePlayerFullscreen()
+  })
+
+  document.addEventListener('fullscreenchange', updateFullscreenButtons)
+  document.addEventListener('webkitfullscreenchange', updateFullscreenButtons)
 }
 
 function setupPlayer() {
@@ -167,6 +178,12 @@ function setupPlayer() {
       updateFloatingControls()
     })
   }
+
+  ui.playerVideo.addEventListener('webkitbeginfullscreen', () => {
+    setInfo('原生视频全屏里浏览器可能会接管键盘。若要继续用 N / P / Space，请改用“页面全屏”。')
+    updateFullscreenButtons()
+  })
+  ui.playerVideo.addEventListener('webkitendfullscreen', updateFullscreenButtons)
 }
 
 function setupKeyboardShortcuts() {
@@ -588,6 +605,68 @@ function refreshCurrentActions() {
   ui.favCurrentBtn.disabled = !hasCurrent
   ui.favCurrentBtn.textContent = hasCurrent && isFavorite(channel.id) ? '取消收藏' : '加入收藏'
   ui.floatingOfficialBtn.disabled = !hasCurrent || !channel.watchUrl
+  updateFullscreenButtons()
+}
+
+async function togglePlayerFullscreen() {
+  const channel = getCurrentChannel()
+  if (!canUsePlayerFullscreen(channel)) return
+
+  if (isPlayerFullscreen()) {
+    exitPlayerFullscreen()
+    return
+  }
+
+  try {
+    if (ui.stageShell.requestFullscreen) {
+      await ui.stageShell.requestFullscreen()
+    } else if (ui.stageShell.webkitRequestFullscreen) {
+      ui.stageShell.webkitRequestFullscreen()
+    } else if (ui.playerVideo.webkitEnterFullscreen) {
+      ui.playerVideo.webkitEnterFullscreen()
+    } else {
+      setInfo('当前浏览器不支持页面全屏')
+      return
+    }
+    setInfo('已进入页面全屏，可继续用 N / P / Space 控制')
+  } catch (_) {
+    setInfo('进入全屏失败，请再试一次')
+  }
+  updateFullscreenButtons()
+}
+
+function exitPlayerFullscreen() {
+  try {
+    if (document.fullscreenElement && document.exitFullscreen) {
+      document.exitFullscreen().catch(() => {})
+    } else if (document.webkitFullscreenElement && document.webkitExitFullscreen) {
+      document.webkitExitFullscreen()
+    } else if (ui.playerVideo.webkitDisplayingFullscreen && ui.playerVideo.webkitExitFullscreen) {
+      ui.playerVideo.webkitExitFullscreen()
+    }
+  } catch (_) {}
+  updateFullscreenButtons()
+}
+
+function canUsePlayerFullscreen(channel = getCurrentChannel()) {
+  return !!ui.stageShell && state.playbackMode === 'video' && !!channel && channel.kind === 'hls'
+}
+
+function isPlayerFullscreen() {
+  const fullscreenElement = document.fullscreenElement || document.webkitFullscreenElement
+  if (fullscreenElement) {
+    return fullscreenElement === ui.stageShell || ui.stageShell.contains(fullscreenElement)
+  }
+  return !!ui.playerVideo.webkitDisplayingFullscreen
+}
+
+function updateFullscreenButtons() {
+  const enabled = canUsePlayerFullscreen()
+  const label = isPlayerFullscreen() ? '退出全屏' : '页面全屏'
+  ui.playerFullscreenBtn.disabled = !enabled
+  ui.floatingFullscreenBtn.disabled = !enabled
+  ui.playerFullscreenBtn.textContent = label
+  ui.floatingFullscreenBtn.textContent = label
 }
 
 async function toggleCurrentPlayback() {
@@ -760,6 +839,7 @@ function updateFloatingControls() {
     ui.floatingMeta.textContent = ''
     ui.floatingPlayPauseBtn.disabled = true
     ui.floatingPlayPauseBtn.textContent = getStartButtonLabel()
+    updateFullscreenButtons()
     return
   }
 
@@ -769,15 +849,18 @@ function updateFloatingControls() {
   if (channel.kind === 'external') {
     ui.floatingPlayPauseBtn.disabled = true
     ui.floatingPlayPauseBtn.textContent = '站内不可播'
+    updateFullscreenButtons()
     return
   }
 
   ui.floatingPlayPauseBtn.disabled = false
   if (!hasMediaSource(media)) {
     ui.floatingPlayPauseBtn.textContent = getStartButtonLabel()
+    updateFullscreenButtons()
     return
   }
   ui.floatingPlayPauseBtn.textContent = media.paused ? getContinueButtonLabel() : '暂停'
+  updateFullscreenButtons()
 }
 
 function switchPlaybackMode(mode) {
