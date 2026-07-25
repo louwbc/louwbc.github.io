@@ -7,7 +7,7 @@
   <title>全球电视</title>
   <link rel="icon" href="../../icons/icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../../assets/css/site.css?v=20260528c">
-  <link rel="stylesheet" href="./global-tv.css?v=20260715b">
+  <link rel="stylesheet" href="./global-tv.css?v=20260715c">
 </head>
 <body class="audio-only">
   <header class="topbar">
@@ -15,7 +15,7 @@
       <div class="brand">
         <svg viewBox="0 0 24 24" class="logo" aria-hidden="true"><path d="M4 6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-3.8l1.3 2.3a1 1 0 0 1-1.7 1l-1.8-3.3H7a3 3 0 0 1-3-3V6zm3-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H7zM8 8h8v2H8V8zm0 4h5v2H8v-2z" fill="currentColor"/></svg>
         <div class="brand-title">全球电视</div>
-        <span class="version-chip" aria-label="当前版本">v2.4</span>
+        <span class="version-chip" aria-label="当前版本">v2.5</span>
       </div>
       <nav class="nav">
         <a href="../../">首页</a>
@@ -34,13 +34,13 @@
       <div class="hero-copy">
         <div class="eyebrow">Live TV Audio First</div>
         <h1 class="hero-title">全球电视直播</h1>
-        <p class="hero-text">这里现在只保留英语频道，并且完全按“只听”来设计。频道库已经扩充到 800 个可用源，同时去掉了宗教类；你可以按语言、地区、国家和分类来筛选，然后直接收听声音，不再提供任何画面播放体验。</p>
+        <p class="hero-text">这里现在只保留英语频道。默认按“只听音频”启动，方便后台收听；如果你需要，也可以随时切换到“看电视”模式。频道库已经扩充到 800 个可用源，同时去掉了宗教类，并支持按语言、地区、国家和分类来筛选。</p>
       </div>
       <div class="hero-meta">
         <div class="meta-pill">可用频道 800 台</div>
         <div class="meta-pill">支持按语言、地区、国家与分类筛选</div>
         <div class="meta-pill">不含宗教类</div>
-        <div class="meta-pill">只提供听播模式</div>
+        <div class="meta-pill">默认只听，可切换看电视</div>
         <div class="meta-pill">收藏 + 最近观看</div>
       </div>
       <div class="muted" id="info" style="margin-top:14px">正在载入频道…</div>
@@ -74,6 +74,10 @@
           <button class="btn tab" id="tabRecent" data-view="recent" role="tab" aria-selected="false">最近</button>
         </div>
         <div class="row utility-row">
+          <div class="mode-switch" role="tablist" aria-label="播放模式">
+            <button class="btn mode-btn active" id="modeAudioBtn" type="button" data-mode="audio" role="tab" aria-selected="true">只听音频</button>
+            <button class="btn mode-btn" id="modeVideoBtn" type="button" data-mode="video" role="tab" aria-selected="false">看电视</button>
+          </div>
           <button class="btn" id="openOfficialBtn" type="button" disabled>打开官方直播</button>
         </div>
       </div>
@@ -84,7 +88,7 @@
         <section class="card player-card">
           <div class="player-top">
             <div>
-              <div class="muted overline">正在收听</div>
+              <div class="muted overline" id="nowOverline">正在收听</div>
               <h2 id="nowTitle" class="now-title">请选择一个频道</h2>
               <div id="nowMeta" class="muted now-meta"></div>
             </div>
@@ -97,14 +101,20 @@
                 title="全球电视直播音频播放器"
                 controls
                 preload="none"></audio>
+              <video
+                id="playerVideo"
+                title="全球电视直播视频播放器"
+                controls
+                playsinline
+                preload="none"></video>
               <div class="stage-placeholder" id="stagePlaceholder">
                 <div class="placeholder-title">准备收听全球电视直播</div>
-                <div class="muted">选择下方频道并点击“收听”后，这里会直接播放直播声音。当前页面是纯音频模式，不提供任何画面播放。</div>
+                <div class="muted">选择下方频道后，默认会先按只听音频来播放；如果你切到“看电视”模式，这里也可以直接显示直播画面。</div>
               </div>
             </div>
           </div>
           <div class="player-note">
-            <div id="nowNote" class="muted">提示：当前页面只保留音频播放；部分频道会跳转到官方直播页继续收听。</div>
+            <div id="nowNote" class="muted">提示：默认是只听音频；你也可以切到“看电视”。部分频道会跳转到官方直播页继续播放。</div>
           </div>
         </section>
       </div>
@@ -137,6 +147,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <script src="./global-tv.js?v=20260715b" type="module"></script>
+  <script src="./global-tv.js?v=20260715c" type="module"></script>
 </body>
 </html>

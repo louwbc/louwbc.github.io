@@ -12,11 +12,15 @@ const ui = {
   tabFavorites: $('#tabFavorites'),
   tabRecent: $('#tabRecent'),
   openOfficialBtn: $('#openOfficialBtn'),
+  modeAudioBtn: $('#modeAudioBtn'),
+  modeVideoBtn: $('#modeVideoBtn'),
+  nowOverline: $('#nowOverline'),
   nowTitle: $('#nowTitle'),
   nowMeta: $('#nowMeta'),
   nowNote: $('#nowNote'),
   favCurrentBtn: $('#favCurrentBtn'),
   playerAudio: $('#playerAudio'),
+  playerVideo: $('#playerVideo'),
   stagePlaceholder: $('#stagePlaceholder'),
   floatingPlayer: $('#floatingPlayer'),
   floatingTitle: $('#floatingTitle'),
@@ -30,14 +34,16 @@ const ui = {
 
 const STORE = {
   favorites: 'global-tv:favorites',
-  recent: 'global-tv:recent'
+  recent: 'global-tv:recent',
+  playbackMode: 'global-tv:playbackMode'
 }
 
 const state = {
   channels: [],
   view: 'all',
   currentId: null,
-  hls: null
+  hls: null,
+  playbackMode: loadPlaybackMode()
 }
 
 init()
@@ -45,7 +51,8 @@ init()
 async function init() {
   setupControls()
   setupPlayer()
-  document.body.classList.add('audio-only')
+  applyPlaybackMode(state.playbackMode, { persist: false, rerender: false })
+  setDefaultStageMessage()
   await loadChannels()
 }
 
@@ -56,6 +63,8 @@ function setupControls() {
   ui.countrySelect.addEventListener('change', refreshList)
   ui.categorySelect.addEventListener('change', refreshList)
   ui.availabilitySelect.addEventListener('change', refreshList)
+  ui.modeAudioBtn.addEventListener('click', () => switchPlaybackMode('audio'))
+  ui.modeVideoBtn.addEventListener('click', () => switchPlaybackMode('video'))
 
   for (const btn of [ui.tabAll, ui.tabFavorites, ui.tabRecent]) {
     btn.addEventListener('click', () => {
@@ -82,19 +91,20 @@ function setupControls() {
   ui.floatingPlayPauseBtn.addEventListener('click', async () => {
     const channel = getCurrentChannel()
     if (!channel || channel.kind === 'external') return
-    if (ui.playerAudio.paused) {
-      if (!ui.playerAudio.currentSrc && !ui.playerAudio.src) {
+    const media = getPlaybackMedia()
+    if (media.paused) {
+      if (!hasMediaSource(media)) {
         playHlsChannel(channel)
         updateFloatingControls()
         return
       }
       try {
-        await ui.playerAudio.play()
+        await media.play()
       } catch (_) {
-        setInfo(`${channel.title} 还没有开始播放`)
+        setInfo(`${channel.title} 还没有开始${getPlaybackVerb()}`)
       }
     } else {
-      ui.playerAudio.pause()
+      media.pause()
     }
     updateFloatingControls()
   })
@@ -107,27 +117,29 @@ function setupControls() {
 }
 
 function setupPlayer() {
-  ui.playerAudio.addEventListener('playing', () => {
-    const channel = getCurrentChannel()
-    if (channel) setInfo(`正在收听 ${channel.title}`)
-    updateFloatingControls()
-  })
-  ui.playerAudio.addEventListener('pause', () => {
-    updateFloatingControls()
-  })
-  ui.playerAudio.addEventListener('loadedmetadata', () => {
-    updateFloatingControls()
-  })
-  ui.playerAudio.addEventListener('ended', () => {
-    updateFloatingControls()
-  })
-  ui.playerAudio.addEventListener('error', () => {
-    const channel = getCurrentChannel()
-    const label = channel?.title || '当前频道'
-    setStageMessage('收听失败', `${label} 当前没有成功载入。你可以点击“打开官方直播”继续收听。`)
-    setInfo(`${label} 收听失败`)
-    updateFloatingControls()
-  })
+  for (const media of [ui.playerAudio, ui.playerVideo]) {
+    media.addEventListener('playing', () => {
+      const channel = getCurrentChannel()
+      if (channel) setInfo(`正在${getPlaybackVerb()} ${channel.title}`)
+      updateFloatingControls()
+    })
+    media.addEventListener('pause', () => {
+      updateFloatingControls()
+    })
+    media.addEventListener('loadedmetadata', () => {
+      updateFloatingControls()
+    })
+    media.addEventListener('ended', () => {
+      updateFloatingControls()
+    })
+    media.addEventListener('error', () => {
+      const channel = getCurrentChannel()
+      const label = channel?.title || '当前频道'
+      setStageMessage(`${getPlaybackVerb()}失败`, `${label} 当前没有成功载入。你可以点击“打开官方直播”继续${getPlaybackVerb()}。`)
+      setInfo(`${label} ${getPlaybackVerb()}失败`)
+      updateFloatingControls()
+    })
+  }
 }
 
 async function loadChannels() {
@@ -284,7 +296,7 @@ function renderChannelItem(channel) {
   if (channel.id === state.currentId) card.classList.add('active')
   card.tabIndex = 0
   card.setAttribute('role', 'button')
-  card.setAttribute('aria-label', `${channel.title}，${channel.kind === 'external' ? '打开官方直播' : '收听直播'}`)
+  card.setAttribute('aria-label', `${channel.title}，${channel.kind === 'external' ? '打开官方直播' : `${getPlaybackVerb()}直播`}`)
   card.addEventListener('click', () => selectChannel(channel, true))
   card.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' && e.key !== ' ') return
@@ -324,7 +336,7 @@ function renderChannelItem(channel) {
   const playBtn = document.createElement('button')
   playBtn.className = 'btn primary'
   playBtn.type = 'button'
-  playBtn.textContent = channel.kind === 'external' ? '打开' : '收听'
+  playBtn.textContent = channel.kind === 'external' ? '打开' : getPlayButtonLabel()
   playBtn.addEventListener('click', (e) => {
     e.stopPropagation()
     selectChannel(channel, true)
@@ -369,21 +381,20 @@ function renderPlayer(channel, autoplay) {
   ui.nowTitle.textContent = channel.title
   ui.nowMeta.textContent = [channel.region, channel.country, channel.language, channel.category].filter(Boolean).join(' · ')
   ui.nowNote.textContent = channel.note || '官方公开直播频道'
+  ui.nowOverline.textContent = state.playbackMode === 'video' ? '正在观看' : '正在收听'
   destroyHls()
 
   if (channel.kind === 'external') {
-    ui.playerAudio.removeAttribute('src')
-    ui.playerAudio.load()
-    setStageMessage('该频道需要在官方页面继续收听', '这个频道暂不支持站内直连音频播放。我已经保留了官方直播入口，点击“打开官方直播”即可继续收听。')
-    setInfo(`已选中 ${channel.title}，请打开官方直播页继续收听`)
+    resetAllMedia()
+    setStageMessage(`该频道需要在官方页面继续${getPlaybackVerb()}`, `这个频道暂不支持站内直连${getPlaybackModeLabel()}。我已经保留了官方直播入口，点击“打开官方直播”即可继续${getPlaybackVerb()}。`)
+    setInfo(`已选中 ${channel.title}，请打开官方直播页继续${getPlaybackVerb()}`)
     if (autoplay) openExternalUrl(channel.watchUrl)
     return
   }
 
   if (!autoplay) {
-    ui.playerAudio.removeAttribute('src')
-    ui.playerAudio.load()
-    setStageMessage('已准备好收听', `点击“收听”即可开始播放 ${channel.title} 的声音。当前页面只提供纯音频模式。`)
+    resetAllMedia()
+    setStageMessage(getReadyStageTitle(), `点击“${getPlayButtonLabel()}”即可开始${getPlaybackVerb()} ${channel.title}。${getReadyStageDescription()}`)
     setInfo(`已选中 ${channel.title}`)
     return
   }
@@ -402,13 +413,15 @@ function setStageMessage(title, text) {
 function playHlsChannel(channel) {
   const url = channel.streamUrl
   if (!url) {
-    setStageMessage('收听失败', '当前频道缺少可播放地址。')
+    setStageMessage(`${getPlaybackVerb()}失败`, '当前频道缺少可播放地址。')
     setInfo(`${channel.title} 缺少可播放地址`)
     return
   }
 
+  const media = getPlaybackMedia()
+  resetAllMedia(media)
   ui.stagePlaceholder.hidden = true
-  ui.playerAudio.muted = false
+  media.muted = false
 
   const HlsCtor = window.Hls
   if (HlsCtor && typeof HlsCtor.isSupported === 'function' && HlsCtor.isSupported()) {
@@ -418,33 +431,33 @@ function playHlsChannel(channel) {
     })
     state.hls = hls
     hls.loadSource(url)
-    hls.attachMedia(ui.playerAudio)
+    hls.attachMedia(media)
     hls.on(HlsCtor.Events.MANIFEST_PARSED, () => {
-      ui.playerAudio.play().catch(() => {
-        setStageMessage('等待收听', `浏览器还没有自动开始播放 ${channel.title}。请点一下音频控件开始播放。`)
-        setInfo(`${channel.title} 已载入，等待收听`)
+      media.play().catch(() => {
+        setStageMessage(getWaitingStageTitle(), `浏览器还没有自动开始${getPlaybackVerb()} ${channel.title}。请点一下播放器开始。`)
+        setInfo(`${channel.title} 已载入，等待${getPlaybackVerb()}`)
       })
     })
     hls.on(HlsCtor.Events.ERROR, (_event, data) => {
       if (data?.fatal) {
-        setStageMessage('收听失败', `${channel.title} 当前没有成功载入。你可以点击“打开官方直播”继续收听。`)
-        setInfo(`${channel.title} 收听失败`)
+        setStageMessage(`${getPlaybackVerb()}失败`, `${channel.title} 当前没有成功载入。你可以点击“打开官方直播”继续${getPlaybackVerb()}。`)
+        setInfo(`${channel.title} ${getPlaybackVerb()}失败`)
       }
     })
     return
   }
 
-  if (ui.playerAudio.canPlayType('application/vnd.apple.mpegurl')) {
-    ui.playerAudio.src = url
-    ui.playerAudio.play().catch(() => {
-      setStageMessage('等待收听', `浏览器还没有自动开始播放 ${channel.title}。请点一下音频控件开始播放。`)
-      setInfo(`${channel.title} 已载入，等待收听`)
+  if (media.canPlayType('application/vnd.apple.mpegurl')) {
+    media.src = url
+    media.play().catch(() => {
+      setStageMessage(getWaitingStageTitle(), `浏览器还没有自动开始${getPlaybackVerb()} ${channel.title}。请点一下播放器开始。`)
+      setInfo(`${channel.title} 已载入，等待${getPlaybackVerb()}`)
     })
     return
   }
 
   setStageMessage('浏览器不支持 HLS', '当前浏览器无法直接播放这类直播流。你可以点击“打开官方直播”继续收听。')
-  setInfo('当前浏览器不支持 HLS 音频播放')
+  setInfo(`当前浏览器不支持 HLS ${getPlaybackModeLabel()}`)
 }
 
 function destroyHls() {
@@ -454,9 +467,7 @@ function destroyHls() {
     } catch (_) {}
     state.hls = null
   }
-  try {
-    ui.playerAudio.pause()
-  } catch (_) {}
+  resetAllMedia()
 }
 
 function refreshCurrentActions() {
@@ -475,12 +486,13 @@ function getCurrentChannel() {
 function updateFloatingControls() {
   const channel = getCurrentChannel()
   const hasCurrent = !!channel
+  const media = getPlaybackMedia()
   ui.floatingPlayer.hidden = !hasCurrent
   if (!hasCurrent) {
-    ui.floatingTitle.textContent = '未开始收听'
+    ui.floatingTitle.textContent = `未开始${getPlaybackVerb()}`
     ui.floatingMeta.textContent = ''
     ui.floatingPlayPauseBtn.disabled = true
-    ui.floatingPlayPauseBtn.textContent = '开始收听'
+    ui.floatingPlayPauseBtn.textContent = getStartButtonLabel()
     return
   }
 
@@ -494,11 +506,119 @@ function updateFloatingControls() {
   }
 
   ui.floatingPlayPauseBtn.disabled = false
-  if (!ui.playerAudio.currentSrc && !ui.playerAudio.src) {
-    ui.floatingPlayPauseBtn.textContent = '开始收听'
+  if (!hasMediaSource(media)) {
+    ui.floatingPlayPauseBtn.textContent = getStartButtonLabel()
     return
   }
-  ui.floatingPlayPauseBtn.textContent = ui.playerAudio.paused ? '继续播放' : '暂停'
+  ui.floatingPlayPauseBtn.textContent = media.paused ? getContinueButtonLabel() : '暂停'
+}
+
+function switchPlaybackMode(mode) {
+  const current = getCurrentChannel()
+  const activeMedia = getPlaybackMedia()
+  const shouldResume = !!current && current.kind === 'hls' && hasMediaSource(activeMedia) && !activeMedia.paused
+  applyPlaybackMode(mode, { rerender: false })
+  if (current) {
+    renderPlayer(current, shouldResume)
+    refreshCurrentActions()
+    updateFloatingControls()
+    refreshList()
+  } else {
+    setDefaultStageMessage()
+    updateFloatingControls()
+    refreshList()
+  }
+}
+
+function applyPlaybackMode(mode, options = {}) {
+  const { persist = true, rerender = true } = options
+  const nextMode = mode === 'video' ? 'video' : 'audio'
+  state.playbackMode = nextMode
+  document.body.classList.toggle('audio-only', nextMode === 'audio')
+  document.body.classList.toggle('video-mode', nextMode === 'video')
+  updateModeButtons()
+  if (persist) save(STORE.playbackMode, nextMode)
+  if (!rerender) return
+  const current = getCurrentChannel()
+  if (current) renderPlayer(current, false)
+}
+
+function updateModeButtons() {
+  const isAudio = state.playbackMode === 'audio'
+  ui.modeAudioBtn.classList.toggle('active', isAudio)
+  ui.modeAudioBtn.setAttribute('aria-selected', isAudio ? 'true' : 'false')
+  ui.modeVideoBtn.classList.toggle('active', !isAudio)
+  ui.modeVideoBtn.setAttribute('aria-selected', !isAudio ? 'true' : 'false')
+}
+
+function getPlaybackMedia() {
+  return state.playbackMode === 'video' ? ui.playerVideo : ui.playerAudio
+}
+
+function hasMediaSource(media) {
+  return !!(media?.currentSrc || media?.src)
+}
+
+function resetAllMedia(exceptMedia = null) {
+  for (const media of [ui.playerAudio, ui.playerVideo]) {
+    if (media === exceptMedia) continue
+    resetMedia(media)
+  }
+}
+
+function resetMedia(media) {
+  if (!media) return
+  try {
+    media.pause()
+  } catch (_) {}
+  try {
+    media.removeAttribute('src')
+    media.load()
+  } catch (_) {}
+}
+
+function loadPlaybackMode() {
+  const saved = load(STORE.playbackMode, 'audio')
+  return saved === 'video' ? 'video' : 'audio'
+}
+
+function getPlaybackVerb() {
+  return state.playbackMode === 'video' ? '观看' : '收听'
+}
+
+function getPlaybackModeLabel() {
+  return state.playbackMode === 'video' ? '视频播放' : '音频播放'
+}
+
+function getPlayButtonLabel() {
+  return state.playbackMode === 'video' ? '观看' : '收听'
+}
+
+function getStartButtonLabel() {
+  return state.playbackMode === 'video' ? '开始观看' : '开始收听'
+}
+
+function getContinueButtonLabel() {
+  return state.playbackMode === 'video' ? '继续观看' : '继续播放'
+}
+
+function getReadyStageTitle() {
+  return state.playbackMode === 'video' ? '已准备好观看' : '已准备好收听'
+}
+
+function getWaitingStageTitle() {
+  return state.playbackMode === 'video' ? '等待观看' : '等待收听'
+}
+
+function getReadyStageDescription() {
+  return state.playbackMode === 'video'
+    ? '当前页面默认仍是只听音频，但你已经切到了视频模式。'
+    : '当前页面默认使用只听音频模式。'
+}
+
+function setDefaultStageMessage() {
+  const title = state.playbackMode === 'video' ? '准备观看全球电视直播' : '准备收听全球电视直播'
+  setStageMessage(title, '选择下方频道后，默认会先按只听音频来播放；如果你切到“看电视”模式，这里也可以直接显示直播画面。')
 }
 
 function getKindLabel(kind) {
