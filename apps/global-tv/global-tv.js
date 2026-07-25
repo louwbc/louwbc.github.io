@@ -161,15 +161,21 @@ async function loadChannels() {
     const parsed = await res.json()
     state.channels = normalizeChannels(parsed)
     const favoriteSync = syncStoredFavorites(state.channels)
+    const favoriteChannels = favoriteSync.ids
+      .map((id) => state.channels.find((item) => item.id === id))
+      .filter(Boolean)
+    state.view = favoriteChannels.length ? 'favorites' : 'all'
     populateFilters(state.channels)
     refreshTabs()
     refreshList()
     if (state.channels.length) {
-      selectChannel(state.channels[0], false)
+      const initialChannel = favoriteChannels[0] || state.channels[0]
+      selectChannel(initialChannel, false)
       const playableCount = state.channels.filter((item) => item.kind === 'hls').length
       const externalCount = state.channels.filter((item) => item.kind === 'external').length
       const syncText = favoriteSync.removedCount ? `，已清理 ${favoriteSync.removedCount} 个失效收藏` : ''
-      setInfo(`已载入 ${state.channels.length} 个可用频道，其中 ${playableCount} 个可站内收听，${externalCount} 个需打开官网${syncText}`)
+      const initialViewText = favoriteChannels.length ? '，已优先显示收藏频道' : ''
+      setInfo(`已载入 ${state.channels.length} 个可用频道，其中 ${playableCount} 个可站内收听，${externalCount} 个需打开官网${syncText}${initialViewText}`)
     } else {
       setInfo('没有可用频道')
     }
