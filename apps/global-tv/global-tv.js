@@ -47,6 +47,7 @@ const STORE = {
 }
 
 const FAVORITES_LIMIT = 100
+const handledKeyboardEvents = new WeakSet()
 
 const state = {
   channels: [],
@@ -169,28 +170,44 @@ function setupPlayer() {
 }
 
 function setupKeyboardShortcuts() {
-  window.addEventListener('keydown', async (event) => {
-    if (shouldIgnoreKeyboardShortcut(event)) return
+  document.addEventListener('keydown', handleKeyboardShortcut, true)
+  window.addEventListener('keydown', handleKeyboardShortcut)
+}
 
-    if (event.code === 'KeyN') {
-      event.preventDefault()
-      playRelativeChannel(1)
-      return
-    }
+async function handleKeyboardShortcut(event) {
+  if (handledKeyboardEvents.has(event)) return
+  handledKeyboardEvents.add(event)
 
-    if (event.code === 'KeyP') {
-      event.preventDefault()
-      playRelativeChannel(-1)
-      return
-    }
+  // #region debug-point A:keydown-received
+  fetch("http://127.0.0.1:7777/event",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sessionId:"global-tv-shortcuts",runId:"post-fix",hypothesisId:"A",location:"global-tv.js:handleKeyboardShortcut",msg:"[DEBUG] keydown received",data:{code:event.code,key:event.key,targetTag:event.target instanceof HTMLElement ? event.target.tagName : null,targetId:event.target instanceof HTMLElement ? (event.target.id || '') : '',defaultPrevented:event.defaultPrevented},ts:Date.now()})}).catch(()=>{});
+  // #endregion
+  if (shouldIgnoreKeyboardShortcut(event)) {
+    // #region debug-point B:keydown-ignored
+    fetch("http://127.0.0.1:7777/event",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sessionId:"global-tv-shortcuts",runId:"post-fix",hypothesisId:"B",location:"global-tv.js:handleKeyboardShortcut",msg:"[DEBUG] keydown ignored",data:{code:event.code,key:event.key,targetTag:event.target instanceof HTMLElement ? event.target.tagName : null,targetId:event.target instanceof HTMLElement ? (event.target.id || '') : ''},ts:Date.now()})}).catch(()=>{});
+    // #endregion
+    return
+  }
 
-    if (event.code === 'Space') {
-      const channel = getCurrentChannel()
-      if (!channel || channel.kind === 'external') return
-      event.preventDefault()
-      await toggleCurrentPlayback()
-    }
-  })
+  const key = String(event.key || '').toLowerCase()
+
+  if (event.code === 'KeyN' || key === 'n') {
+    event.preventDefault()
+    playRelativeChannel(1)
+    return
+  }
+
+  if (event.code === 'KeyP' || key === 'p') {
+    event.preventDefault()
+    playRelativeChannel(-1)
+    return
+  }
+
+  if (event.code === 'Space' || key === ' ') {
+    const channel = getCurrentChannel()
+    if (!channel || channel.kind === 'external') return
+    event.preventDefault()
+    await toggleCurrentPlayback()
+  }
 }
 
 async function loadChannels() {
@@ -446,6 +463,9 @@ function selectChannel(channel, autoplay) {
 
 function playRelativeChannel(step) {
   const list = getNavigableChannels()
+  // #region debug-point C:navigation-state
+  fetch("http://127.0.0.1:7777/event",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sessionId:"global-tv-shortcuts",runId:"post-fix",hypothesisId:"C",location:"global-tv.js:playRelativeChannel",msg:"[DEBUG] playRelativeChannel called",data:{step,listLength:list.length,view:state.view,currentId:getCurrentChannel()?.id || '',currentTitle:getCurrentChannel()?.title || ''},ts:Date.now()})}).catch(()=>{});
+  // #endregion
   if (!list.length) {
     setInfo('当前列表里没有可切换的频道')
     return
@@ -456,6 +476,9 @@ function playRelativeChannel(step) {
   const baseIndex = currentIndex >= 0 ? currentIndex : (step > 0 ? -1 : 0)
   const nextIndex = modulo(baseIndex + step, list.length)
   const target = list[nextIndex]
+  // #region debug-point C:navigation-target
+  fetch("http://127.0.0.1:7777/event",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sessionId:"global-tv-shortcuts",runId:"post-fix",hypothesisId:"C",location:"global-tv.js:playRelativeChannel",msg:"[DEBUG] navigation target resolved",data:{step,currentIndex,baseIndex,nextIndex,targetId:target?.id || '',targetTitle:target?.title || ''},ts:Date.now()})}).catch(()=>{});
+  // #endregion
   if (!target) return
   selectChannel(target, true)
   setInfo(`已切到 ${target.title}`)
@@ -960,6 +983,9 @@ function shouldIgnoreKeyboardShortcut(event) {
   if (!(target instanceof HTMLElement)) return false
   if (target.isContentEditable) return true
   const tag = target.tagName
+  // #region debug-point B:ignore-check
+  fetch("http://127.0.0.1:7777/event",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sessionId:"global-tv-shortcuts",runId:"post-fix",hypothesisId:"B",location:"global-tv.js:shouldIgnoreKeyboardShortcut",msg:"[DEBUG] ignore check evaluated",data:{tag,id:target.id || '',isContentEditable:target.isContentEditable},ts:Date.now()})}).catch(()=>{});
+  // #endregion
   return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'BUTTON'
 }
 
