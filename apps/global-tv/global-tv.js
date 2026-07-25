@@ -11,6 +11,9 @@ const ui = {
   tabAll: $('#tabAll'),
   tabFavorites: $('#tabFavorites'),
   tabRecent: $('#tabRecent'),
+  exportFavoritesBtn: $('#exportFavoritesBtn'),
+  importFavoritesBtn: $('#importFavoritesBtn'),
+  importFavoritesInput: $('#importFavoritesInput'),
   openOfficialBtn: $('#openOfficialBtn'),
   modeAudioBtn: $('#modeAudioBtn'),
   modeVideoBtn: $('#modeVideoBtn'),
@@ -76,6 +79,16 @@ function setupControls() {
   ui.availabilitySelect.addEventListener('change', refreshList)
   ui.modeAudioBtn.addEventListener('click', () => switchPlaybackMode('audio'))
   ui.modeVideoBtn.addEventListener('click', () => switchPlaybackMode('video'))
+  ui.exportFavoritesBtn.addEventListener('click', exportFavorites)
+  ui.importFavoritesBtn.addEventListener('click', () => {
+    ui.importFavoritesInput.click()
+  })
+  ui.importFavoritesInput.addEventListener('change', async (event) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    await importFavorites(file)
+  })
 
   for (const btn of [ui.tabAll, ui.tabFavorites, ui.tabRecent]) {
     btn.addEventListener('click', () => {
@@ -161,9 +174,7 @@ async function loadChannels() {
     const parsed = await res.json()
     state.channels = normalizeChannels(parsed)
     const favoriteSync = syncStoredFavorites(state.channels)
-    const favoriteChannels = favoriteSync.ids
-      .map((id) => state.channels.find((item) => item.id === id))
-      .filter(Boolean)
+    const favoriteChannels = getFavoriteChannels()
     state.view = favoriteChannels.length ? 'favorites' : 'all'
     populateFilters(state.channels)
     refreshTabs()
@@ -308,6 +319,11 @@ function getVisibleChannels() {
     const hay = `${channel.title} ${channel.region} ${channel.country} ${channel.language} ${channel.category} ${channel.note}`.toLowerCase()
     return hay.includes(keyword)
   })
+}
+
+function getFavoriteChannels() {
+  const byId = new Map(state.channels.map((item) => [item.id, item]))
+  return loadFavoriteIds().map((id) => byId.get(id)).filter(Boolean)
 }
 
 function renderChannelItem(channel) {
@@ -524,6 +540,117 @@ function handleFavoriteToggleResult(result, title) {
   if (result.status === 'limit_reached') {
     setInfo(`收藏已达 ${result.limit} 个上限，请先取消一些收藏后再添加 ${label}`)
   }
+}
+
+function exportFavorites() {
+  const favoriteChannels = getFavoriteChannels()
+  if (!favoriteChannels.length) {
+    setInfo('当前没有可导出的收藏频道')
+    return
+  }
+
+  const payload = {
+    app: 'global-tv',
+    exportedAt: new Date().toISOString(),
+    count: favoriteChannels.length,
+    favorites: favoriteChannels.map((channel) => channel.id)
+  }
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `global-tv-favorites-${buildExportDate()}.json`
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
+  setInfo(`已导出 ${favoriteChannels.length} 个收藏频道`)
+}
+
+async function importFavorites(file) {
+  try {
+    const raw = await file.text()
+    const parsed = JSON.parse(raw)
+    const importedIds = extractImportedFavoriteIds(parsed)
+    if (!importedIds.length) {
+      setInfo('导入文件里没有可用的收藏频道')
+      return
+    }
+
+    const validIds = new Set(state.channels.map((item) => item.id))
+    const currentIds = loadFavoriteIds()
+    const currentSet = new Set(currentIds)
+    const next = [...currentIds]
+
+    let invalidCount = 0
+    let duplicateCount = 0
+    let addedCount = 0
+
+    for (const id of importedIds) {
+      if (!validIds.has(id)) {
+        invalidCount += 1
+        continue
+      }
+      if (currentSet.has(id)) {
+        duplicateCount += 1
+        continue
+      }
+      if (next.length >= FAVORITES_LIMIT) break
+      next.push(id)
+      currentSet.add(id)
+      addedCount += 1
+    }
+
+    const overflowCount = Math.max(0, currentIds.length + importedIds.length - invalidCount - duplicateCount - next.length)
+    if (!addedCount) {
+      const overflowText = overflowCount ? `，另有 ${overflowCount} 个因超过 ${FAVORITES_LIMIT} 条上限未导入` : ''
+      setInfo(`没有新增收藏频道，已跳过 ${duplicateCount} 个重复频道和 ${invalidCount} 个失效频道${overflowText}`)
+      return
+    }
+
+    save(STORE.favorites, next)
+    state.view = 'favorites'
+    refreshTabs()
+    refreshList()
+    const favoriteChannels = getFavoriteChannels()
+    const current = getCurrentChannel()
+    if (!current || !currentSet.has(current.id)) {
+      const firstFavorite = favoriteChannels[0]
+      if (firstFavorite) selectChannel(firstFavorite, false)
+    }
+
+    const skipped = []
+    if (duplicateCount) skipped.push(`${duplicateCount} 个重复`)
+    if (invalidCount) skipped.push(`${invalidCount} 个失效`)
+    if (overflowCount) skipped.push(`${overflowCount} 个超出上限`)
+    const skippedText = skipped.length ? `，已跳过 ${skipped.join('、')}` : ''
+    setInfo(`已导入 ${addedCount} 个收藏频道${skippedText}`)
+  } catch (_) {
+    setInfo('导入失败，请选择格式正确的 JSON 收藏文件')
+  }
+}
+
+function extractImportedFavoriteIds(payload) {
+  const source = Array.isArray(payload)
+    ? payload
+    : (Array.isArray(payload?.favorites) ? payload.favorites : [])
+  const seen = new Set()
+  const out = []
+  for (const item of source) {
+    const value = String(item || '').trim()
+    if (!value || seen.has(value)) continue
+    seen.add(value)
+    out.push(value)
+  }
+  return out
+}
+
+function buildExportDate() {
+  const now = new Date()
+  const year = String(now.getFullYear())
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}${month}${day}`
 }
 
 function getCurrentChannel() {
