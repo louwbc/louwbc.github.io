@@ -217,6 +217,13 @@ async function handleKeyboardShortcut(event) {
     if (!channel || channel.kind === 'external') return
     event.preventDefault()
     await toggleCurrentPlayback()
+    return
+  }
+
+  if (event.code === 'KeyF' || key === 'f') {
+    if (!canUsePlayerFullscreen()) return
+    event.preventDefault()
+    await togglePlayerFullscreen()
   }
 }
 
