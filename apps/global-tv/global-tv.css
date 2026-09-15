@@ -197,6 +197,14 @@
   position:relative;
   z-index:1;
 }
+#playerVideo::cue{
+  background:rgba(15,23,42,.88);
+  color:#f8fafc;
+  font-size:18px;
+  line-height:1.5;
+  padding:4px 10px;
+  border-radius:6px;
+}
 .stage-shell:fullscreen .video-mount,
 .stage-shell:-webkit-full-screen .video-mount{
   height:100%;

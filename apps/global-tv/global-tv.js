@@ -14,6 +14,8 @@ const ui = {
   exportFavoritesBtn: $('#exportFavoritesBtn'),
   importFavoritesBtn: $('#importFavoritesBtn'),
   importFavoritesInput: $('#importFavoritesInput'),
+  subtitleBtn: $('#subtitleBtn'),
+  floatingSubtitleBtn: $('#floatingSubtitleBtn'),
   playerFullscreenBtn: $('#playerFullscreenBtn'),
   openOfficialBtn: $('#openOfficialBtn'),
   modeAudioBtn: $('#modeAudioBtn'),
@@ -45,7 +47,8 @@ const ui = {
 const STORE = {
   favorites: 'global-tv:favorites',
   recent: 'global-tv:recent',
-  playbackMode: 'global-tv:playbackMode'
+  playbackMode: 'global-tv:playbackMode',
+  subtitleEnabled: 'global-tv:subtitleEnabled'
 }
 
 const FAVORITES_LIMIT = 100
@@ -57,6 +60,8 @@ const state = {
   currentId: null,
   hls: null,
   playbackMode: loadPlaybackMode(),
+  subtitleEnabled: loadSubtitleEnabled(),
+  subtitleAvailable: false,
   stageInView: true,
   videoDocked: false,
   stageObserver: null
@@ -150,6 +155,9 @@ function setupControls() {
     togglePlayerFullscreen()
   })
 
+  ui.subtitleBtn.addEventListener('click', toggleSubtitle)
+  ui.floatingSubtitleBtn.addEventListener('click', toggleSubtitle)
+
   document.addEventListener('fullscreenchange', updateFullscreenButtons)
   document.addEventListener('webkitfullscreenchange', updateFullscreenButtons)
 }
@@ -184,6 +192,16 @@ function setupPlayer() {
     updateFullscreenButtons()
   })
   ui.playerVideo.addEventListener('webkitendfullscreen', updateFullscreenButtons)
+  ui.playerVideo.textTracks.addEventListener('addtrack', () => {
+    checkSubtitleAvailability()
+    applySubtitleMode()
+  })
+  ui.playerVideo.textTracks.addEventListener('change', () => {
+    checkSubtitleAvailability()
+  })
+  ui.playerVideo.textTracks.addEventListener('removetrack', () => {
+    checkSubtitleAvailability()
+  })
 }
 
 function setupKeyboardShortcuts() {
@@ -224,6 +242,22 @@ async function handleKeyboardShortcut(event) {
     if (!canUsePlayerFullscreen()) return
     event.preventDefault()
     await togglePlayerFullscreen()
+  }
+
+  if (event.code === 'KeyC' || key === 'c') {
+    if (!canUseSubtitle()) {
+      const channel = getCurrentChannel()
+      if (state.playbackMode !== 'video') {
+        setInfo('字幕切换仅在“看电视”模式下可用')
+      } else if (!channel) {
+        setInfo('请先选择一个频道')
+      } else {
+        setInfo('当前频道没有可用字幕')
+      }
+      return
+    }
+    event.preventDefault()
+    toggleSubtitle()
   }
 }
 
@@ -548,16 +582,29 @@ function playHlsChannel(channel) {
   if (HlsCtor && typeof HlsCtor.isSupported === 'function' && HlsCtor.isSupported()) {
     const hls = new HlsCtor({
       enableWorker: true,
-      lowLatencyMode: true
+      lowLatencyMode: true,
+      enableWebVTT: true,
+      renderTextTracksNatively: true
     })
     state.hls = hls
     hls.loadSource(url)
     hls.attachMedia(media)
     hls.on(HlsCtor.Events.MANIFEST_PARSED, () => {
+      if (state.playbackMode === 'video') {
+        checkSubtitleAvailability()
+        applySubtitleMode()
+      }
       media.play().catch(() => {
         setStageMessage(getWaitingStageTitle(), `浏览器还没有自动开始${getPlaybackVerb()} ${channel.title}。请点一下播放器开始。`)
         setInfo(`${channel.title} 已载入，等待${getPlaybackVerb()}`)
       })
+    })
+    hls.on(HlsCtor.Events.SUBTITLE_TRACKS_UPDATED, () => {
+      checkSubtitleAvailability()
+      applySubtitleMode()
+    })
+    hls.on(HlsCtor.Events.SUBTITLE_TRACK_SWITCH, () => {
+      checkSubtitleAvailability()
     })
     hls.on(HlsCtor.Events.ERROR, (_event, data) => {
       if (data?.fatal) {
@@ -574,6 +621,12 @@ function playHlsChannel(channel) {
       setStageMessage(getWaitingStageTitle(), `浏览器还没有自动开始${getPlaybackVerb()} ${channel.title}。请点一下播放器开始。`)
       setInfo(`${channel.title} 已载入，等待${getPlaybackVerb()}`)
     })
+    setTimeout(() => {
+      if (state.playbackMode === 'video') {
+        checkSubtitleAvailability()
+        applySubtitleMode()
+      }
+    }, 2000)
     return
   }
 
@@ -599,6 +652,7 @@ function refreshCurrentActions() {
   ui.favCurrentBtn.disabled = !hasCurrent
   ui.favCurrentBtn.textContent = hasCurrent && isFavorite(channel.id) ? '取消收藏' : '加入收藏'
   ui.floatingOfficialBtn.disabled = !hasCurrent || !channel.watchUrl
+  updateSubtitleButtons()
   updateFullscreenButtons()
 }
 
@@ -850,10 +904,12 @@ function updateFloatingControls() {
   ui.floatingPlayPauseBtn.disabled = false
   if (!hasMediaSource(media)) {
     ui.floatingPlayPauseBtn.textContent = getStartButtonLabel()
+    updateSubtitleButtons()
     updateFullscreenButtons()
     return
   }
   ui.floatingPlayPauseBtn.textContent = media.paused ? getContinueButtonLabel() : '暂停'
+  updateSubtitleButtons()
   updateFullscreenButtons()
 }
 
@@ -862,6 +918,15 @@ function switchPlaybackMode(mode) {
   const activeMedia = getPlaybackMedia()
   const shouldResume = !!current && current.kind === 'hls' && hasMediaSource(activeMedia) && !activeMedia.paused
   applyPlaybackMode(mode, { rerender: false })
+  if (mode === 'video') {
+    setTimeout(() => {
+      checkSubtitleAvailability()
+      applySubtitleMode()
+    }, 500)
+  } else {
+    state.subtitleAvailable = false
+    updateSubtitleButtons()
+  }
   if (current) {
     renderPlayer(current, shouldResume)
     refreshCurrentActions()
@@ -1245,4 +1310,89 @@ function openExternalUrl(url) {
   const href = normalizeUrl(url)
   if (!href) return
   window.open(href, '_blank', 'noopener,noreferrer')
+}
+
+function loadSubtitleEnabled() {
+  const saved = load(STORE.subtitleEnabled, false)
+  return saved === true
+}
+
+function canUseSubtitle(channel = getCurrentChannel()) {
+  return state.playbackMode === 'video' && !!channel && channel.kind === 'hls' && state.subtitleAvailable
+}
+
+function toggleSubtitle() {
+  if (!canUseSubtitle()) {
+    const channel = getCurrentChannel()
+    if (state.playbackMode !== 'video') {
+      setInfo('字幕切换仅在“看电视”模式下可用')
+    } else if (!channel) {
+      setInfo('请先选择一个频道')
+    } else {
+      setInfo('当前频道没有可用字幕')
+    }
+    return
+  }
+  state.subtitleEnabled = !state.subtitleEnabled
+  save(STORE.subtitleEnabled, state.subtitleEnabled)
+  applySubtitleMode()
+  updateSubtitleButtons()
+  setInfo(`字幕已${state.subtitleEnabled ? '开启' : '关闭'}`)
+}
+
+function applySubtitleMode() {
+  const textTracks = ui.playerVideo.textTracks
+  if (!textTracks || !textTracks.length) return
+  const mode = state.subtitleEnabled ? 'showing' : 'hidden'
+  for (let i = 0; i < textTracks.length; i++) {
+    const track = textTracks[i]
+    if (track.kind === 'subtitles' || track.kind === 'captions') {
+      track.mode = mode
+    }
+  }
+  if (state.hls && typeof state.hls.subtitleTrack === 'number') {
+    if (state.subtitleEnabled) {
+      const subtitleTracks = state.hls.subtitleTracks || []
+      if (subtitleTracks.length && state.hls.subtitleTrack === -1) {
+        state.hls.subtitleTrack = 0
+      }
+    } else {
+      state.hls.subtitleTrack = -1
+    }
+  }
+}
+
+function checkSubtitleAvailability() {
+  const channel = getCurrentChannel()
+  if (!channel || state.playbackMode !== 'video' || channel.kind !== 'hls') {
+    state.subtitleAvailable = false
+    updateSubtitleButtons()
+    return
+  }
+  let available = false
+  const textTracks = ui.playerVideo.textTracks
+  if (textTracks && textTracks.length) {
+    for (let i = 0; i < textTracks.length; i++) {
+      const track = textTracks[i]
+      if (track.kind === 'subtitles' || track.kind === 'captions') {
+        available = true
+        break
+      }
+    }
+  }
+  if (!available && state.hls && state.hls.subtitleTracks && state.hls.subtitleTracks.length) {
+    available = true
+  }
+  state.subtitleAvailable = available
+  updateSubtitleButtons()
+}
+
+function updateSubtitleButtons() {
+  const enabled = canUseSubtitle()
+  const label = state.subtitleEnabled ? '字幕：开启' : '字幕：关闭'
+  const floatingLabel = state.subtitleEnabled ? '字幕开' : '字幕关'
+  ui.subtitleBtn.disabled = !enabled
+  ui.subtitleBtn.textContent = state.subtitleAvailable ? label : '字幕：无'
+  ui.floatingSubtitleBtn.disabled = !enabled
+  ui.floatingSubtitleBtn.textContent = state.subtitleAvailable ? floatingLabel : '无字幕'
 }
