@@ -205,6 +205,13 @@
   padding:4px 10px;
   border-radius:6px;
 }
+.player-top-btns{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:flex-end;
+}
 .stage-shell:fullscreen .video-mount,
 .stage-shell:-webkit-full-screen .video-mount{
   height:100%;

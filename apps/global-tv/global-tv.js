@@ -25,6 +25,7 @@ const ui = {
   nowMeta: $('#nowMeta'),
   nowNote: $('#nowNote'),
   favCurrentBtn: $('#favCurrentBtn'),
+  unifiedFavBtn: $('#unifiedFavBtn'),
   stageWrap: $('#stageWrap'),
   stageShell: $('#stageShell'),
   playerAudio: $('#playerAudio'),
@@ -121,6 +122,14 @@ function setupControls() {
     if (!channel) return
     const result = toggleFavorite(channel.id)
     handleFavoriteToggleResult(result, channel.title)
+    refreshCurrentActions()
+    refreshList()
+  })
+  ui.unifiedFavBtn.addEventListener('click', () => {
+    const channel = getCurrentChannel()
+    if (!channel) return
+    const r = toggleUnifiedFavTV(channel)
+    setInfo(r.text)
     refreshCurrentActions()
     refreshList()
   })
@@ -273,9 +282,20 @@ async function loadChannels() {
     populateFilters(state.channels)
     refreshTabs()
     refreshList()
+    const paramChannelId = new URLSearchParams(location.search).get('channel')
     if (state.channels.length) {
-      const initialChannel = favoriteChannels[0] || state.channels[0]
-      selectChannel(initialChannel, false)
+      let initialChannel = paramChannelId
+        ? state.channels.find((c) => String(c.id) === String(paramChannelId).trim())
+        : null
+      if (!initialChannel) initialChannel = favoriteChannels[0] || state.channels[0]
+      const autoPlay = !!paramChannelId
+      selectChannel(initialChannel, autoPlay)
+      if (paramChannelId && initialChannel) {
+        setTimeout(() => {
+          const card = document.querySelector(`.channel-item`)
+          if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }, 300)
+      }
       const playableCount = state.channels.filter((item) => item.kind === 'hls').length
       const externalCount = state.channels.filter((item) => item.kind === 'external').length
       const syncText = favoriteSync.removedCount ? `，已清理 ${favoriteSync.removedCount} 个失效收藏` : ''
@@ -546,7 +566,19 @@ function renderChannelItem(channel) {
     refreshList()
   })
 
-  actions.append(playBtn, officialBtn, favBtn)
+  const unifiedBtn = document.createElement('button')
+  unifiedBtn.className = 'btn'
+  unifiedBtn.type = 'button'
+  unifiedBtn.textContent = isInUnifiedFav('tv', channel.id) ? '✚ 已合并' : '合并收藏'
+  unifiedBtn.addEventListener('click', (e) => {
+    e.stopPropagation()
+    const r = toggleUnifiedFavTV(channel)
+    setInfo(r.text)
+    refreshCurrentActions()
+    refreshList()
+  })
+
+  actions.append(playBtn, officialBtn, favBtn, unifiedBtn)
   card.append(main, actions)
   return card
 }
@@ -700,6 +732,8 @@ function refreshCurrentActions() {
   ui.openOfficialBtn.disabled = !hasCurrent || !channel.watchUrl
   ui.favCurrentBtn.disabled = !hasCurrent
   ui.favCurrentBtn.textContent = hasCurrent && isFavorite(channel.id) ? '取消收藏' : '加入收藏'
+  ui.unifiedFavBtn.disabled = !hasCurrent
+  ui.unifiedFavBtn.textContent = hasCurrent && isInUnifiedFav('tv', channel.id) ? '已合并收藏' : '合并收藏'
   ui.floatingOfficialBtn.disabled = !hasCurrent || !channel.watchUrl
   updateSubtitleButtons()
   updateFullscreenButtons()
@@ -1383,6 +1417,58 @@ function save(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value))
   } catch (_) {}
+}
+
+const UNIFIED_STORE_KEY = 'solo-radio:unified-favorites'
+const UNIFIED_LIMIT = 600
+
+function buildUnifiedId(type, refId) {
+  return `${type}:${String(refId).trim()}`
+}
+function loadUnifiedFavs() {
+  try {
+    const raw = localStorage.getItem(UNIFIED_STORE_KEY)
+    const arr = raw ? JSON.parse(raw) : []
+    return Array.isArray(arr) ? arr.slice(0, UNIFIED_LIMIT) : []
+  } catch (_) { return [] }
+}
+function saveUnifiedFavs(list) {
+  try {
+    localStorage.setItem(UNIFIED_STORE_KEY, JSON.stringify((list || []).slice(0, UNIFIED_LIMIT)))
+  } catch (_) {}
+}
+function isInUnifiedFav(type, refId) {
+  const id = buildUnifiedId(type, refId)
+  return loadUnifiedFavs().some(x => x.id === id)
+}
+function toggleUnifiedFavTV(channel) {
+  const type = 'tv'
+  const refId = String(channel.id || '').trim()
+  if (!refId) return { status: 'noop', text: '无效的频道' }
+  const id = buildUnifiedId(type, refId)
+  let list = loadUnifiedFavs()
+  const existing = list.find(x => x.id === id)
+  if (existing) {
+    list = list.filter(x => x.id !== id)
+    saveUnifiedFavs(list)
+    return { status: 'removed', text: `已把 ${channel.title} 从统一收藏中移除` }
+  }
+  if (list.length >= UNIFIED_LIMIT) {
+    return { status: 'limit_reached', text: `统一收藏已达 ${UNIFIED_LIMIT} 条上限，请先移除部分` }
+  }
+  const subtitle = [channel.region, channel.country, channel.language, channel.category].filter(Boolean).join(' · ')
+  list.push({
+    id, type, refId, addedAt: Date.now(),
+    meta: {
+      title: channel.title || '未命名频道',
+      subtitle,
+      country: channel.country || '',
+      language: channel.language || '',
+      category: channel.category || ''
+    }
+  })
+  saveUnifiedFavs(list)
+  return { status: 'added', text: `已把 ${channel.title} 加入统一收藏（共 ${list.length} 条）` }
 }
 
 function normalizeUrl(value) {
