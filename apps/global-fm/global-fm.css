@@ -67,6 +67,21 @@ select.input{appearance:none}
   line-height:1;
 }
 .item-actions .icon-btn{width:42px}
+.icon-btn.tiny{
+  width:30px;
+  min-width:30px;
+  height:30px;
+  padding:0;
+  font-size:14px;
+  line-height:1;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+.icon-btn.tiny:disabled{
+  opacity:.4;
+  cursor:not-allowed;
+}
 .player{
   position:sticky;
   bottom:0;

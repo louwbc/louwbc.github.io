@@ -602,6 +602,50 @@ function renderStationItem(s, tab) {
     playStation(s, tab)
   })
 
+  actions.append(play)
+
+  if (tab === 'favorites') {
+    const pos = getFavoritePositionFM(s)
+    const canMove = pos && pos.total > 1
+    const atTop = !pos || pos.index === 0
+    const atBottom = !pos || pos.index === pos.total - 1
+
+    const makeReorderBtn = (icon, label, disabled, onClick) => {
+      const b = document.createElement('button')
+      b.className = 'btn icon-btn tiny'
+      b.textContent = icon
+      b.setAttribute('aria-label', label)
+      b.disabled = !canMove || disabled
+      b.addEventListener('click', (e) => {
+        e.stopPropagation()
+        if (!b.disabled) onClick()
+      })
+      return b
+    }
+    const stationName = s.name || '该电台'
+    const toTopBtn = makeReorderBtn('⤒', '移到最前', atTop, () => {
+      const r = moveFavToTopFM(s)
+      if (r) setInfo(`已将 ${stationName} 移到第 ${r.position} 位`)
+      refreshList()
+    })
+    const upBtn = makeReorderBtn('↑', '上移一位', atTop, () => {
+      const r = moveFavUpFM(s)
+      if (r) setInfo(`已将 ${stationName} 上移到第 ${r.position} 位`)
+      refreshList()
+    })
+    const downBtn = makeReorderBtn('↓', '下移一位', atBottom, () => {
+      const r = moveFavDownFM(s)
+      if (r) setInfo(`已将 ${stationName} 下移到第 ${r.position} 位`)
+      refreshList()
+    })
+    const toBottomBtn = makeReorderBtn('⤓', '移到最后', atBottom, () => {
+      const r = moveFavToBottomFM(s)
+      if (r) setInfo(`已将 ${stationName} 移到第 ${r.position} 位`)
+      refreshList()
+    })
+    actions.append(toTopBtn, upBtn, downBtn, toBottomBtn)
+  }
+
   const fav = document.createElement('button')
   fav.className = 'btn icon-btn'
   fav.textContent = isFavorite(s) ? '★' : '☆'
@@ -612,7 +656,7 @@ function renderStationItem(s, tab) {
     refreshList()
   })
 
-  actions.append(play, fav)
+  actions.append(fav)
   card.append(main, actions)
   return card
 }
@@ -1850,6 +1894,45 @@ function toggleFavorite(s) {
   else favs.unshift(minStation(s))
   saveFavorites(favs.slice(0, 500))
   if (state.tab === 'favorites') refreshList()
+}
+function getFavoritePositionFM(s) {
+  const favs = loadFavorites()
+  const i = favs.findIndex(x => sameStation(x, s))
+  return i < 0 ? null : { index: i, total: favs.length }
+}
+function moveFavToTopFM(s) {
+  const favs = loadFavorites()
+  const i = favs.findIndex(x => sameStation(x, s))
+  if (i <= 0) return null
+  const [it] = favs.splice(i, 1)
+  favs.unshift(it)
+  saveFavorites(favs.slice(0, 500))
+  return { position: 1 }
+}
+function moveFavUpFM(s) {
+  const favs = loadFavorites()
+  const i = favs.findIndex(x => sameStation(x, s))
+  if (i <= 0) return null
+  ;[favs[i - 1], favs[i]] = [favs[i], favs[i - 1]]
+  saveFavorites(favs.slice(0, 500))
+  return { position: i }
+}
+function moveFavDownFM(s) {
+  const favs = loadFavorites()
+  const i = favs.findIndex(x => sameStation(x, s))
+  if (i < 0 || i >= favs.length - 1) return null
+  ;[favs[i], favs[i + 1]] = [favs[i + 1], favs[i]]
+  saveFavorites(favs.slice(0, 500))
+  return { position: i + 2 }
+}
+function moveFavToBottomFM(s) {
+  const favs = loadFavorites()
+  const i = favs.findIndex(x => sameStation(x, s))
+  if (i < 0 || i >= favs.length - 1) return null
+  const [it] = favs.splice(i, 1)
+  favs.push(it)
+  saveFavorites(favs.slice(0, 500))
+  return { position: favs.length }
 }
 
 function loadRecent() {

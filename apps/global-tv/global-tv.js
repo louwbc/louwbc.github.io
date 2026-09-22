@@ -385,13 +385,14 @@ function buildListMeta(count) {
 }
 
 function getVisibleChannels() {
-  const favorites = new Set(loadFavoriteIds())
+  const favoriteIds = loadFavoriteIds()
+  const favorites = new Set(favoriteIds)
   const recent = loadList(STORE.recent)
   const byId = new Map(state.channels.map((item) => [item.id, item]))
 
   let base = state.channels
   if (state.view === 'favorites') {
-    base = state.channels.filter((channel) => favorites.has(channel.id))
+    base = favoriteIds.map((id) => byId.get(id)).filter(Boolean)
   } else if (state.view === 'recent') {
     base = recent.map((id) => byId.get(id)).filter(Boolean)
   }
@@ -466,6 +467,54 @@ function renderChannelItem(channel) {
 
   const actions = document.createElement('div')
   actions.className = 'item-actions'
+
+  if (state.view === 'favorites') {
+    const reorderRow = document.createElement('div')
+    reorderRow.className = 'item-reorder-row'
+
+    const pos = getFavoritePosition(channel.id)
+    const canMove = pos && pos.total > 1
+    const atTop = !pos || pos.index === 0
+    const atBottom = !pos || pos.index === pos.total - 1
+
+    const makeReorderBtn = (icon, label, disabled, onClick) => {
+      const b = document.createElement('button')
+      b.className = 'btn icon-btn tiny'
+      b.type = 'button'
+      b.textContent = icon
+      b.setAttribute('aria-label', label)
+      b.disabled = !canMove || disabled
+      b.addEventListener('click', (e) => {
+        e.stopPropagation()
+        if (!b.disabled) onClick()
+      })
+      return b
+    }
+
+    const toTopBtn = makeReorderBtn('⤒', '移到最前', atTop, () => {
+      const r = moveFavoriteToTop(channel.id)
+      if (r) setInfo(`已将 ${channel.title} 移到第 ${r.position} 位`)
+      refreshList()
+    })
+    const upBtn = makeReorderBtn('↑', '上移一位', atTop, () => {
+      const r = moveFavoriteUp(channel.id)
+      if (r) setInfo(`已将 ${channel.title} 上移到第 ${r.position} 位`)
+      refreshList()
+    })
+    const downBtn = makeReorderBtn('↓', '下移一位', atBottom, () => {
+      const r = moveFavoriteDown(channel.id)
+      if (r) setInfo(`已将 ${channel.title} 下移到第 ${r.position} 位`)
+      refreshList()
+    })
+    const toBottomBtn = makeReorderBtn('⤓', '移到最后', atBottom, () => {
+      const r = moveFavoriteToBottom(channel.id)
+      if (r) setInfo(`已将 ${channel.title} 移到第 ${r.position} 位`)
+      refreshList()
+    })
+
+    reorderRow.append(toTopBtn, upBtn, downBtn, toBottomBtn)
+    actions.append(reorderRow)
+  }
 
   const playBtn = document.createElement('button')
   playBtn.className = 'btn primary'
@@ -1236,6 +1285,46 @@ function toggleFavorite(id) {
   const next = [value, ...list]
   save(STORE.favorites, next)
   return { status: 'added', count: next.length }
+}
+
+function moveFavoriteToTop(id) {
+  const list = loadFavoriteIds()
+  const idx = list.indexOf(String(id))
+  if (idx <= 0) return null
+  const next = [list[idx], ...list.slice(0, idx), ...list.slice(idx + 1)]
+  save(STORE.favorites, next)
+  return { position: 1 }
+}
+function moveFavoriteUp(id) {
+  const list = loadFavoriteIds()
+  const idx = list.indexOf(String(id))
+  if (idx <= 0) return null
+  const next = list.slice()
+  ;[next[idx - 1], next[idx]] = [next[idx], next[idx - 1]]
+  save(STORE.favorites, next)
+  return { position: idx }
+}
+function moveFavoriteDown(id) {
+  const list = loadFavoriteIds()
+  const idx = list.indexOf(String(id))
+  if (idx < 0 || idx >= list.length - 1) return null
+  const next = list.slice()
+  ;[next[idx], next[idx + 1]] = [next[idx + 1], next[idx]]
+  save(STORE.favorites, next)
+  return { position: idx + 2 }
+}
+function moveFavoriteToBottom(id) {
+  const list = loadFavoriteIds()
+  const idx = list.indexOf(String(id))
+  if (idx < 0 || idx >= list.length - 1) return null
+  const next = [...list.slice(0, idx), ...list.slice(idx + 1), list[idx]]
+  save(STORE.favorites, next)
+  return { position: next.length }
+}
+function getFavoritePosition(id) {
+  const list = loadFavoriteIds()
+  const idx = list.indexOf(String(id))
+  return idx < 0 ? null : { index: idx, total: list.length }
 }
 
 function isFavorite(id) {
