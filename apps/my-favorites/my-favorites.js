@@ -619,6 +619,17 @@ async function loadTvChannels() {
 }
 
 async function resolveFmStream(item) {
+  const metaUrl = normalizeUrl(item?.meta?.streamUrl || '')
+  if (metaUrl) {
+    const cache = state.fmCache || {}
+    const key = String(item.refId || '').trim()
+    if (key && (!cache[key] || !cache[key].expiresAt || cache[key].expiresAt <= Date.now() || cache[key].url !== metaUrl)) {
+      cache[key] = { url: metaUrl, homepage: item?.meta?.homepage || null, expiresAt: Date.now() + FM_STREAM_CACHE_TTL }
+      state.fmCache = cache
+      save(FM_STREAM_CACHE_KEY, cache)
+    }
+    return { streamUrl: metaUrl, watchUrl: item?.meta?.homepage || null, playable: true, kind: 'fm' }
+  }
   const cache = state.fmCache || {}
   const key = String(item.refId || '').trim()
   if (!key) return null
@@ -635,7 +646,7 @@ async function resolveFmStream(item) {
       const arr = await res.json()
       const station = Array.isArray(arr) ? arr[0] : null
       if (!station) continue
-      const url = station.url_resolved || station.url
+      const url = normalizeUrl(station.url_resolved || station.url || '')
       if (!url) continue
       cache[key] = { url, homepage: station.homepage || null, expiresAt: Date.now() + FM_STREAM_CACHE_TTL }
       state.fmCache = cache
@@ -729,17 +740,21 @@ function buildId(type, refId) {
 
 function normalizeItem(raw) {
   const id = buildId(raw.type, raw.refId)
+  const rawMeta = raw.meta && typeof raw.meta === 'object' ? raw.meta : {}
   return {
     id,
     type: raw.type === 'fm' ? 'fm' : 'tv',
     refId: String(raw.refId).trim(),
+    order: typeof raw.order === 'number' ? raw.order : 0,
     addedAt: raw.addedAt || Date.now(),
     meta: {
-      title: String(raw.meta?.title || '未命名').trim(),
-      subtitle: String(raw.meta?.subtitle || '').trim(),
-      country: String(raw.meta?.country || '').trim(),
-      language: String(raw.meta?.language || '').trim(),
-      category: String(raw.meta?.category || '').trim()
+      title: String(rawMeta.title || '未命名').trim(),
+      subtitle: String(rawMeta.subtitle || '').trim(),
+      country: String(rawMeta.country || '').trim(),
+      language: String(rawMeta.language || '').trim(),
+      category: String(rawMeta.category || '').trim(),
+      streamUrl: rawMeta.streamUrl ? String(rawMeta.streamUrl).trim() : null,
+      homepage: rawMeta.homepage ? String(rawMeta.homepage).trim() : null
     }
   }
 }
@@ -778,6 +793,15 @@ function load(key, fallback) {
 }
 function save(key, val) {
   try { localStorage.setItem(key, JSON.stringify(val)) } catch (_) {}
+}
+function normalizeUrl(value) {
+  try {
+    const url = new URL(String(value || '').trim())
+    if (!/^https?:$/.test(url.protocol)) return ''
+    return url.toString()
+  } catch (_) {
+    return ''
+  }
 }
 
 function setInfo(text) {

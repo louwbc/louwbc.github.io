@@ -2103,6 +2103,7 @@ function toggleUnifiedFavoriteFM(s) {
   const lang = (Array.isArray(s.language) ? s.language[0] : String(s.language || '')) || ''
   const cat = tags[0] || ''
   const metaSub = [s.country, lang, cat].filter(Boolean).join(' · ')
+  const streamUrl = normalizeUrl(s?.url_resolved || s?.url || '') || null
   current.push({
     id,
     type: 'fm',
@@ -2114,7 +2115,8 @@ function toggleUnifiedFavoriteFM(s) {
       subtitle: metaSub,
       country: String(s.country || '').trim(),
       language: lang,
-      category: cat
+      category: cat,
+      streamUrl
     }
   })
   saveUnifiedFM(current)
