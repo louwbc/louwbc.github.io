@@ -25,7 +25,6 @@ const ui = {
   nowMeta: $('#nowMeta'),
   nowNote: $('#nowNote'),
   favCurrentBtn: $('#favCurrentBtn'),
-  unifiedFavBtn: $('#unifiedFavBtn'),
   stageWrap: $('#stageWrap'),
   stageShell: $('#stageShell'),
   playerAudio: $('#playerAudio'),
@@ -122,14 +121,6 @@ function setupControls() {
     if (!channel) return
     const result = toggleFavorite(channel.id)
     handleFavoriteToggleResult(result, channel.title)
-    refreshCurrentActions()
-    refreshList()
-  })
-  ui.unifiedFavBtn.addEventListener('click', () => {
-    const channel = getCurrentChannel()
-    if (!channel) return
-    const r = toggleUnifiedFavTV(channel)
-    setInfo(r.text)
     refreshCurrentActions()
     refreshList()
   })
@@ -282,20 +273,9 @@ async function loadChannels() {
     populateFilters(state.channels)
     refreshTabs()
     refreshList()
-    const paramChannelId = new URLSearchParams(location.search).get('channel')
     if (state.channels.length) {
-      let initialChannel = paramChannelId
-        ? state.channels.find((c) => String(c.id) === String(paramChannelId).trim())
-        : null
-      if (!initialChannel) initialChannel = favoriteChannels[0] || state.channels[0]
-      const autoPlay = !!paramChannelId
-      selectChannel(initialChannel, autoPlay)
-      if (paramChannelId && initialChannel) {
-        setTimeout(() => {
-          const card = document.querySelector(`.channel-item`)
-          if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        }, 300)
-      }
+      const initialChannel = favoriteChannels[0] || state.channels[0]
+      selectChannel(initialChannel, false)
       const playableCount = state.channels.filter((item) => item.kind === 'hls').length
       const externalCount = state.channels.filter((item) => item.kind === 'external').length
       const syncText = favoriteSync.removedCount ? `，已清理 ${favoriteSync.removedCount} 个失效收藏` : ''
@@ -405,14 +385,13 @@ function buildListMeta(count) {
 }
 
 function getVisibleChannels() {
-  const favoriteIds = loadFavoriteIds()
-  const favorites = new Set(favoriteIds)
+  const favorites = new Set(loadFavoriteIds())
   const recent = loadList(STORE.recent)
   const byId = new Map(state.channels.map((item) => [item.id, item]))
 
   let base = state.channels
   if (state.view === 'favorites') {
-    base = favoriteIds.map((id) => byId.get(id)).filter(Boolean)
+    base = state.channels.filter((channel) => favorites.has(channel.id))
   } else if (state.view === 'recent') {
     base = recent.map((id) => byId.get(id)).filter(Boolean)
   }
@@ -488,54 +467,6 @@ function renderChannelItem(channel) {
   const actions = document.createElement('div')
   actions.className = 'item-actions'
 
-  if (state.view === 'favorites') {
-    const reorderRow = document.createElement('div')
-    reorderRow.className = 'item-reorder-row'
-
-    const pos = getFavoritePosition(channel.id)
-    const canMove = pos && pos.total > 1
-    const atTop = !pos || pos.index === 0
-    const atBottom = !pos || pos.index === pos.total - 1
-
-    const makeReorderBtn = (icon, label, disabled, onClick) => {
-      const b = document.createElement('button')
-      b.className = 'btn icon-btn tiny'
-      b.type = 'button'
-      b.textContent = icon
-      b.setAttribute('aria-label', label)
-      b.disabled = !canMove || disabled
-      b.addEventListener('click', (e) => {
-        e.stopPropagation()
-        if (!b.disabled) onClick()
-      })
-      return b
-    }
-
-    const toTopBtn = makeReorderBtn('⤒', '移到最前', atTop, () => {
-      const r = moveFavoriteToTop(channel.id)
-      if (r) setInfo(`已将 ${channel.title} 移到第 ${r.position} 位`)
-      refreshList()
-    })
-    const upBtn = makeReorderBtn('↑', '上移一位', atTop, () => {
-      const r = moveFavoriteUp(channel.id)
-      if (r) setInfo(`已将 ${channel.title} 上移到第 ${r.position} 位`)
-      refreshList()
-    })
-    const downBtn = makeReorderBtn('↓', '下移一位', atBottom, () => {
-      const r = moveFavoriteDown(channel.id)
-      if (r) setInfo(`已将 ${channel.title} 下移到第 ${r.position} 位`)
-      refreshList()
-    })
-    const toBottomBtn = makeReorderBtn('⤓', '移到最后', atBottom, () => {
-      const r = moveFavoriteToBottom(channel.id)
-      if (r) setInfo(`已将 ${channel.title} 移到第 ${r.position} 位`)
-      refreshList()
-    })
-
-    reorderRow.append(toTopBtn, upBtn, downBtn, toBottomBtn)
-    actions.append(reorderRow)
-  }
-
   const playBtn = document.createElement('button')
   playBtn.className = 'btn primary'
   playBtn.type = 'button'
@@ -566,29 +497,7 @@ function renderChannelItem(channel) {
     refreshList()
   })
 
-  const primaryRow = document.createElement('div')
-  primaryRow.className = 'item-primary-row'
-  primaryRow.append(playBtn, officialBtn)
-
-  const secondaryRow = document.createElement('div')
-  secondaryRow.className = 'item-secondary-row'
-  const inUnified = isInUnifiedFav('tv', channel.id)
-  const unifiedBtn = document.createElement('button')
-  unifiedBtn.className = 'btn icon-btn tiny'
-  unifiedBtn.type = 'button'
-  unifiedBtn.textContent = inUnified ? '✓' : '✚'
-  unifiedBtn.setAttribute('aria-label', inUnified ? '从统一收藏移除' : '加入统一收藏')
-  unifiedBtn.title = inUnified ? '已加入统一收藏' : '合并到统一收藏'
-  unifiedBtn.addEventListener('click', (e) => {
-    e.stopPropagation()
-    const r = toggleUnifiedFavTV(channel)
-    setInfo(r.text)
-    refreshCurrentActions()
-    refreshList()
-  })
-  secondaryRow.append(favBtn, unifiedBtn)
-
-  actions.append(primaryRow, secondaryRow)
+  actions.append(playBtn, officialBtn, favBtn)
   card.append(main, actions)
   return card
 }
@@ -742,8 +651,6 @@ function refreshCurrentActions() {
   ui.openOfficialBtn.disabled = !hasCurrent || !channel.watchUrl
   ui.favCurrentBtn.disabled = !hasCurrent
   ui.favCurrentBtn.textContent = hasCurrent && isFavorite(channel.id) ? '取消收藏' : '加入收藏'
-  ui.unifiedFavBtn.disabled = !hasCurrent
-  ui.unifiedFavBtn.textContent = hasCurrent && isInUnifiedFav('tv', channel.id) ? '已合并收藏' : '合并收藏'
   ui.floatingOfficialBtn.disabled = !hasCurrent || !channel.watchUrl
   updateSubtitleButtons()
   updateFullscreenButtons()
@@ -1331,46 +1238,6 @@ function toggleFavorite(id) {
   return { status: 'added', count: next.length }
 }
 
-function moveFavoriteToTop(id) {
-  const list = loadFavoriteIds()
-  const idx = list.indexOf(String(id))
-  if (idx <= 0) return null
-  const next = [list[idx], ...list.slice(0, idx), ...list.slice(idx + 1)]
-  save(STORE.favorites, next)
-  return { position: 1 }
-}
-function moveFavoriteUp(id) {
-  const list = loadFavoriteIds()
-  const idx = list.indexOf(String(id))
-  if (idx <= 0) return null
-  const next = list.slice()
-  ;[next[idx - 1], next[idx]] = [next[idx], next[idx - 1]]
-  save(STORE.favorites, next)
-  return { position: idx }
-}
-function moveFavoriteDown(id) {
-  const list = loadFavoriteIds()
-  const idx = list.indexOf(String(id))
-  if (idx < 0 || idx >= list.length - 1) return null
-  const next = list.slice()
-  ;[next[idx], next[idx + 1]] = [next[idx + 1], next[idx]]
-  save(STORE.favorites, next)
-  return { position: idx + 2 }
-}
-function moveFavoriteToBottom(id) {
-  const list = loadFavoriteIds()
-  const idx = list.indexOf(String(id))
-  if (idx < 0 || idx >= list.length - 1) return null
-  const next = [...list.slice(0, idx), ...list.slice(idx + 1), list[idx]]
-  save(STORE.favorites, next)
-  return { position: next.length }
-}
-function getFavoritePosition(id) {
-  const list = loadFavoriteIds()
-  const idx = list.indexOf(String(id))
-  return idx < 0 ? null : { index: idx, total: list.length }
-}
-
 function isFavorite(id) {
   return loadFavoriteIds().includes(id)
 }
@@ -1427,58 +1294,6 @@ function save(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value))
   } catch (_) {}
-}
-
-const UNIFIED_STORE_KEY = 'solo-radio:unified-favorites'
-const UNIFIED_LIMIT = 600
-
-function buildUnifiedId(type, refId) {
-  return `${type}:${String(refId).trim()}`
-}
-function loadUnifiedFavs() {
-  try {
-    const raw = localStorage.getItem(UNIFIED_STORE_KEY)
-    const arr = raw ? JSON.parse(raw) : []
-    return Array.isArray(arr) ? arr.slice(0, UNIFIED_LIMIT) : []
-  } catch (_) { return [] }
-}
-function saveUnifiedFavs(list) {
-  try {
-    localStorage.setItem(UNIFIED_STORE_KEY, JSON.stringify((list || []).slice(0, UNIFIED_LIMIT)))
-  } catch (_) {}
-}
-function isInUnifiedFav(type, refId) {
-  const id = buildUnifiedId(type, refId)
-  return loadUnifiedFavs().some(x => x.id === id)
-}
-function toggleUnifiedFavTV(channel) {
-  const type = 'tv'
-  const refId = String(channel.id || '').trim()
-  if (!refId) return { status: 'noop', text: '无效的频道' }
-  const id = buildUnifiedId(type, refId)
-  let list = loadUnifiedFavs()
-  const existing = list.find(x => x.id === id)
-  if (existing) {
-    list = list.filter(x => x.id !== id)
-    saveUnifiedFavs(list)
-    return { status: 'removed', text: `已把 ${channel.title} 从统一收藏中移除` }
-  }
-  if (list.length >= UNIFIED_LIMIT) {
-    return { status: 'limit_reached', text: `统一收藏已达 ${UNIFIED_LIMIT} 条上限，请先移除部分` }
-  }
-  const subtitle = [channel.region, channel.country, channel.language, channel.category].filter(Boolean).join(' · ')
-  list.push({
-    id, type, refId, addedAt: Date.now(),
-    meta: {
-      title: channel.title || '未命名频道',
-      subtitle,
-      country: channel.country || '',
-      language: channel.language || '',
-      category: channel.category || ''
-    }
-  })
-  saveUnifiedFavs(list)
-  return { status: 'added', text: `已把 ${channel.title} 加入统一收藏（共 ${list.length} 条）` }
 }
 
 function normalizeUrl(value) {

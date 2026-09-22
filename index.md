@@ -8,12 +8,11 @@ title: "首页"
   <p class="muted" style="margin-top:8px">{{ site.description }}</p>
   <div class="row" style="margin-top:12px">
     <a class="btn primary" href="{{ '/blog/' | relative_url }}">进入博客</a>
-    <a class="btn" href="{{ '/apps/my-favorites/' | relative_url }}">我的收藏</a>
     <a class="btn" href="{{ '/apps/podcast/' | relative_url }}">全球播客</a>
     <a class="btn" href="{{ '/apps/global-tv/' | relative_url }}">全球电视</a>
-    <a class="btn" href="{{ '/apps/global-fm/' | relative_url }}">全球FM</a>
     <a class="btn" href="{{ '/apps/pomodoro/' | relative_url }}">番茄钟</a>
     <a class="btn" href="{{ '/apps/xiangqi/' | relative_url }}">中国象棋</a>
+    <a class="btn" href="{{ '/apps/global-fm/' | relative_url }}">全球FM</a>
     <a class="btn" href="{{ '/apps/pdf-tool/' | relative_url }}">PDF工具</a>
   </div>
 </section>

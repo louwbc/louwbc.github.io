@@ -3,6 +3,10 @@ const $ = (s) => document.querySelector(s)
 const STORE_KEY = 'solo-radio:unified-favorites'
 const LIMIT = 600
 
+const FM_STREAM_CACHE_KEY = 'solo-radio:fm-stream-cache'
+const FM_STREAM_CACHE_TTL = 24 * 60 * 60 * 1000
+const FM_API_BASES = ['https://de1.api.radio-browser.info', 'https://de2.api.radio-browser.info']
+
 const ui = {
   info: $('#info'),
   searchInput: $('#searchInput'),
@@ -16,22 +20,53 @@ const ui = {
   clearBtn: $('#clearBtn'),
   favList: $('#favList'),
   listMeta: $('#listMeta'),
-  empty: $('#empty')
+  empty: $('#empty'),
+  nowTitle: $('#nowTitle'),
+  nowSub: $('#nowSub'),
+  prevBtn: $('#prevBtn'),
+  playBtn: $('#playBtn'),
+  nextBtn: $('#nextBtn'),
+  tvVisualBtn: $('#tvVisualBtn'),
+  openAppBtn: $('#openAppBtn'),
+  vol: $('#vol'),
+  playerAudio: $('#playerAudio'),
+  playerVideo: $('#playerVideo'),
+  videoDock: $('#videoDock'),
+  videoDockTitle: $('#videoDockTitle'),
+  videoDockStage: $('#videoDockStage'),
+  videoDockCloseBtn: $('#videoDockCloseBtn'),
+  videoDockFullscreenBtn: $('#videoDockFullscreenBtn')
 }
 
 const state = {
   items: [],
-  filter: { type: 'all', keyword: '' }
+  filter: { type: 'all', keyword: '' },
+  tvChannels: null,
+  tvChannelsLoading: false,
+  fmCache: null,
+  playing: null,
+  playMeta: null,
+  modeTvShowVideo: false,
+  hls: null,
+  volume: 1
 }
 
 init()
 
 function init() {
-  loadItems()
+  const vol = Number(load('solo-radio:my-favorites:volume', 1))
+  state.volume = Number.isFinite(vol) ? vol : 1
+  ui.vol.value = String(state.volume)
+  ui.playerAudio.volume = state.volume
+  ui.playerVideo.volume = state.volume
+  state.fmCache = load(FM_STREAM_CACHE_KEY, {}) || {}
+  pruneFmCache()
+
   setupControls()
+  loadItems()
   refreshTabs()
   refreshList()
-  setInfo(`已载入 ${state.items.length} 条统一收藏`)
+  setInfo(`已载入 ${state.items.length} 条统一收藏。点击卡片上的「播放」按钮即可在此页面直接收听。`)
 }
 
 function setupControls() {
@@ -68,6 +103,57 @@ function setupControls() {
     loadItems()
     refreshList()
     setInfo('已清空所有统一收藏')
+  })
+
+  ui.prevBtn.addEventListener('click', () => jump(-1))
+  ui.nextBtn.addEventListener('click', () => jump(1))
+  ui.playBtn.addEventListener('click', async () => {
+    if (!state.playing) return
+    if (ui.playerAudio.paused) await ui.playerAudio.play().catch(onPlayError)
+    else ui.playerAudio.pause()
+    syncPlayButton()
+    if (state.modeTvShowVideo && state.playing?.type === 'tv') {
+      if (!ui.playerVideo.paused && ui.playerAudio.paused) ui.playerVideo.pause()
+      else if (ui.playerAudio.paused === false) ui.playerVideo.play().catch(() => {})
+    }
+  })
+
+  ui.tvVisualBtn.addEventListener('click', toggleTvVisual)
+
+  ui.openAppBtn.addEventListener('click', () => {
+    const item = state.playing
+    if (!item) return
+    window.open(buildOpenUrl(item), '_blank', 'noopener,noreferrer')
+  })
+
+  ui.vol.addEventListener('input', () => {
+    const v = Number(ui.vol.value)
+    state.volume = v
+    ui.playerAudio.volume = v
+    ui.playerVideo.volume = v
+    save('solo-radio:my-favorites:volume', v)
+  })
+
+  ui.playerAudio.addEventListener('play', syncPlayButton)
+  ui.playerAudio.addEventListener('pause', syncPlayButton)
+  ui.playerAudio.addEventListener('ended', () => jump(1))
+  ui.playerAudio.addEventListener('error', () => {
+    setInfo('播放失败：该流不可用或跨域限制')
+    syncPlayButton()
+  })
+  ui.playerAudio.addEventListener('waiting', () => {
+    if (!ui.playerAudio.paused && state.playing) setInfo('缓冲中…')
+  })
+
+  ui.videoDockCloseBtn.addEventListener('click', () => setTvShowVideo(false))
+  ui.videoDockFullscreenBtn.addEventListener('click', () => {
+    if (!ui.playerVideo) return
+    const el = ui.videoDockStage
+    if (!document.fullscreenElement) {
+      ;(el.requestFullscreen || el.webkitRequestFullscreen || (() => {})).call(el)
+    } else {
+      ;(document.exitFullscreen || document.webkitExitFullscreen || (() => {})).call(document)
+    }
   })
 }
 
@@ -110,7 +196,7 @@ function renderItem(item) {
   row.tabIndex = 0
   row.setAttribute('role', 'button')
   const typeLabel = item.type === 'tv' ? '电视' : '电台'
-  row.setAttribute('aria-label', `${typeLabel} · ${item.meta.title}，点击打开`)
+  row.setAttribute('aria-label', `${typeLabel} · ${item.meta.title}，点击播放`)
 
   const typeBox = document.createElement('div')
   typeBox.className = `fav-type ${item.type}`
@@ -137,13 +223,55 @@ function renderItem(item) {
 
   const topRow = document.createElement('div')
   topRow.className = 'fav-action-row'
-  const openBtn = document.createElement('a')
-  openBtn.className = 'btn primary'
+
+  const isCurrent = state.playing && state.playing.id === item.id
+
+  const playBtn = document.createElement('button')
+  playBtn.className = 'btn primary'
+  playBtn.type = 'button'
+  playBtn.textContent = (isCurrent && !ui.playerAudio.paused) ? '⏸ 播放中' : '▶ 播放'
+  playBtn.addEventListener('click', async (e) => {
+    e.stopPropagation()
+    await playItem(item, true)
+  })
+
+  topRow.append(playBtn)
+
+  if (item.type === 'tv') {
+    const visualBtn = document.createElement('button')
+    visualBtn.className = 'btn'
+    visualBtn.type = 'button'
+    visualBtn.textContent = '📺 看画面'
+    visualBtn.disabled = true
+    visualBtn.title = '点击播放后可切换到看画面'
+    visualBtn.addEventListener('click', async (e) => {
+      e.stopPropagation()
+      if (!isCurrent) await playItem(item, true)
+      setTvShowVideo(true)
+    })
+    ;(async () => {
+      try {
+        const stream = await resolveStream(item)
+        visualBtn.disabled = !stream || !stream.playable
+        if (stream && stream.playable) visualBtn.title = '看画面'
+        else if (stream && stream.watchUrl) { visualBtn.textContent = '↗ 官网'; visualBtn.title = '此频道需跳转到官网打开' ; visualBtn.disabled = false ; visualBtn.onclick = () => window.open(stream.watchUrl, '_blank', 'noopener,noreferrer') }
+      } catch (_) {}
+    })()
+    topRow.append(visualBtn)
+  }
+
+  const openBtn = document.createElement('button')
+  openBtn.className = 'btn'
   openBtn.type = 'button'
-  openBtn.textContent = '打开'
-  openBtn.href = buildOpenUrl(item)
-  openBtn.target = '_blank'
-  openBtn.rel = 'noopener,noreferrer'
+  openBtn.textContent = '↗'
+  openBtn.title = `在${typeLabel}应用中打开`
+  openBtn.setAttribute('aria-label', `在${typeLabel}应用中打开`)
+  openBtn.addEventListener('click', (e) => {
+    e.stopPropagation()
+    window.open(buildOpenUrl(item), '_blank', 'noopener,noreferrer')
+  })
+  topRow.append(openBtn)
+
   const removeBtn = document.createElement('button')
   removeBtn.className = 'btn'
   removeBtn.type = 'button'
@@ -152,7 +280,7 @@ function renderItem(item) {
     e.stopPropagation()
     removeFromUnified(item.id)
   })
-  topRow.append(openBtn, removeBtn)
+  topRow.append(removeBtn)
 
   const reorderRow = document.createElement('div')
   reorderRow.className = 'fav-action-row'
@@ -192,11 +320,11 @@ function renderItem(item) {
 
   actions.append(topRow, reorderRow)
   row.append(typeBox, main, actions)
-  row.addEventListener('click', () => window.open(buildOpenUrl(item), '_blank', 'noopener,noreferrer'))
+  row.addEventListener('click', () => playItem(item, true))
   row.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' && e.key !== ' ') return
     e.preventDefault()
-    window.open(buildOpenUrl(item), '_blank', 'noopener,noreferrer')
+    playItem(item, true)
   })
   return row
 }
@@ -219,6 +347,7 @@ function removeFromUnified(id) {
   if (!ok) return
   state.items = state.items.filter(x => x.id !== id)
   save(state.items)
+  if (state.playing && state.playing.id === id) stopPlayback()
   refreshList()
   setInfo(`已移除「${item.meta.title}」`)
 }
@@ -253,6 +382,291 @@ function moveToBottom(id) {
   save(state.items)
   return { position: state.items.length }
 }
+
+/* ============================
+ *  流解析 & 统一播放内核
+ * ============================ */
+
+async function playItem(item, autoplay) {
+  if (!item) return
+  const same = state.playing && state.playing.id === item.id
+  if (same && state.playMeta && state.playMeta.streamUrl && autoplay) {
+    if (ui.playerAudio.paused) await ui.playerAudio.play().catch(onPlayError)
+    refreshPlayerUI()
+    refreshList()
+    return
+  }
+  setInfo(`正在解析 ${item.meta.title}…`)
+  stopPlayback()
+  state.playing = item
+  state.playMeta = { streamUrl: null, watchUrl: null, playable: false, kind: null }
+  state.modeTvShowVideo = false
+  hideVideoDock()
+  refreshPlayerUI()
+  refreshList()
+  try {
+    const stream = await resolveStream(item)
+    state.playMeta = Object.assign({ streamUrl: null, watchUrl: null, playable: false, kind: null }, stream || {})
+    if (!state.playMeta.playable && state.playMeta.watchUrl) {
+      setInfo(`${item.meta.title} 需要在官网打开。点击「↗ 官网」跳转播放。`)
+      refreshPlayerUI()
+      refreshList()
+      return
+    }
+    if (!state.playMeta.playable) {
+      setInfo(`${item.meta.title} 暂无可用的直播源，已停止`)
+      refreshPlayerUI()
+      refreshList()
+      return
+    }
+    await loadAndPlay(state.playMeta.streamUrl, item.type, autoplay)
+    setInfo(`正在播放：${item.meta.title}${item.type === 'tv' ? '（只听音频模式，可点击 📺 看画面）' : ''}`)
+  } catch (err) {
+    setInfo(`播放失败：${err?.message || '未知错误'}`)
+  }
+  refreshPlayerUI()
+  refreshList()
+}
+
+async function loadAndPlay(url, type, autoplay) {
+  const target = state.modeTvShowVideo && type === 'tv' ? ui.playerVideo : ui.playerAudio
+  const useHls = /\.m3u8(\?|$)/i.test(url) && window.Hls && window.Hls.isSupported()
+  destroyHls()
+  ui.playerAudio.pause()
+  ui.playerVideo.pause()
+  ui.playerAudio.removeAttribute('src')
+  ui.playerVideo.removeAttribute('src')
+  ui.playerAudio.load()
+  if (useHls) {
+    state.hls = new window.Hls({ enableWorker: true, lowLatencyMode: true })
+    state.hls.loadSource(url)
+    state.hls.attachMedia(target)
+    state.hls.on(window.Hls.Events.ERROR, (_e, data) => {
+      if (data?.fatal) setInfo('播放错误：直播源可能中断或跨域受限')
+    })
+    state.hls.on(window.Hls.Events.MANIFEST_PARSED, () => {
+      if (autoplay) target.play().catch(onPlayError)
+    })
+  } else {
+    target.src = url
+    target.load()
+    if (autoplay) target.play().catch(onPlayError)
+  }
+  if (state.modeTvShowVideo && type === 'tv') {
+    showVideoDock()
+  }
+}
+
+function destroyHls() {
+  if (state.hls) {
+    try { state.hls.destroy() } catch (_) {}
+    state.hls = null
+  }
+}
+
+function stopPlayback() {
+  ui.playerAudio.pause()
+  ui.playerVideo.pause()
+  ui.playerAudio.removeAttribute('src')
+  ui.playerVideo.removeAttribute('src')
+  try { ui.playerAudio.load() } catch (_) {}
+  try { ui.playerVideo.load() } catch (_) {}
+  destroyHls()
+  state.playing = null
+  state.playMeta = null
+  state.modeTvShowVideo = false
+  hideVideoDock()
+  syncPlayButton()
+  ui.tvVisualBtn.hidden = true
+}
+
+function jump(step) {
+  const list = getVisibleItems()
+  if (!list.length) return
+  const idx = state.playing ? list.findIndex(x => x.id === state.playing.id) : -1
+  const next = idx < 0 ? 0 : (idx + step + list.length) % list.length
+  playItem(list[next], true)
+}
+
+function toggleTvVisual() {
+  if (!state.playing || state.playing.type !== 'tv') return
+  setTvShowVideo(!state.modeTvShowVideo)
+}
+
+async function setTvShowVideo(show) {
+  if (!state.playing || state.playing.type !== 'tv') return
+  state.modeTvShowVideo = !!show
+  if (state.playMeta && state.playMeta.streamUrl) {
+    const url = state.playMeta.streamUrl
+    const wasPlaying = !ui.playerAudio.paused || !ui.playerVideo.paused
+    destroyHls()
+    ui.playerAudio.pause()
+    ui.playerVideo.pause()
+    ui.playerAudio.removeAttribute('src')
+    ui.playerVideo.removeAttribute('src')
+    try { ui.playerAudio.load() } catch (_) {}
+    try { ui.playerVideo.load() } catch (_) {}
+    const target = show ? ui.playerVideo : ui.playerAudio
+    const useHls = /\.m3u8(\?|$)/i.test(url) && window.Hls && window.Hls.isSupported()
+    if (useHls) {
+      state.hls = new window.Hls({ enableWorker: true, lowLatencyMode: true })
+      state.hls.loadSource(url)
+      state.hls.attachMedia(target)
+      state.hls.on(window.Hls.Events.MANIFEST_PARSED, () => { if (wasPlaying) target.play().catch(() => {}) })
+    } else {
+      target.src = url
+      target.load()
+      if (wasPlaying) target.play().catch(() => {})
+    }
+    if (target === ui.playerVideo) ui.playerAudio.pause()
+    else ui.playerVideo.pause()
+  }
+  show ? showVideoDock() : hideVideoDock()
+  refreshPlayerUI()
+}
+
+function showVideoDock() {
+  if (!state.playing) return
+  ui.videoDock.hidden = false
+  ui.videoDockTitle.textContent = `📺 ${state.playing.meta.title}`
+  document.body.classList.add('has-video-dock')
+}
+function hideVideoDock() {
+  ui.videoDock.hidden = true
+  document.body.classList.remove('has-video-dock')
+}
+
+function refreshPlayerUI() {
+  const item = state.playing
+  syncPlayButton()
+  if (!item) {
+    ui.nowTitle.textContent = '未播放'
+    ui.nowSub.textContent = ''
+    ui.prevBtn.disabled = true
+    ui.nextBtn.disabled = true
+    ui.tvVisualBtn.hidden = true
+    ui.openAppBtn.disabled = true
+    return
+  }
+  ui.nowTitle.textContent = item.meta.title
+  const typeLabel = item.type === 'tv' ? '电视' : '电台'
+  ui.nowSub.textContent = [typeLabel, item.meta.country, item.meta.language, item.meta.category].filter(Boolean).join(' · ')
+  const list = getVisibleItems()
+  ui.prevBtn.disabled = list.length <= 1
+  ui.nextBtn.disabled = list.length <= 1
+  const canShowVideo = item.type === 'tv' && state.playMeta && state.playMeta.playable
+  ui.tvVisualBtn.hidden = !canShowVideo
+  if (canShowVideo) {
+    ui.tvVisualBtn.textContent = state.modeTvShowVideo ? '🔇' : '📺'
+    ui.tvVisualBtn.title = state.modeTvShowVideo ? '切回只听音频' : '看电视画面'
+  }
+  ui.openAppBtn.disabled = false
+}
+
+function syncPlayButton() {
+  const playing = !ui.playerAudio.paused || !ui.playerVideo.paused
+  ui.playBtn.disabled = !state.playing
+  ui.playBtn.textContent = state.playing ? (playing ? '⏸' : '▶') : '▶'
+}
+
+function onPlayError(err) {
+  const name = String(err?.name || '')
+  if (name === 'NotAllowedError') setInfo('播放失败：浏览器阻止了自动播放，请再点一次播放')
+  else setInfo('播放失败：请换一个试试或稍后重试')
+  syncPlayButton()
+}
+
+/* ============================
+ *  流地址解析
+ * ============================ */
+
+async function resolveStream(item) {
+  if (!item) return null
+  return item.type === 'tv' ? resolveTvStream(item) : resolveFmStream(item)
+}
+
+async function resolveTvStream(item) {
+  const channels = await loadTvChannels()
+  const channel = channels?.find(c => String(c.id) === String(item.refId).trim())
+  if (!channel) return null
+  const kind = channel.kind || (channel.streamUrl ? 'hls' : 'external')
+  return {
+    streamUrl: channel.streamUrl || null,
+    watchUrl: channel.watchUrl || null,
+    playable: kind === 'hls' && !!channel.streamUrl,
+    kind
+  }
+}
+
+async function loadTvChannels() {
+  if (state.tvChannels) return state.tvChannels
+  if (state.tvChannelsLoading) {
+    await new Promise(resolve => setTimeout(() => resolve(loadTvChannels()), 100))
+    return state.tvChannels
+  }
+  state.tvChannelsLoading = true
+  try {
+    const res = await fetch('../global-tv/channels.json', { cache: 'no-store' })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = await res.json()
+    state.tvChannels = Array.isArray(data) ? data : []
+  } catch (_) {
+    state.tvChannels = []
+  } finally {
+    state.tvChannelsLoading = false
+  }
+  return state.tvChannels
+}
+
+async function resolveFmStream(item) {
+  const cache = state.fmCache || {}
+  const key = String(item.refId || '').trim()
+  if (!key) return null
+  const cached = cache[key]
+  if (cached && cached.expiresAt && cached.expiresAt > Date.now() && cached.url) {
+    return { streamUrl: cached.url, watchUrl: cached.homepage || null, playable: true, kind: 'fm' }
+  }
+  setInfo(`正在查询电台直播源：${item.meta.title}…`)
+  let lastErr = null
+  for (const base of FM_API_BASES) {
+    try {
+      const res = await fetch(`${base}/json/stations/byuuid/${encodeURIComponent(key)}`, { cache: 'no-store' })
+      if (!res.ok) { lastErr = new Error(`HTTP ${res.status}`) ; continue }
+      const arr = await res.json()
+      const station = Array.isArray(arr) ? arr[0] : null
+      if (!station) continue
+      const url = station.url_resolved || station.url
+      if (!url) continue
+      cache[key] = { url, homepage: station.homepage || null, expiresAt: Date.now() + FM_STREAM_CACHE_TTL }
+      state.fmCache = cache
+      save(FM_STREAM_CACHE_KEY, cache)
+      return { streamUrl: url, watchUrl: station.homepage || null, playable: true, kind: 'fm' }
+    } catch (err) {
+      lastErr = err
+    }
+  }
+  if (lastErr) setInfo(`查询电台直播源失败：${lastErr.message || '网络错误'}`)
+  return null
+}
+
+function pruneFmCache() {
+  const cache = state.fmCache || {}
+  const now = Date.now()
+  let changed = false
+  for (const k of Object.keys(cache)) {
+    if (!cache[k] || !cache[k].expiresAt || cache[k].expiresAt <= now) {
+      delete cache[k]; changed = true
+    }
+  }
+  if (changed) {
+    state.fmCache = cache
+    save(FM_STREAM_CACHE_KEY, cache)
+  }
+}
+
+/* ============================
+ *  导入 / 导出
+ * ============================ */
 
 function exportFavorites() {
   if (!state.items.length) {
@@ -350,6 +764,20 @@ function loadRaw() {
   } catch (_) {
     return []
   }
+}
+
+function load(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key)
+    if (raw == null) return fallback
+    const v = JSON.parse(raw)
+    return v ?? fallback
+  } catch (_) {
+    return fallback
+  }
+}
+function save(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)) } catch (_) {}
 }
 
 function setInfo(text) {

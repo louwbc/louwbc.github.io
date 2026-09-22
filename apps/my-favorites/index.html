@@ -7,7 +7,7 @@
   <title>我的收藏 · 电视 + 电台</title>
   <link rel="icon" href="../../icons/icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../../assets/css/site.css?v=20260528c">
-  <link rel="stylesheet" href="./my-favorites.css?v=20260922a">
+  <link rel="stylesheet" href="./my-favorites.css?v=20260922c">
 </head>
 <body>
   <header class="topbar">
@@ -15,11 +15,12 @@
       <div class="brand">
         <svg viewBox="0 0 24 24" class="logo" aria-hidden="true"><path d="M5 5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5zm2 0v14h10V5H7zm2 2h6v2H9V7zm0 3h6v2H9v-2zm0 3h4v2H9v-2z" fill="currentColor"/></svg>
         <div class="brand-title">我的收藏</div>
-        <span class="version-chip" aria-label="当前版本">v1.0</span>
+        <span class="version-chip" aria-label="当前版本">v1.1</span>
       </div>
       <nav class="nav">
         <a href="../../">首页</a>
         <a href="../../blog/">博客</a>
+        <a href="../my-favorites/">我的收藏</a>
         <a href="../global-fm/">全球FM</a>
         <a href="../global-tv/">全球电视</a>
         <a href="../podcast/">全球播客</a>
@@ -32,14 +33,15 @@
   <main class="container">
     <section class="card card-pad hero-panel">
       <div class="hero-copy">
-        <div class="eyebrow">Unified Favorites</div>
+        <div class="eyebrow">Unified Favorites · Listen First</div>
         <h1 class="hero-title">跨应用统一收藏</h1>
-        <p class="hero-text">在这里同时管理你收藏的全球电视频道和全球电台。可随时一键跳转至对应应用播放，并独立调整统一列表的顺序。统一收藏与各应用内部的独立收藏互不干扰。</p>
+        <p class="hero-text">在这里同时管理你收藏的全球电视频道和全球电台。点击任意卡片即可在此页面直接播放（电视默认按“只听音频”启动，需要时可切换为看画面），无需再在电视与电台页面之间跳转。</p>
       </div>
       <div class="hero-meta">
         <div class="meta-pill">电视 + 电台混排</div>
         <div class="meta-pill">上限 600 条</div>
-        <div class="meta-pill">支持搜索与类型筛选</div>
+        <div class="meta-pill">同页直接播放</div>
+        <div class="meta-pill">电视默认只听音频，可一键看画面</div>
         <div class="meta-pill">自定义排序</div>
         <div class="meta-pill">导入 / 导出</div>
       </div>
@@ -84,6 +86,36 @@
     </section>
   </main>
 
-  <script src="./my-favorites.js?v=20260922a" type="module"></script>
+  <div class="video-dock" id="videoDock" hidden>
+    <div class="video-dock-head">
+      <div class="video-dock-title" id="videoDockTitle">看电视</div>
+      <div class="video-dock-actions">
+        <button class="btn icon-btn" id="videoDockFullscreenBtn" type="button" aria-label="全屏">⛶</button>
+        <button class="btn icon-btn" id="videoDockCloseBtn" type="button" aria-label="关闭">✕</button>
+      </div>
+    </div>
+    <div class="video-dock-stage" id="videoDockStage">
+      <video id="playerVideo" title="统一收藏电视画面" controls controlslist="nofullscreen" playsinline preload="none"></video>
+    </div>
+  </div>
+
+  <footer class="player" id="player">
+    <div class="now">
+      <div class="now-title" id="nowTitle">未播放</div>
+      <div class="now-sub muted" id="nowSub"></div>
+    </div>
+    <div class="controls">
+      <button class="btn icon-btn" id="prevBtn" aria-label="上一条">⏮</button>
+      <button class="btn primary icon-btn" id="playBtn" aria-label="播放/暂停">▶</button>
+      <button class="btn icon-btn" id="nextBtn" aria-label="下一条">⏭</button>
+      <button class="btn icon-btn" id="tvVisualBtn" aria-label="看电视画面" title="看电视画面" hidden>📺</button>
+      <button class="btn icon-btn" id="openAppBtn" aria-label="打开对应应用" title="在对应应用中打开">↗</button>
+      <input class="vol" id="vol" type="range" min="0" max="1" step="0.01" aria-label="音量">
+    </div>
+    <audio id="playerAudio" preload="none" crossorigin="anonymous"></audio>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script src="./my-favorites.js?v=20260922c" type="module"></script>
 </body>
 </html>

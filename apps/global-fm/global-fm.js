@@ -23,7 +23,6 @@ const ui = {
   playBtn: $('#playBtn'),
   nextBtn: $('#nextBtn'),
   favBtn: $('#favBtn'),
-  unifiedFavBtn: $('#unifiedFavBtn'),
   vol: $('#vol'),
   audio: $('#audio'),
   installBtn: $('#installBtn')
@@ -92,27 +91,12 @@ async function init() {
   setupPlayerControls()
   setupInfiniteScroll()
   setupPwaInstall()
-  const paramStationUuid = new URLSearchParams(location.search).get('station')
   await discoverApiBase()
   await loadLanguages()
   applyPreferredLanguage()
   await loadTags()
   applyPreferredTag()
   await loadBundledAvailable(true)
-  if (paramStationUuid) {
-    const found = findStationByUuid(String(paramStationUuid).trim())
-    if (found) {
-      state.tab = 'recent'
-      refreshTabs()
-      playStation(found, 'available')
-      setInfo(`已定位到：${found.name || '电台'}`)
-      setTimeout(() => {
-        const first = document.querySelector('.station-item')
-        if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      }, 300)
-      return
-    }
-  }
   setDefaultTab()
   loadBundledRecommended(true)
   if (state.tab === 'discover') await search(true)
@@ -267,13 +251,6 @@ function setupPlayerControls() {
     if (!state.playing) return
     if (isEpisode(state.playing)) return
     toggleFavorite(state.playing)
-    refreshPlayerFav()
-    refreshList()
-  })
-  ui.unifiedFavBtn.addEventListener('click', () => {
-    if (!state.playing || isEpisode(state.playing)) return
-    const r = toggleUnifiedFavFM(state.playing)
-    setInfo(r.text)
     refreshPlayerFav()
     refreshList()
   })
@@ -625,64 +602,6 @@ function renderStationItem(s, tab) {
     playStation(s, tab)
   })
 
-  actions.append(play)
-
-  if (tab === 'favorites') {
-    const pos = getFavoritePositionFM(s)
-    const canMove = pos && pos.total > 1
-    const atTop = !pos || pos.index === 0
-    const atBottom = !pos || pos.index === pos.total - 1
-
-    const makeReorderBtn = (icon, label, disabled, onClick) => {
-      const b = document.createElement('button')
-      b.className = 'btn icon-btn tiny'
-      b.textContent = icon
-      b.setAttribute('aria-label', label)
-      b.disabled = !canMove || disabled
-      b.addEventListener('click', (e) => {
-        e.stopPropagation()
-        if (!b.disabled) onClick()
-      })
-      return b
-    }
-    const stationName = s.name || '该电台'
-    const toTopBtn = makeReorderBtn('⤒', '移到最前', atTop, () => {
-      const r = moveFavToTopFM(s)
-      if (r) setInfo(`已将 ${stationName} 移到第 ${r.position} 位`)
-      refreshList()
-    })
-    const upBtn = makeReorderBtn('↑', '上移一位', atTop, () => {
-      const r = moveFavUpFM(s)
-      if (r) setInfo(`已将 ${stationName} 上移到第 ${r.position} 位`)
-      refreshList()
-    })
-    const downBtn = makeReorderBtn('↓', '下移一位', atBottom, () => {
-      const r = moveFavDownFM(s)
-      if (r) setInfo(`已将 ${stationName} 下移到第 ${r.position} 位`)
-      refreshList()
-    })
-    const toBottomBtn = makeReorderBtn('⤓', '移到最后', atBottom, () => {
-      const r = moveFavToBottomFM(s)
-      if (r) setInfo(`已将 ${stationName} 移到第 ${r.position} 位`)
-      refreshList()
-    })
-    actions.append(toTopBtn, upBtn, downBtn, toBottomBtn)
-  }
-
-  const inUnified = isInUnifiedFavFM(s)
-  const unified = document.createElement('button')
-  unified.className = 'btn icon-btn tiny'
-  unified.textContent = inUnified ? '✓' : '✚'
-  unified.setAttribute('aria-label', inUnified ? '从统一收藏移除' : '加入统一收藏')
-  unified.title = inUnified ? '已加入统一收藏' : '合并到统一收藏'
-  unified.addEventListener('click', () => {
-    const r = toggleUnifiedFavFM(s)
-    setInfo(r.text)
-    refreshPlayerFav()
-    refreshList()
-  })
-  actions.append(unified)
-
   const fav = document.createElement('button')
   fav.className = 'btn icon-btn'
   fav.textContent = isFavorite(s) ? '★' : '☆'
@@ -693,7 +612,7 @@ function renderStationItem(s, tab) {
     refreshList()
   })
 
-  actions.append(fav)
+  actions.append(play, fav)
   card.append(main, actions)
   return card
 }
@@ -741,17 +660,10 @@ function refreshPlayerFav() {
   if (!state.playing || isEpisode(state.playing)) {
     ui.favBtn.disabled = true
     ui.favBtn.textContent = '☆'
-    ui.unifiedFavBtn.disabled = true
-    ui.unifiedFavBtn.textContent = '✚'
-    ui.unifiedFavBtn.title = '加入统一收藏'
     return
   }
   ui.favBtn.disabled = false
   ui.favBtn.textContent = isFavorite(state.playing) ? '★' : '☆'
-  ui.unifiedFavBtn.disabled = false
-  const inUnified = isInUnifiedFavFM(state.playing)
-  ui.unifiedFavBtn.textContent = inUnified ? '✓' : '✚'
-  ui.unifiedFavBtn.title = inUnified ? '已加入统一收藏（点击移除）' : '加入统一收藏'
 }
 
 function jump(step) {
@@ -1939,45 +1851,6 @@ function toggleFavorite(s) {
   saveFavorites(favs.slice(0, 500))
   if (state.tab === 'favorites') refreshList()
 }
-function getFavoritePositionFM(s) {
-  const favs = loadFavorites()
-  const i = favs.findIndex(x => sameStation(x, s))
-  return i < 0 ? null : { index: i, total: favs.length }
-}
-function moveFavToTopFM(s) {
-  const favs = loadFavorites()
-  const i = favs.findIndex(x => sameStation(x, s))
-  if (i <= 0) return null
-  const [it] = favs.splice(i, 1)
-  favs.unshift(it)
-  saveFavorites(favs.slice(0, 500))
-  return { position: 1 }
-}
-function moveFavUpFM(s) {
-  const favs = loadFavorites()
-  const i = favs.findIndex(x => sameStation(x, s))
-  if (i <= 0) return null
-  ;[favs[i - 1], favs[i]] = [favs[i], favs[i - 1]]
-  saveFavorites(favs.slice(0, 500))
-  return { position: i }
-}
-function moveFavDownFM(s) {
-  const favs = loadFavorites()
-  const i = favs.findIndex(x => sameStation(x, s))
-  if (i < 0 || i >= favs.length - 1) return null
-  ;[favs[i], favs[i + 1]] = [favs[i + 1], favs[i]]
-  saveFavorites(favs.slice(0, 500))
-  return { position: i + 2 }
-}
-function moveFavToBottomFM(s) {
-  const favs = loadFavorites()
-  const i = favs.findIndex(x => sameStation(x, s))
-  if (i < 0 || i >= favs.length - 1) return null
-  const [it] = favs.splice(i, 1)
-  favs.push(it)
-  saveFavorites(favs.slice(0, 500))
-  return { position: favs.length }
-}
 
 function loadRecent() {
   return load(STORE.recent, [])
@@ -2083,77 +1956,4 @@ function load(key, fallback) {
 
 function save(key, val) {
   try { localStorage.setItem(key, JSON.stringify(val)) } catch (_) {}
-}
-
-function findStationByUuid(uuid) {
-  const needle = String(uuid || '').trim()
-  if (!needle) return null
-  const direct = getAvailableStations().find(s => String(s?.stationuuid || s?.uuid || '').trim() === needle)
-  if (direct) return direct
-  const favs = loadFavorites().find(s => String(s?.stationuuid || s?.uuid || '').trim() === needle)
-  if (favs) return favs
-  const recent = loadRecent().find(s => String(s?.stationuuid || s?.uuid || '').trim() === needle)
-  if (recent) return recent
-  return null
-}
-
-const UNIFIED_STORE_KEY_FM = 'solo-radio:unified-favorites'
-const UNIFIED_LIMIT_FM = 600
-function buildUnifiedIdFM(type, refId) {
-  return `${type}:${String(refId || '').trim()}`
-}
-function loadUnifiedFavsFM() {
-  try {
-    const raw = localStorage.getItem(UNIFIED_STORE_KEY_FM)
-    const arr = raw ? JSON.parse(raw) : []
-    return Array.isArray(arr) ? arr.slice(0, UNIFIED_LIMIT_FM) : []
-  } catch (_) { return [] }
-}
-function saveUnifiedFavsFM(list) {
-  try {
-    localStorage.setItem(UNIFIED_STORE_KEY_FM, JSON.stringify((list || []).slice(0, UNIFIED_LIMIT_FM)))
-  } catch (_) {}
-}
-function getFmRefId(s) {
-  return String(s?.stationuuid || s?.uuid || s?.name || '').trim()
-}
-function isInUnifiedFavFM(s) {
-  const refId = getFmRefId(s)
-  if (!refId) return false
-  const id = buildUnifiedIdFM('fm', refId)
-  return loadUnifiedFavsFM().some(x => x.id === id)
-}
-function toggleUnifiedFavFM(s) {
-  const refId = getFmRefId(s)
-  if (!refId) return { status: 'noop', text: '无效的电台' }
-  const type = 'fm'
-  const id = buildUnifiedIdFM(type, refId)
-  let list = loadUnifiedFavsFM()
-  const existing = list.find(x => x.id === id)
-  const name = s.name || '该电台'
-  if (existing) {
-    list = list.filter(x => x.id !== id)
-    saveUnifiedFavsFM(list)
-    return { status: 'removed', text: `已把 ${name} 从统一收藏中移除` }
-  }
-  if (list.length >= UNIFIED_LIMIT_FM) {
-    return { status: 'limit_reached', text: `统一收藏已达 ${UNIFIED_LIMIT_FM} 条上限，请先移除部分` }
-  }
-  const country = String(s.country || '').trim()
-  const language = String(s.language || '').trim()
-  const rawTags = String(s.tags || '').split(',').map(t => t.trim()).filter(Boolean)
-  const category = rawTags[0] || ''
-  const subtitle = [country, language, category].filter(Boolean).join(' · ')
-  list.push({
-    id, type, refId, addedAt: Date.now(),
-    meta: {
-      title: name || '未命名电台',
-      subtitle,
-      country,
-      language,
-      category
-    }
-  })
-  saveUnifiedFavsFM(list)
-  return { status: 'added', text: `已把 ${name} 加入统一收藏（共 ${list.length} 条）` }
 }
