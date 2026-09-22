@@ -789,6 +789,14 @@ function sameStation(a, b) {
   return String(ida) === String(idb)
 }
 
+function isStation(x) {
+  if (!x || typeof x !== 'object') return false
+  if (isEpisode(x)) return false
+  const hasStationKey = !!x.stationuuid || typeof x.name !== 'undefined'
+  const typeOk = (typeof x.url_resolved === 'string' || typeof x.url === 'string' || hasStationKey)
+  return typeOk && !(x.kind && x.kind !== 'station' && x.kind !== 'fm')
+}
+
 function isEpisode(x) {
   return x?.kind === 'episode'
 }
