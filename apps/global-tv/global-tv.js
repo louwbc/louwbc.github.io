@@ -25,6 +25,7 @@ const ui = {
   nowMeta: $('#nowMeta'),
   nowNote: $('#nowNote'),
   favCurrentBtn: $('#favCurrentBtn'),
+  unfiCurrentBtn: $('#unfiCurrentBtn'),
   stageWrap: $('#stageWrap'),
   stageShell: $('#stageShell'),
   playerAudio: $('#playerAudio'),
@@ -124,6 +125,16 @@ function setupControls() {
     refreshCurrentActions()
     refreshList()
   })
+
+  if (ui.unfiCurrentBtn) {
+    ui.unfiCurrentBtn.addEventListener('click', () => {
+      const channel = getCurrentChannel()
+      if (!channel) return
+      toggleUnifiedFavoriteForChannel(channel)
+      refreshCurrentActions()
+      refreshList()
+    })
+  }
 
   ui.floatingPlayPauseBtn.addEventListener('click', async () => {
     const channel = getCurrentChannel()
@@ -467,6 +478,9 @@ function renderChannelItem(channel) {
   const actions = document.createElement('div')
   actions.className = 'item-actions'
 
+  const primaryRow = document.createElement('div')
+  primaryRow.className = 'item-primary-row'
+
   const playBtn = document.createElement('button')
   playBtn.className = 'btn primary'
   playBtn.type = 'button'
@@ -485,6 +499,11 @@ function renderChannelItem(channel) {
     openExternalUrl(channel.watchUrl)
   })
 
+  primaryRow.append(playBtn, officialBtn)
+
+  const secondaryRow = document.createElement('div')
+  secondaryRow.className = 'item-secondary-row'
+
   const favBtn = document.createElement('button')
   favBtn.className = 'btn'
   favBtn.type = 'button'
@@ -497,7 +516,64 @@ function renderChannelItem(channel) {
     refreshList()
   })
 
-  actions.append(playBtn, officialBtn, favBtn)
+  const unfiId = `tv:${channel.id}`
+  const inUnified = (loadRawUnified() || []).some(x => String(x.id) === String(unfiId))
+  const unfiBtn = document.createElement('button')
+  unfiBtn.className = 'btn icon-btn tiny'
+  unfiBtn.type = 'button'
+  unfiBtn.textContent = inUnified ? '✓' : '✚'
+  unfiBtn.title = inUnified ? '已加入统一收藏' : '加入统一收藏'
+  unfiBtn.setAttribute('aria-label', unfiBtn.title)
+  unfiBtn.addEventListener('click', (e) => {
+    e.stopPropagation()
+    toggleUnifiedFavoriteForChannel(channel)
+    refreshList()
+  })
+
+  secondaryRow.append(favBtn, unfiBtn)
+
+  actions.append(primaryRow, secondaryRow)
+
+  if (state.view === 'favorites' && state.items && state.items.length > 1) {
+    const reorderRow = document.createElement('div')
+    reorderRow.className = 'item-reorder-row'
+    const pos = getFavoritePosition(channel.id)
+    if (pos) {
+      const atTop = pos.index === 0
+      const atBottom = pos.index === pos.total - 1
+      const makeR = (icon, label, disabled, onClick) => {
+        const b = document.createElement('button')
+        b.className = 'btn icon-btn tiny'
+        b.type = 'button'
+        b.textContent = icon
+        b.setAttribute('aria-label', label)
+        b.disabled = disabled
+        b.addEventListener('click', (ev) => {
+          ev.stopPropagation()
+          if (b.disabled) return
+          onClick()
+        })
+        return b
+      }
+      const name = channel.title
+      reorderRow.append(
+        makeR('⤒', '移到最前', atTop, () => {
+          const r = moveFavoriteToTop(channel.id); if (r) setInfo(`已将「${name}」移到第 ${r.position} 位`); refreshList()
+        }),
+        makeR('↑', '上移一位', atTop, () => {
+          const r = moveFavoriteUp(channel.id); if (r) setInfo(`已将「${name}」上移到第 ${r.position} 位`); refreshList()
+        }),
+        makeR('↓', '下移一位', atBottom, () => {
+          const r = moveFavoriteDown(channel.id); if (r) setInfo(`已将「${name}」下移到第 ${r.position} 位`); refreshList()
+        }),
+        makeR('⤓', '移到最后', atBottom, () => {
+          const r = moveFavoriteToBottom(channel.id); if (r) setInfo(`已将「${name}」移到第 ${r.position} 位`); refreshList()
+        })
+      )
+      actions.append(reorderRow)
+    }
+  }
+
   card.append(main, actions)
   return card
 }
@@ -651,6 +727,16 @@ function refreshCurrentActions() {
   ui.openOfficialBtn.disabled = !hasCurrent || !channel.watchUrl
   ui.favCurrentBtn.disabled = !hasCurrent
   ui.favCurrentBtn.textContent = hasCurrent && isFavorite(channel.id) ? '取消收藏' : '加入收藏'
+  if (ui.unfiCurrentBtn) {
+    ui.unfiCurrentBtn.disabled = !hasCurrent
+    if (hasCurrent) {
+      const unfiId = `tv:${channel.id}`
+      const inU = (loadRawUnified() || []).some(x => String(x.id) === String(unfiId))
+      ui.unfiCurrentBtn.textContent = inU ? '✓ 已加入统一收藏' : '加入统一收藏'
+    } else {
+      ui.unfiCurrentBtn.textContent = '加入统一收藏'
+    }
+  }
   ui.floatingOfficialBtn.disabled = !hasCurrent || !channel.watchUrl
   updateSubtitleButtons()
   updateFullscreenButtons()
