@@ -437,17 +437,37 @@ body.video-mode .stage-shell{
 .item-actions{
   display:flex;
   flex-direction:column;
-  gap:8px;
+  gap:6px;
   flex:0 0 auto;
 }
-.item-actions .btn{
-  min-width:82px;
+.item-primary-row{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+.item-secondary-row{
+  display:flex;
+  gap:6px;
+  justify-content:flex-end;
+  align-items:center;
+}
+.item-primary-row .btn{
+  min-width:78px;
+}
+.item-secondary-row .btn:not(.icon-btn){
+  min-width:64px;
+  min-height:30px;
+  height:30px;
+  padding:0 10px;
+  font-size:12px;
+  line-height:1;
 }
 .item-reorder-row{
   display:flex;
   gap:4px;
-  justify-content:center;
-  margin-bottom:2px;
+  justify-content:flex-end;
+  margin-bottom:0;
 }
 .icon-btn.tiny{
   width:30px;

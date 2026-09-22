@@ -566,10 +566,19 @@ function renderChannelItem(channel) {
     refreshList()
   })
 
+  const primaryRow = document.createElement('div')
+  primaryRow.className = 'item-primary-row'
+  primaryRow.append(playBtn, officialBtn)
+
+  const secondaryRow = document.createElement('div')
+  secondaryRow.className = 'item-secondary-row'
+  const inUnified = isInUnifiedFav('tv', channel.id)
   const unifiedBtn = document.createElement('button')
-  unifiedBtn.className = 'btn'
+  unifiedBtn.className = 'btn icon-btn tiny'
   unifiedBtn.type = 'button'
-  unifiedBtn.textContent = isInUnifiedFav('tv', channel.id) ? '✚ 已合并' : '合并收藏'
+  unifiedBtn.textContent = inUnified ? '✓' : '✚'
+  unifiedBtn.setAttribute('aria-label', inUnified ? '从统一收藏移除' : '加入统一收藏')
+  unifiedBtn.title = inUnified ? '已加入统一收藏' : '合并到统一收藏'
   unifiedBtn.addEventListener('click', (e) => {
     e.stopPropagation()
     const r = toggleUnifiedFavTV(channel)
@@ -577,8 +586,9 @@ function renderChannelItem(channel) {
     refreshCurrentActions()
     refreshList()
   })
+  secondaryRow.append(favBtn, unifiedBtn)
 
-  actions.append(playBtn, officialBtn, favBtn, unifiedBtn)
+  actions.append(primaryRow, secondaryRow)
   card.append(main, actions)
   return card
 }
