@@ -23,10 +23,14 @@ const ui = {
   playBtn: $('#playBtn'),
   nextBtn: $('#nextBtn'),
   favBtn: $('#favBtn'),
+  unfiBtn: $('#unfiBtn'),
   vol: $('#vol'),
   audio: $('#audio'),
   installBtn: $('#installBtn')
 }
+
+const UNIFIED_STORE_KEY = 'solo-radio:unified-favorites'
+const UNIFIED_LIMIT = 600
 
 const STORE = {
   favorites: 'global-fm:favorites',
@@ -99,8 +103,26 @@ async function init() {
   await loadBundledAvailable(true)
   setDefaultTab()
   loadBundledRecommended(true)
-  if (state.tab === 'discover') await search(true)
-  else setInfo('已显示收藏')
+
+  const params = new URLSearchParams(location.search || '')
+  const targetUuid = params.get('station')
+  if (targetUuid) {
+    try {
+      let hit = findStationByUuid(targetUuid) || null
+      if (!hit) {
+        if (state.tab !== 'discover') setTab('discover')
+        await search(true)
+        hit = findStationByUuid(targetUuid) || null
+      }
+      if (hit) {
+        playStation(hit, 'deep-link')
+        setInfo(`已跳转到「${hit.name || '目标电台'}」`)
+      }
+    } catch (_) {}
+  }
+
+  if (state.tab === 'discover' && !targetUuid) await search(true)
+  else if (!targetUuid) setInfo('已显示收藏')
 }
 
 function setupFavoritesBackup() {
@@ -254,6 +276,15 @@ function setupPlayerControls() {
     refreshPlayerFav()
     refreshList()
   })
+  if (ui.unfiBtn) {
+    ui.unfiBtn.addEventListener('click', () => {
+      if (!state.playing) return
+      if (isEpisode(state.playing)) return
+      toggleUnifiedFavoriteFM(state.playing)
+      refreshPlayerFav()
+      refreshList()
+    })
+  }
 
   ui.audio.addEventListener('play', syncPlayButton)
   ui.audio.addEventListener('pause', syncPlayButton)
@@ -602,6 +633,21 @@ function renderStationItem(s, tab) {
     playStation(s, tab)
   })
 
+  const unfiId = `fm:${String(s.stationuuid || s.name || s.url || '').trim()}`
+  const inUnified = (loadRawUnifiedFM() || []).some(x => String(x.id) === unfiId)
+  const unfiBtn = document.createElement('button')
+  unfiBtn.className = 'btn icon-btn tiny'
+  unfiBtn.type = 'button'
+  unfiBtn.textContent = inUnified ? '✓' : '✚'
+  unfiBtn.title = inUnified ? '已加入统一收藏' : '加入统一收藏'
+  unfiBtn.setAttribute('aria-label', unfiBtn.title)
+  unfiBtn.addEventListener('click', (e) => {
+    e.stopPropagation()
+    toggleUnifiedFavoriteFM(s)
+    refreshList()
+    refreshPlayerFav()
+  })
+
   const fav = document.createElement('button')
   fav.className = 'btn icon-btn'
   fav.textContent = isFavorite(s) ? '★' : '☆'
@@ -612,7 +658,49 @@ function renderStationItem(s, tab) {
     refreshList()
   })
 
-  actions.append(play, fav)
+  actions.append(play, unfiBtn, fav)
+
+  if (String(tab || state.tab) === 'favorites') {
+    const favs = loadFavorites().filter(x => isStation(x))
+    const pos = getFavoritePositionFM(s)
+    if (favs.length > 1 && pos) {
+      const reorderRow = document.createElement('div')
+      reorderRow.style.cssText = 'display:flex;gap:4px;align-items:center;margin-left:6px'
+      const atTop = pos.index === 0
+      const atBottom = pos.index === favs.length - 1
+      const makeR = (icon, label, disabled, onClick) => {
+        const b = document.createElement('button')
+        b.className = 'btn icon-btn tiny'
+        b.type = 'button'
+        b.textContent = icon
+        b.setAttribute('aria-label', label)
+        b.disabled = disabled
+        b.addEventListener('click', (ev) => {
+          ev.stopPropagation()
+          if (b.disabled) return
+          onClick()
+        })
+        return b
+      }
+      const name = s.name || '该电台'
+      reorderRow.append(
+        makeR('⤒', '移到最前', atTop, () => {
+          const r = moveFavToTopFM(s); if (r) setInfo(`已将「${name}」移到第 ${r.position} 位`); refreshList()
+        }),
+        makeR('↑', '上移一位', atTop, () => {
+          const r = moveFavUpFM(s); if (r) setInfo(`已将「${name}」上移到第 ${r.position} 位`); refreshList()
+        }),
+        makeR('↓', '下移一位', atBottom, () => {
+          const r = moveFavDownFM(s); if (r) setInfo(`已将「${name}」下移到第 ${r.position} 位`); refreshList()
+        }),
+        makeR('⤓', '移到最后', atBottom, () => {
+          const r = moveFavToBottomFM(s); if (r) setInfo(`已将「${name}」移到第 ${r.position} 位`); refreshList()
+        })
+      )
+      actions.append(reorderRow)
+    }
+  }
+
   card.append(main, actions)
   return card
 }
@@ -660,10 +748,22 @@ function refreshPlayerFav() {
   if (!state.playing || isEpisode(state.playing)) {
     ui.favBtn.disabled = true
     ui.favBtn.textContent = '☆'
+    if (ui.unfiBtn) {
+      ui.unfiBtn.disabled = true
+      ui.unfiBtn.textContent = '✚'
+      ui.unfiBtn.title = '加入统一收藏'
+    }
     return
   }
   ui.favBtn.disabled = false
   ui.favBtn.textContent = isFavorite(state.playing) ? '★' : '☆'
+  if (ui.unfiBtn) {
+    ui.unfiBtn.disabled = false
+    const inU = isInUnifiedFM(state.playing)
+    ui.unfiBtn.textContent = inU ? '✓' : '✚'
+    ui.unfiBtn.title = inU ? '已加入统一收藏' : '加入统一收藏'
+    ui.unfiBtn.setAttribute('aria-label', ui.unfiBtn.title)
+  }
 }
 
 function jump(step) {
@@ -1956,4 +2056,133 @@ function load(key, fallback) {
 
 function save(key, val) {
   try { localStorage.setItem(key, JSON.stringify(val)) } catch (_) {}
+}
+
+function loadRawUnifiedFM() {
+  return load(UNIFIED_STORE_KEY, [])
+}
+
+function saveUnifiedFM(list) {
+  const clean = Array.isArray(list) ? list.slice(0, UNIFIED_LIMIT) : []
+  save(UNIFIED_STORE_KEY, clean)
+}
+
+function unifiedRefIdFM(s) {
+  if (!s) return ''
+  if (s.refId) return String(s.refId).trim()
+  return String(s.stationuuid || s.name || s.url || '').trim()
+}
+
+function unifiedIdFM(s) {
+  return `fm:${unifiedRefIdFM(s)}`
+}
+
+function isInUnifiedFM(s) {
+  if (!s || isEpisode(s)) return false
+  const id = unifiedIdFM(s)
+  return (loadRawUnifiedFM() || []).some(x => String(x.id) === id)
+}
+
+function toggleUnifiedFavoriteFM(s) {
+  if (!s || isEpisode(s)) return
+  const id = unifiedIdFM(s)
+  const current = loadRawUnifiedFM() || []
+  const idx = current.findIndex(x => String(x.id) === id)
+  const name = String(s.name || '').trim() || '该电台'
+  if (idx >= 0) {
+    current.splice(idx, 1)
+    saveUnifiedFM(current)
+    setInfo(`已从统一收藏中移除「${name}」`)
+    return { added: false, id }
+  }
+  if (current.length >= UNIFIED_LIMIT) {
+    setInfo(`已达到统一收藏上限 ${UNIFIED_LIMIT} 条，请先移除部分再添加`)
+    return null
+  }
+  const tags = Array.isArray(s.tags) ? s.tags : String(s.tags || '').split(',').map(t => t.trim()).filter(Boolean)
+  const lang = (Array.isArray(s.language) ? s.language[0] : String(s.language || '')) || ''
+  const cat = tags[0] || ''
+  const metaSub = [s.country, lang, cat].filter(Boolean).join(' · ')
+  current.push({
+    id,
+    type: 'fm',
+    refId: unifiedRefIdFM(s),
+    order: current.length,
+    addedAt: Date.now(),
+    meta: {
+      title: name,
+      subtitle: metaSub,
+      country: String(s.country || '').trim(),
+      language: lang,
+      category: cat
+    }
+  })
+  saveUnifiedFM(current)
+  setInfo(`已加入统一收藏：${name}`)
+  return { added: true, id }
+}
+
+function findFavoriteIndexByStation(arr, s) {
+  if (!Array.isArray(arr) || !s || isEpisode(s)) return -1
+  return arr.findIndex(x => isStation(x) && sameStation(x, s))
+}
+
+function getFavoritePositionFM(s) {
+  if (!s || isEpisode(s)) return null
+  const favs = loadFavorites().filter(x => isStation(x))
+  const idx = findFavoriteIndexByStation(favs, s)
+  if (idx < 0) return null
+  return { index: idx, total: favs.length }
+}
+
+function writeFavoriteStationListFM(favs) {
+  const cleaned = Array.isArray(favs) ? favs.slice(0, 500) : []
+  save(STORE.favorites, cleaned)
+}
+
+function moveFavToTopFM(s) {
+  if (!s || isEpisode(s)) return null
+  const favs = loadFavorites()
+  const idx = findFavoriteIndexByStation(favs, s)
+  if (idx <= 0) return null
+  const [it] = favs.splice(idx, 1)
+  favs.unshift(it)
+  writeFavoriteStationListFM(favs)
+  return { position: 1 }
+}
+function moveFavUpFM(s) {
+  if (!s || isEpisode(s)) return null
+  const favs = loadFavorites()
+  const idx = findFavoriteIndexByStation(favs, s)
+  if (idx <= 0) return null
+  ;[favs[idx - 1], favs[idx]] = [favs[idx], favs[idx - 1]]
+  writeFavoriteStationListFM(favs)
+  return { position: idx }
+}
+function moveFavDownFM(s) {
+  if (!s || isEpisode(s)) return null
+  const favs = loadFavorites()
+  const idx = findFavoriteIndexByStation(favs, s)
+  if (idx < 0 || idx >= favs.length - 1) return null
+  ;[favs[idx], favs[idx + 1]] = [favs[idx + 1], favs[idx]]
+  writeFavoriteStationListFM(favs)
+  return { position: idx + 2 }
+}
+function moveFavToBottomFM(s) {
+  if (!s || isEpisode(s)) return null
+  const favs = loadFavorites()
+  const idx = findFavoriteIndexByStation(favs, s)
+  if (idx < 0 || idx >= favs.length - 1) return null
+  const [it] = favs.splice(idx, 1)
+  favs.push(it)
+  writeFavoriteStationListFM(favs)
+  return { position: favs.length }
+}
+
+function findStationByUuid(uuid) {
+  if (!uuid) return null
+  const key = String(uuid).trim()
+  if (!key) return null
+  const list = (state.items && Array.isArray(state.items)) ? state.items : loadFavorites()
+  return list.find(x => isStation(x) && String(x.stationuuid || '').trim() === key) || null
 }
