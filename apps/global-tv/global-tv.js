@@ -53,6 +53,8 @@ const STORE = {
 }
 
 const FAVORITES_LIMIT = 100
+const UNIFIED_FAV_STORE_KEY = 'solo-radio:unified-favorites'
+const UNIFIED_FAV_LIMIT = 600
 const handledKeyboardEvents = new WeakSet()
 
 const state = {
@@ -78,6 +80,25 @@ async function init() {
   applyPlaybackMode(state.playbackMode, { persist: false, rerender: false })
   setDefaultStageMessage()
   await loadChannels()
+
+  try {
+    const params = new URLSearchParams(window.location.search || '')
+    const channelId = String(params.get('channel') || '').trim()
+    if (channelId) {
+      const channel = findChannelById(channelId)
+      if (channel) {
+        selectChannel(channel, false)
+        requestAnimationFrame(() => {
+          try {
+            const el = document.querySelector(`[data-channel-id="${CSS.escape(channelId)}"]`)
+            if (el && typeof el.scrollIntoView === 'function') {
+              el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            }
+          } catch (_) {}
+        })
+      }
+    }
+  } catch (_) {}
 }
 
 function setupControls() {
@@ -396,13 +417,13 @@ function buildListMeta(count) {
 }
 
 function getVisibleChannels() {
-  const favorites = new Set(loadFavoriteIds())
+  const favoriteIds = loadFavoriteIds()
   const recent = loadList(STORE.recent)
   const byId = new Map(state.channels.map((item) => [item.id, item]))
 
   let base = state.channels
   if (state.view === 'favorites') {
-    base = state.channels.filter((channel) => favorites.has(channel.id))
+    base = favoriteIds.map((id) => byId.get(id)).filter(Boolean)
   } else if (state.view === 'recent') {
     base = recent.map((id) => byId.get(id)).filter(Boolean)
   }
@@ -534,13 +555,14 @@ function renderChannelItem(channel) {
 
   actions.append(primaryRow, secondaryRow)
 
-  if (state.view === 'favorites' && state.items && state.items.length > 1) {
-    const reorderRow = document.createElement('div')
-    reorderRow.className = 'item-reorder-row'
+  if (state.view === 'favorites') {
+    const favs = loadFavoriteIds()
     const pos = getFavoritePosition(channel.id)
-    if (pos) {
+    if (favs.length > 1 && pos) {
+      const reorderRow = document.createElement('div')
+      reorderRow.className = 'item-reorder-row'
       const atTop = pos.index === 0
-      const atBottom = pos.index === pos.total - 1
+      const atBottom = pos.index === favs.length - 1
       const makeR = (icon, label, disabled, onClick) => {
         const b = document.createElement('button')
         b.className = 'btn icon-btn tiny'
@@ -1481,4 +1503,122 @@ function updateSubtitleButtons() {
   ui.subtitleBtn.textContent = state.subtitleAvailable ? label : '字幕：无'
   ui.floatingSubtitleBtn.disabled = !enabled
   ui.floatingSubtitleBtn.textContent = state.subtitleAvailable ? floatingLabel : '无字幕'
+}
+
+function loadRawUnified() {
+  return load(UNIFIED_FAV_STORE_KEY, [])
+}
+
+function saveUnifiedTV(list) {
+  const clean = Array.isArray(list) ? list.slice(0, UNIFIED_FAV_LIMIT) : []
+  save(UNIFIED_FAV_STORE_KEY, clean)
+}
+
+function toggleUnifiedFavoriteForChannel(channel) {
+  if (!channel || !channel.id) return null
+  const refId = String(channel.id).trim()
+  const id = `tv:${refId}`
+  const current = loadRawUnified() || []
+  const idx = current.findIndex(x => String(x.id) === String(id))
+  const name = String(channel.title || '').trim() || '该频道'
+  if (idx >= 0) {
+    current.splice(idx, 1)
+    saveUnifiedTV(current)
+    setInfo(`已从统一收藏中移除「${name}」`)
+    return { added: false, id }
+  }
+  if (current.length >= UNIFIED_FAV_LIMIT) {
+    setInfo(`已达到统一收藏上限 ${UNIFIED_FAV_LIMIT} 条，请先移除部分再添加`)
+    return null
+  }
+  const country = String(channel.country || '').trim()
+  const lang = String(channel.language || '').trim()
+  const cat = String(channel.category || '').trim()
+  const metaSub = [country, lang, cat].filter(Boolean).join(' · ')
+  current.push({
+    id,
+    type: 'tv',
+    refId,
+    order: current.length,
+    addedAt: Date.now(),
+    meta: {
+      title: name,
+      subtitle: metaSub,
+      country,
+      language: lang,
+      category: cat
+    }
+  })
+  saveUnifiedTV(current)
+  setInfo(`已加入统一收藏：${name}`)
+  return { added: true, id }
+}
+
+function getFavoritePosition(id) {
+  if (!id) return null
+  const key = String(id).trim()
+  if (!key) return null
+  const favs = loadFavoriteIds()
+  const idx = favs.findIndex(x => String(x).trim() === key)
+  if (idx < 0) return null
+  return { index: idx, total: favs.length }
+}
+
+function writeFavoriteIdListTV(ids) {
+  const cleaned = Array.isArray(ids) ? ids.slice(0, FAVORITES_LIMIT) : []
+  save(STORE.favorites, cleaned)
+}
+
+function moveFavoriteToTop(id) {
+  if (!id) return null
+  const key = String(id).trim()
+  const favs = loadFavoriteIds()
+  const idx = favs.findIndex(x => String(x).trim() === key)
+  if (idx <= 0) return null
+  const [it] = favs.splice(idx, 1)
+  favs.unshift(it)
+  writeFavoriteIdListTV(favs)
+  return { position: 1 }
+}
+
+function moveFavoriteUp(id) {
+  if (!id) return null
+  const key = String(id).trim()
+  const favs = loadFavoriteIds()
+  const idx = favs.findIndex(x => String(x).trim() === key)
+  if (idx <= 0) return null
+  ;[favs[idx - 1], favs[idx]] = [favs[idx], favs[idx - 1]]
+  writeFavoriteIdListTV(favs)
+  return { position: idx }
+}
+
+function moveFavoriteDown(id) {
+  if (!id) return null
+  const key = String(id).trim()
+  const favs = loadFavoriteIds()
+  const idx = favs.findIndex(x => String(x).trim() === key)
+  if (idx < 0 || idx >= favs.length - 1) return null
+  ;[favs[idx], favs[idx + 1]] = [favs[idx + 1], favs[idx]]
+  writeFavoriteIdListTV(favs)
+  return { position: idx + 2 }
+}
+
+function moveFavoriteToBottom(id) {
+  if (!id) return null
+  const key = String(id).trim()
+  const favs = loadFavoriteIds()
+  const idx = favs.findIndex(x => String(x).trim() === key)
+  if (idx < 0 || idx >= favs.length - 1) return null
+  const [it] = favs.splice(idx, 1)
+  favs.push(it)
+  writeFavoriteIdListTV(favs)
+  return { position: favs.length }
+}
+
+function findChannelById(id) {
+  if (!id) return null
+  const key = String(id).trim()
+  if (!key) return null
+  const list = (state.channels && Array.isArray(state.channels)) ? state.channels : []
+  return list.find(x => String(x.id || '').trim() === key) || null
 }
