@@ -459,8 +459,9 @@ function getFavoriteChannels() {
 function renderChannelItem(channel) {
   const card = document.createElement('article')
   card.className = 'channel-item'
-  if (channel.id === state.currentId) card.classList.add('active')
   card.tabIndex = 0
+  card.setAttribute('data-channel-id', String(channel.id || ''))
+  if (channel.id === state.currentId) card.classList.add('active')
   card.setAttribute('role', 'button')
   card.setAttribute('aria-label', `${channel.title}，${channel.kind === 'external' ? '打开官方直播' : `${getPlaybackVerb()}直播`}`)
   card.addEventListener('click', () => selectChannel(channel, true))

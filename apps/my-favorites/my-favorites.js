@@ -99,7 +99,7 @@ function setupControls() {
     if (!state.items.length) return
     const ok = confirm(`确定要清空全部 ${state.items.length} 条统一收藏吗？此操作不可撤销。`)
     if (!ok) return
-    save([])
+    saveItems([])
     loadItems()
     refreshList()
     setInfo('已清空所有统一收藏')
@@ -346,7 +346,7 @@ function removeFromUnified(id) {
   const ok = confirm(`确定把「${item.meta.title}」从统一收藏中移除吗？`)
   if (!ok) return
   state.items = state.items.filter(x => x.id !== id)
-  save(state.items)
+  saveItems(state.items)
   if (state.playing && state.playing.id === id) stopPlayback()
   refreshList()
   setInfo(`已移除「${item.meta.title}」`)
@@ -357,21 +357,21 @@ function moveToTop(id) {
   if (idx <= 0) return null
   const [it] = state.items.splice(idx, 1)
   state.items.unshift(it)
-  save(state.items)
+  saveItems(state.items)
   return { position: 1 }
 }
 function moveUp(id) {
   const idx = state.items.findIndex(x => x.id === id)
   if (idx <= 0) return null
   ;[state.items[idx - 1], state.items[idx]] = [state.items[idx], state.items[idx - 1]]
-  save(state.items)
+  saveItems(state.items)
   return { position: idx }
 }
 function moveDown(id) {
   const idx = state.items.findIndex(x => x.id === id)
   if (idx < 0 || idx >= state.items.length - 1) return null
   ;[state.items[idx], state.items[idx + 1]] = [state.items[idx + 1], state.items[idx]]
-  save(state.items)
+  saveItems(state.items)
   return { position: idx + 2 }
 }
 function moveToBottom(id) {
@@ -379,7 +379,7 @@ function moveToBottom(id) {
   if (idx < 0 || idx >= state.items.length - 1) return null
   const [it] = state.items.splice(idx, 1)
   state.items.push(it)
-  save(state.items)
+  saveItems(state.items)
   return { position: state.items.length }
 }
 
@@ -713,7 +713,7 @@ async function importFavorites(file) {
       added++
     }
     state.items = current
-    save(state.items)
+    saveItems(state.items)
     refreshList()
     const overflow = valid.length - added
     const msg = overflow ? `，另有 ${overflow} 条因重复或超过 ${LIMIT} 条上限未导入` : ''
@@ -750,7 +750,7 @@ function loadItems() {
   state.items = raw.map(normalizeItem).slice(0, LIMIT)
 }
 
-function save(items) {
+function saveItems(items) {
   try {
     const clean = (items || []).slice(0, LIMIT)
     localStorage.setItem(STORE_KEY, JSON.stringify(clean))
