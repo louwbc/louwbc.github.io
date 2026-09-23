@@ -3,7 +3,7 @@
  * 全球电视（Task 6 功能等价迁移 + 单一导航 + 单一收藏源）
  * - 左 Player（#global-video Teleport 到 TV Top Dock / 全屏 stage）+ 右 ChannelList
  * - 5 维筛选：keyword/country/language/category/availability + 3 Tab（all/fav/recent）
- * - 快捷键 N 下一台 / P 上一台 / Space 播放暂停 / F 全屏 / C 字幕开关 (VueUse onKeyStroke + shouldIgnore(input focus))
+ * - 快捷键 N 下一台 / P 上一台 / Space 播放暂停 / F 全屏 / C 字幕开关 (原生 window 捕获期监听，失焦仍可用)
  * - HLS 动态 import('hls.js')（useHls.ts）；Safari 原生 HLS
  * - 独立收藏上限 100 (useTvStore)；统一收藏 ✚ 独立按钮双写
  * - 深度链接 ?channel=xxx：onMounted 后选中、播放并 smooth scrollIntoView
@@ -16,7 +16,7 @@ import { useFavoritesStore } from '@/stores/favorites'
 import { useSettingsStore } from '@/stores/settings'
 import { usePlayerStore } from '@/stores/player'
 import { useHls } from '@/composables/useHls'
-import { onKeyStroke, useIntersectionObserver } from '@vueuse/core'
+import { useIntersectionObserver } from '@vueuse/core'
 import TabSwitch from '@/components/common/TabSwitch.vue'
 import SearchBar from '@/components/common/SearchBar.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
@@ -46,7 +46,15 @@ const video = (typeof document !== 'undefined' ? document.getElementById('global
 const miniPlayerEl = ref<HTMLDivElement | null>(null)
 const videoVisible = ref(false)
 const showVideo = computed(() => settings.tvDefaultPlaybackMode === 'video' || videoVisible.value)
-const toggleVideoVisible = () => { videoVisible.value = !videoVisible.value; applyVideoPosition() }
+const toggleVideoVisible = () => {
+  // ⚠️ 切换「看画面/听音频」先把旧 mode 的播放停掉，防止 audio 和 video 同播
+  player.stopAllMedia(false)
+  videoVisible.value = !videoVisible.value
+  applyVideoPosition()
+  // 如果刚才有播放项，再依据新模式重启
+  const chId = player.currentItem?.id
+  if (chId) { setTimeout(() => selectAndPlay(chId, {}), 0) }
+}
 
 const tab = computed({
   get: () => filters.value.tab,
@@ -60,7 +68,10 @@ const TABS = [
   { key: 'recent' as const, label: '最近', icon: 'i-carbon-time' }
 ]
 
-// 键盘：N/P/Space/F/C + ignore input focus
+// -----------------------------------------------------------------------------
+// 键盘快捷键（原生 window keydown 捕获期监听 + 手动 stopImmediatePropagation + onBeforeUnmount remove）
+// 修复原 onKeyStroke：document focus 丢失时失效；无法 preventDefault（浏览器默认快捷键抢占）
+// -----------------------------------------------------------------------------
 const shouldIgnore = (target: EventTarget | null) => {
   if (!(target instanceof HTMLElement)) return false
   const tag = target.tagName.toLowerCase()
@@ -75,84 +86,126 @@ const nextChannel = (step = 1) => {
   selectAndPlay(filteredChannels.value[next].id, { scroll: true })
 }
 
-onKeyStroke('KeyN', (e) => { if (shouldIgnore(e.target)) return; nextChannel(1) })
-onKeyStroke('KeyP', (e) => { if (shouldIgnore(e.target)) return; nextChannel(-1) })
-onKeyStroke(' ', (e) => {
-  if (shouldIgnore(e.target)) return
-  e.preventDefault()
-  const audio = document.getElementById('global-audio') as HTMLAudioElement | null
-  if (audio) {
-    if (audio.paused) { void audio.play().then(() => (player.isPlaying = true)).catch(() => {}) }
-    else { audio.pause(); player.isPlaying = false }
+async function togglePlayPause() {
+  // 优先 video（如果有画面且 playing）
+  if (showVideo.value && video && video.src) {
+    if (video.paused) { try { await video.play() } catch { /* noop */ } }
+    else { video.pause() }
+    player.isPlaying = !video.paused
+    return
   }
-})
-onKeyStroke('KeyF', async (e) => {
-  if (shouldIgnore(e.target)) return
-  if (!showVideo.value) { toast.info('「看画面」模式下按 F 全屏（当前为音频优先）'); return }
-  const el = (stageEl.value ?? video ?? document.documentElement)
+  // 否则走 audio（FM / TV 音频优先）
+  const audio = document.getElementById('global-audio') as HTMLAudioElement | null
+  if (audio && audio.src) {
+    if (audio.paused) { try { await audio.play() } catch { /* noop */ } }
+    else { audio.pause() }
+    player.isPlaying = !audio.paused
+    return
+  }
+  // 啥都没 → 选 filteredChannels[0]
+  if (filteredChannels.value[0]) selectAndPlay(filteredChannels.value[0].id, {})
+}
+
+async function requestFullscreen() {
+  if (!showVideo.value) { toast.info('「看画面」模式下可全屏（当前为音频优先）'); return }
+  const el = (stageEl.value ?? miniPlayerEl.value ?? video ?? document.documentElement) as HTMLElement | null
+  if (!el) return
   try {
-    if (!document.fullscreenElement) { await (el.requestFullscreen || (el as HTMLElement & { webkitRequestFullscreen?: () => Promise<void> }).webkitRequestFullscreen).call(el) }
-    else { await document.exitFullscreen() }
-  } catch { /* noop */ }
-})
-onKeyStroke('KeyC', (e) => {
-  if (shouldIgnore(e.target)) return
+    if (!document.fullscreenElement) {
+      const fn = el.requestFullscreen ||
+        (el as HTMLElement & { webkitRequestFullscreen?: () => Promise<void> }).webkitRequestFullscreen ||
+        (el as HTMLElement & { mozRequestFullScreen?: () => Promise<void> }).mozRequestFullScreen
+      if (fn) await fn.call(el)
+    } else {
+      await document.exitFullscreen()
+    }
+  } catch {
+    toast.error('浏览器阻止了全屏，请手动点按钮')
+  }
+}
+
+function toggleSubtitle() {
   if (!video) return
   const tt = video.textTracks
   if (!tt.length) { toast.info('当前频道无字幕轨'); return }
   const onCount = Array.from(tt).filter(t => t.mode === 'showing').length
   const target = onCount === 0 ? 'showing' : 'disabled'
-  for (let i = 0; i < tt.length; i++) (tt[i]).mode = (target === 'showing' && i === 0 ? 'showing' : 'disabled') as TextTrackMode
+  for (let i = 0; i < tt.length; i++) {
+    (tt[i]).mode = (target === 'showing' && i === 0 ? 'showing' : 'disabled') as TextTrackMode
+  }
   settings.tvSubtitleEnabled = target === 'showing'
   toast.success(`字幕 ${target === 'showing' ? '已开启' : '已关闭'}`)
-})
+}
 
-// 应用视频位置（Top Dock / 全屏模式下隐藏 dock）
+function onGlobalKeydown(e: KeyboardEvent) {
+  if (shouldIgnore(e.target)) return
+  // 捕获期（useCapture=true 已在下面绑定），stopImmediate 防止浏览器快捷键抢
+  const key = e.key
+  const code = e.code
+  // Space = 播放暂停
+  if (key === ' ' || code === 'Space') {
+    e.preventDefault(); e.stopImmediatePropagation(); void togglePlayPause(); return
+  }
+  if (code === 'KeyN') { e.preventDefault(); e.stopImmediatePropagation(); nextChannel(1); return }
+  if (code === 'KeyP') { e.preventDefault(); e.stopImmediatePropagation(); nextChannel(-1); return }
+  if (code === 'KeyF') { e.preventDefault(); e.stopImmediatePropagation(); void requestFullscreen(); return }
+  if (code === 'KeyC') { e.preventDefault(); e.stopImmediatePropagation(); toggleSubtitle(); return }
+  // ← → 也能切台（和 P/N 等价，直观）
+  if (code === 'ArrowRight') { e.preventDefault(); nextChannel(1); return }
+  if (code === 'ArrowLeft') { e.preventDefault(); nextChannel(-1); return }
+}
+// 以 CAPTURE=true 绑定（在浏览器默认处理之前先拦截）
+const KEYDOWN_OPT: AddEventListenerOptions = { capture: true, passive: false }
+
+// -----------------------------------------------------------------------------
+// 视频位置（Top Dock / 全屏 stage）
+// -----------------------------------------------------------------------------
 function applyVideoPosition() {
   if (!video) return
   if (!showVideo.value) { video.hidden = true; return }
   video.hidden = false
-  // 把 #global-video 从 body 根移到 miniPlayerEl stage（Teleport 需要 DOM 移动）
   const target = miniPlayerEl.value
   if (target && video.parentNode !== target) target.appendChild(video)
-  // 类
   video.classList.add('w-full', 'h-full', 'rounded', 'bg-black')
   video.classList.remove('hidden')
-  if (video.hasAttribute('controls')) { /* keep */ }
   miniPlayerShown.value = true
 }
 
 async function selectAndPlay(id: string, opts: { scroll?: boolean } = {}) {
   const ch = tv.findById(id)
   if (!ch) return
-  // 最近
   tv.pushRecent(id)
-  // 独立收藏 Tab 时自动同步到统一收藏？开关 control settings.autoMirror
+  // ⚠️ 切频道前：stop 一切全局音视频，防止 audio + video 同播，也防止 safari 原生 video 持续旧 src
+  player.stopAllMedia(false)
+  detach()
+
   const hasStream = ch.availability !== 'external' && ch.streamUrl
   if (hasStream) {
     if (showVideo.value) {
-      // 用视频：HLS attach
+      // 视频：HLS attach
       await nextTick()
       applyVideoPosition()
       if (video) {
         const ok = await attach(video, ch.streamUrl)
         if (ok) {
           try {
-            const vv = video
-            vv.volume = player.volume
-            await vv.play().catch(() => {})
-            player.isPlaying = !vv.paused
-            player.currentStreamUrl = ch.streamUrl
-            player.currentTitle = ch.title
-            player.currentSubtitle = [ch.country, ch.category].filter(Boolean).join(' · ')
-            player.mediaType = 'tv'
+            video.volume = player.volume
+            if (!video.paused) try { video.pause() } catch { /* noop */ }
+            await video.play().catch(() => {})
+            player.isPlaying = !video.paused
           } catch { /* noop */ }
         }
       }
     } else {
-      // 音频优先
+      // 音频优先：使用 player.playItem（会先停 video）
       void player.playItem(ch, true)
     }
+    // 同步 Player Store 当前项（video/attach 两条路径都要更新）
+    player.mediaType = 'tv'
+    player.currentItem = ch
+    player.currentStreamUrl = ch.streamUrl
+    player.currentTitle = ch.title
+    player.currentSubtitle = [ch.country, ch.category].filter(Boolean).join(' · ')
   } else if (ch.watchUrl) {
     window.open(ch.watchUrl, '_blank', 'noopener')
   }
@@ -188,7 +241,6 @@ async function onImportFile(e: Event) {
         }
       }
     }
-    // persist：通过动态 import 直接调用（避免 storage 顶层循环依赖）
     (await import('@/storage/index')).storageSet(
       (await import('@/storage/keys')).V3_KEYS.TV_LOCAL_FAVORITES,
       tv.localFavorites.slice()
@@ -229,33 +281,27 @@ deepLinkEventTarget.once(async (p) => {
   selectAndPlay(id, { scroll: true })
 })
 
-// IntersectionObserver：stage 滚出视口时显示 FloatingMiniPlayer
 const stageIO = useIntersectionObserver(stageEl, ([entry]) => {
   miniPlayerShown.value = showVideo.value ? true : !entry.isIntersecting && Boolean(player.currentTitle)
 })
 
 onMounted(async () => {
+  window.addEventListener('keydown', onGlobalKeydown, KEYDOWN_OPT)
   await tv.loadChannels()
-  // 自动读 query channel
   const id = typeof route.query.channel === 'string' ? route.query.channel : undefined
   if (id) { await nextTick(); selectAndPlay(id, { scroll: true }) }
-  // 若在视频模式且正在播放 global-audio 时，按设置把视频挂出来
-  if (showVideo.value && video) {
-    applyVideoPosition()
-  }
+  if (showVideo.value && video) applyVideoPosition()
 })
 onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onGlobalKeydown, KEYDOWN_OPT as EventListenerOptions)
   detach()
+  player.stopAllMedia(false)
   if (video) {
     video.hidden = true
-    video.pause()
-    try { video.removeAttribute('src'); video.load() } catch { /* noop */ }
-    // 还原回 body
-    if (video.parentNode && video.parentNode !== document.body) document.body.appendChild(video)
+    try { if (video.parentNode && video.parentNode !== document.body) document.body.appendChild(video) } catch { /* noop */ }
   }
 })
 
-// 同步 query.tab <-> store.tab
 watch(() => route.query.tab, (t) => { if (typeof t === 'string' && ['all', 'fav', 'recent'].includes(t)) tv.setFilter('tab', t as 'all' | 'fav' | 'recent') }, { immediate: true })
 watch(tab, (t) => { if (route.query.tab !== t) void router.replace({ query: { ...route.query, tab: t } }) })
 </script>
@@ -272,7 +318,7 @@ watch(tab, (t) => { if (route.query.tab !== t) void router.replace({ query: { ..
           >共 {{ channels.length }} 台</span>
         </h1>
         <p class="mt-1 text-xs text-muted">
-          英语频道 800+ · 音频优先 · 快捷键 N/P/Space/F/C
+          英语频道 800+ · 音频优先 · 快捷键 N/P/Space/F/C（←/→ 也可切台）
         </p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
@@ -439,7 +485,7 @@ watch(tab, (t) => { if (route.query.tab !== t) void router.replace({ query: { ..
             <div class="flex items-center gap-1">
               <BaseBtn
                 variant="icon"
-                title="上一台 (P)"
+                title="上一台 (P / ←)"
                 @click="nextChannel(-1)"
               >
                 <span class="i-carbon-skip-back-filled" />
@@ -448,22 +494,23 @@ watch(tab, (t) => { if (route.query.tab !== t) void router.replace({ query: { ..
                 variant="icon"
                 :class="player.isPlaying ? 'base-btn-primary' : ''"
                 :title="player.isPlaying ? '暂停 (Space)' : '播放 (Space)'"
-                @click="player.toggle()"
+                @click="togglePlayPause"
               >
                 <span :class="player.isPlaying ? 'i-carbon-pause-filled' : 'i-carbon-play-filled'" />
               </BaseBtn>
               <BaseBtn
                 variant="icon"
-                title="下一台 (N)"
+                title="下一台 (N / →)"
                 @click="nextChannel(1)"
               >
                 <span class="i-carbon-skip-forward-filled" />
               </BaseBtn>
+              <!-- ⚠️ 修复：原绑定错误 selectAndPlay → 现在正确 requestFullscreen -->
               <BaseBtn
                 variant="icon"
-                :disabled="!video && showVideo"
+                :disabled="!showVideo"
                 title="全屏 (F)"
-                @click="selectAndPlay(player.currentItem?.id || channels[0]?.id, {})"
+                @click="requestFullscreen"
               >
                 <span class="i-carbon-fit-to-screen" />
               </BaseBtn>
@@ -476,7 +523,7 @@ watch(tab, (t) => { if (route.query.tab !== t) void router.replace({ query: { ..
             <EmptyState
               v-if="!showVideo"
               :title="player.currentTitle ? '音频优先模式' : '尚未开始播放'"
-              :description="player.currentTitle ? '切换到「看电视」模式可显示视频画面 + 字幕' : '从右侧列表选一个频道开始（也可以直接听音频）'"
+              :description="player.currentTitle ? '点右上方「看电视 / 画面」切换可显示视频画面 + 字幕' : '从右侧列表双击卡片或点击播放开始（快捷键 N 选下一台）'"
               icon="i-carbon-headphones"
             />
           </div>

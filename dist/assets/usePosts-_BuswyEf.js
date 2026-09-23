@@ -1,4 +1,4 @@
-import{g as vn}from"./_commonjsHelpers-BosuxZz1.js";import{c as p0}from"./_commonjs-dynamic-modules-TDtrdbi3.js";import{i as ve}from"./vue-DYTlwS-P.js";const wn=`---
+import{g as vn}from"./_commonjsHelpers-BosuxZz1.js";import{c as p0}from"./_commonjs-dynamic-modules-TDtrdbi3.js";import{i as ve}from"./vue-DGP_fnqP.js";const wn=`---
 layout: post
 title: "你好，新的站点"
 date: 2026-04-27

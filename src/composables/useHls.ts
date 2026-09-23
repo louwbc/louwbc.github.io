@@ -27,12 +27,31 @@ export function useHls() {
 
   async function attach(videoEl: HTMLVideoElement, streamUrl: string): Promise<HlsImpl | HTMLVideoElement | null> {
     if (!videoEl || !streamUrl) return null
+    // ⚠️ 关键：在销毁旧 HLS 之前，先把 videoEl 播放完全停掉并清空 src
+    // 否则 Safari 原生 HLS（video.src=url）模式下 detach 只 destroy Hls，video 继续播 → 两个频道同时响
+    try {
+      if (!videoEl.paused) videoEl.pause()
+      try {
+        videoEl.removeAttribute('src')
+        videoEl.load()
+      } catch {
+        // 某些浏览器在非媒体状态下 .load() 抛错可忽略
+      }
+      // 清 textTracks（防止上一台字幕残留）
+      try {
+        const tt = videoEl.textTracks
+        for (let i = 0; i < (tt?.length ?? 0); i++) {
+          try { (tt[i] as TextTrack).mode = 'disabled' } catch { /* noop */ }
+        }
+      } catch { /* noop */ }
+    } catch { /* noop */ }
     detach()
     attaching.value = true
     try {
       if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
-        // Safari / iOS：原生 HLS
+        // Safari / iOS：原生 HLS — 等待 src 设置后再返回，避免时序问题
         videoEl.src = streamUrl
+        try { await videoEl.play().catch(() => {}) } catch { /* autoplay 禁止忽略 */ }
         return videoEl
       }
       const Ctor = await loadHlsCtor()

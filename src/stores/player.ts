@@ -92,20 +92,48 @@ export const usePlayerStore = defineStore('player', {
       }
     },
     stop() {
-      const audio = ensureAudioEl()
+      this.stopAllMedia(true)
+    },
+    /**
+     * 同时停止 #global-audio 与 #global-video，并清空 src。
+     * - resetState=true（默认）：同时重置 store currentStreamUrl / currentItem / mediaType / isPlaying
+     * - resetState=false：在「切频道」时用，保留 title 以免 UI 闪烁（selectAndPlay 会马上再赋值）
+     */
+    stopAllMedia(resetState = true) {
       try {
-        audio.pause()
-        audio.removeAttribute('src')
-        audio.load()
-      } catch {
-        /* noop */
-      }
+        const audio = document.getElementById('global-audio') as HTMLAudioElement | null
+        if (audio) {
+          try { if (!audio.paused) audio.pause() } catch { /* noop */ }
+          try {
+            audio.removeAttribute('src')
+            audio.load()
+          } catch { /* noop */ }
+        }
+      } catch { /* noop */ }
+      try {
+        const video = document.getElementById('global-video') as HTMLVideoElement | null
+        if (video) {
+          try { if (!video.paused) video.pause() } catch { /* noop */ }
+          try {
+            video.removeAttribute('src')
+            video.load()
+          } catch { /* noop */ }
+          try {
+            const tt = video.textTracks
+            for (let i = 0; i < (tt?.length ?? 0); i++) {
+              try { (tt[i] as TextTrack).mode = 'disabled' } catch { /* noop */ }
+            }
+          } catch { /* noop */ }
+        }
+      } catch { /* noop */ }
       this.isPlaying = false
-      this.currentStreamUrl = ''
-      this.currentItem = null
-      this.currentTitle = ''
-      this.currentSubtitle = ''
-      this.mediaType = null
+      if (resetState) {
+        this.currentStreamUrl = ''
+        this.currentItem = null
+        this.currentTitle = ''
+        this.currentSubtitle = ''
+        this.mediaType = null
+      }
     },
     getCurrentUniqueKey() {
       return this.currentItem ? mediaUniqueKey(this.currentItem) : ''
