@@ -6,8 +6,6 @@ yarn-error.log*
 pnpm-debug.log*
 
 # Vite / build
-dist
-dist-ssr
 .vite
 *.local
 

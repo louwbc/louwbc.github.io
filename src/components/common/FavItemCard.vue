@@ -74,23 +74,24 @@ const dirs: { key: 'top' | 'up' | 'down' | 'bottom'; icon: string; label: string
 
 <template>
   <article
-    class="base-card !p-3 md:!p-4 flex flex-col gap-3 relative"
+    class="base-card !p-3 md:!p-4 flex flex-col gap-3 relative group"
     :data-fav-key="`${item.type}:${item.id}`"
   >
-    <!-- 右上角 hover 删除 X（醒目） -->
+    <!-- 右上角 删除按钮（图标 + 文字，PC hover 渐显/移动端常显） -->
     <button
       type="button"
-      class="absolute top-2 right-2 z-10 w-7 h-7 rounded-btn flex items-center justify-center
+      class="absolute top-2 right-2 z-10 h-7 pl-2 pr-2.5 rounded-btn inline-flex items-center gap-1 text-xs
              text-muted hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-500/10
-             opacity-60 md:opacity-0 group-hover:opacity-100 transition"
+             opacity-70 hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition whitespace-nowrap"
       aria-label="从收藏移除"
       :title="`从收藏移除「${item.title}」`"
       @click="requestRemove"
     >
-      <span class="i-carbon-close text-lg" />
+      <span class="i-carbon-close text-base shrink-0" />
+      <span class="shrink-0">移除</span>
     </button>
 
-    <header class="flex items-start gap-3 min-w-0 pr-9">
+    <header class="flex items-start gap-3 min-w-0 pr-20">
       <div class="w-11 h-11 shrink-0 rounded-btn bg-[var(--accent-bg)] border border-[var(--accent-border)] text-accent inline-flex items-center justify-center">
         <span
           :class="icon"
@@ -135,13 +136,13 @@ const dirs: { key: 'top' | 'up' | 'down' | 'bottom'; icon: string; label: string
       </div>
     </header>
 
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 [&>button]:inline-flex [&>button]:items-center [&>button]:justify-center [&>button]:gap-1 [&>button]:whitespace-nowrap">
       <button
         class="base-btn base-btn-primary"
         :class="{ 'opacity-60': streamHealth.level === 'bad' }"
         @click="play"
       >
-        <span class="i-carbon-play-filled" />
+        <span class="i-carbon-play-filled shrink-0" />
         播放
       </button>
       <button
@@ -149,21 +150,21 @@ const dirs: { key: 'top' | 'up' | 'down' | 'bottom'; icon: string; label: string
         @click="openHomepage"
         :title="item.homepage || item.streamUrl || '无官网链接'"
       >
-        <span class="i-carbon-earth" />
+        <span class="i-carbon-earth shrink-0" />
         官网
       </button>
       <button
         class="base-btn"
         @click="jumpSource"
       >
-        <span :class="isTv(item) ? 'i-carbon-screen' : 'i-carbon-network-4'" />
+        <span :class="(isTv(item) ? 'i-carbon-screen' : 'i-carbon-network-4') + ' shrink-0'" />
         定位
       </button>
       <button
         class="base-btn base-btn-danger"
         @click="requestRemove"
       >
-        <span class="i-carbon-trash-can" />
+        <span class="i-carbon-trash-can shrink-0" />
         移除
       </button>
     </div>
