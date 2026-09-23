@@ -13,7 +13,11 @@ type ReorderDir = 'top' | 'up' | 'down' | 'bottom'
 const readInitial = (): MediaItem[] => {
   const raw = storageGet<MediaItem[]>(V3_KEYS.UNIFIED_FAVORITES, [])
   if (!Array.isArray(raw)) return []
-  return raw.slice(0, UNIFIED_FAVORITES_MAX)
+  // 双保险：v3 收藏项统一打标 fromFavorites（老版本 add() 时可能没写入）
+  return raw.slice(0, UNIFIED_FAVORITES_MAX).map(it => ({
+    ...it,
+    meta: { ...(it.meta ?? {}), fromFavorites: true }
+  }))
 }
 
 export const useFavoritesStore = defineStore('favorites', {
@@ -41,7 +45,10 @@ export const useFavoritesStore = defineStore('favorites', {
         useToasts().warn(`统一收藏已达上限 ${UNIFIED_FAVORITES_MAX} 条，请清理后再收藏`, 4500)
         return false
       }
-      const patched: MediaItem = { ...item, orderIndex: this.items.length }
+      // 写入 fromFavorites meta 标记：播放失败时 AudioEngine 可提供「从收藏移除」的快捷操作
+      const meta = item.meta ? { ...item.meta } : ({} as Record<string, unknown>)
+      meta.fromFavorites = true
+      const patched: MediaItem = { ...item, meta, orderIndex: this.items.length }
       this.items.push(patched)
       this._persist()
       return true
