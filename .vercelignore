@@ -1,7 +1,10 @@
-node_modules
-build
-dist
-.git
-.trae
-.log
-.figma
+_legacy/
+_legacy/**
+_site/
+.npm-cache/
+.trae/
+
+# 测试 & 覆盖率
+coverage/
+playwright-report/
+test-results/

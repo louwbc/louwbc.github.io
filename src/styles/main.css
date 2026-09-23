@@ -1,0 +1,64 @@
+/* 项目全局 token（v2 视觉风格对齐）。UnoCSS 的 `uno.css` 在 main.ts 中 import（避免 CSS 中 import virtual 模块告警） */
+:root {
+  --bg: #f6f7f9;
+  --panel: #ffffff;
+  --card: #ffffff;
+  --surface: #f1f3f6;
+  --surface-2: #e9eef5;
+  --text: #0f172a;
+  --muted: #475569;
+  --border: rgba(15, 23, 42, 0.14);
+  --accent: #1f4a7a;
+  --accent-border: rgba(31, 74, 122, 0.5);
+  --accent-bg: rgba(31, 74, 122, 0.1);
+  --accent-bg-hover: rgba(31, 74, 122, 0.14);
+  --accent-outline: rgba(31, 74, 122, 0.28);
+  --danger: #b91c1c;
+  --radius-card: 16px;
+  --radius-btn: 12px;
+  --radius-chip: 999px;
+  --topbar-blur: rgba(246, 247, 249, 0.92);
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04),
+    0 1px 3px rgba(15, 23, 42, 0.06);
+  --safe-right: calc(16px + env(safe-area-inset-right));
+  --safe-left: calc(16px + env(safe-area-inset-left));
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font-family: inherit;
+}
+
+.app-container {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 16px var(--safe-right) calc(160px + env(safe-area-inset-bottom))
+    var(--safe-left);
+}
+
+/* 全屏态隐藏滚动条 */
+.app-fs {
+  overflow: hidden;
+}

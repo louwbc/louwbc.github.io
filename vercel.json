@@ -1,1 +1,6 @@
-{"rewrites":[{"source":"/(.*)","destination":"/index.html"}]}
+{
+  "rewrites": [
+    { "source": "/((?!assets/|data/|icons/|__app_version__|sw.js|manifest.webmanifest|robots.txt).*)", "destination": "/index.html" }
+  ],
+  "cleanUrls": true
+}
