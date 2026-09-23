@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Redirecting… - Solo Radio</title>
+    <script>
+      // GitHub Pages SPA 深链回退（AC-12）
+      // 当访问 /blog/xxx 时被 GitHub Pages 404 命中，把原始路径塞进 sessionStorage，重定向到首页
+      (function () {
+        var l = window.location;
+        var raw = l.pathname + l.search + l.hash;
+        try { window.sessionStorage.setItem('solo-radio:spa:fallback', raw); } catch (_) {}
+        l.replace(l.origin + (l.pathname.startsWith('/solo_radio') ? '/solo_radio/' : '/') + '#/');
+      })();
+    </script>
+  </head>
+  <body>Redirecting…</body>
+</html>

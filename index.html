@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./icons/icon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#f6f7f9" />
+    <meta name="description" content="全球电视 + 全球FM + 统一收藏 · 音频优先" />
+    <title>Solo Radio</title>
+    <script type="module" crossorigin src="./assets/index-BclQM092.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/vue-DYTlwS-P.js">
+    <link rel="stylesheet" crossorigin href="./assets/index-B4Vl9AK8.css">
+  </head>
+  <body>
+    <div id="app"></div>
+    <!-- 全局持久播放器的 DOM：跨路由不卸载；由 src/composables/useAudioEngine / useVideoEngine 操作 -->
+    <audio
+      id="global-audio"
+      preload="none"
+      crossorigin="anonymous"
+      hidden
+    ></audio>
+    <video
+      id="global-video"
+      preload="none"
+      playsinline
+      controls
+      controlslist="nofullscreen"
+      hidden
+    ></video>
+  </body>
+</html>

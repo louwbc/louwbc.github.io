@@ -6,4 +6,6 @@ _site/
 vendor/
 node_modules/
 .vercel/
+.npm-cache/
+.trae/
 *.log
