@@ -1,0 +1,8 @@
+title: "louwbc"
+description: "个人博客 · 番茄钟 · 全球FM"
+version: "2.1"
+lang: "zh-CN"
+markdown: kramdown
+permalink: /blog/:title/
+kramdown:
+  input: GFM

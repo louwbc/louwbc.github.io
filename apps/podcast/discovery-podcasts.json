@@ -1,0 +1,309 @@
+[
+  {
+    "id": "acquired-discovery",
+    "title": "Acquired",
+    "feedUrl": "https://feeds.megaphone.fm/acquired",
+    "openUrl": "https://www.acquired.fm/",
+    "language": "english",
+    "author": "Ben Gilbert, David Rosenthal",
+    "category": "商业与财经",
+    "sourceLabel": "官方 RSS",
+    "summary": "长篇深度拆解公司、行业和并购史，适合作为高质量商业类推荐。"
+  },
+  {
+    "id": "lex-fridman-discovery",
+    "title": "Lex Fridman Podcast",
+    "feedUrl": "https://lexfridman.com/feed/podcast/",
+    "openUrl": "https://lexfridman.com/podcast/",
+    "language": "english",
+    "author": "Lex Fridman",
+    "category": "科技与产品",
+    "sourceLabel": "官方 RSS",
+    "summary": "长访谈形态稳定，覆盖 AI、科学、创业和公共议题。"
+  },
+  {
+    "id": "planet-money-discovery",
+    "title": "Planet Money",
+    "feedUrl": "https://feeds.npr.org/510289/podcast.xml",
+    "openUrl": "https://www.npr.org/podcasts/510289/planet-money",
+    "language": "english",
+    "author": "NPR",
+    "category": "商业与财经",
+    "sourceLabel": "官方 RSS",
+    "summary": "用讲故事的方式解释经济运行，适合大众用户长期收听。"
+  },
+  {
+    "id": "indicator-discovery",
+    "title": "The Indicator from Planet Money",
+    "feedUrl": "https://feeds.npr.org/510325/podcast.xml",
+    "openUrl": "https://www.npr.org/podcasts/510325/the-indicator-from-planet-money",
+    "language": "english",
+    "author": "NPR",
+    "category": "商业与财经",
+    "sourceLabel": "官方 RSS",
+    "summary": "短时长、高频更新，适合补充财经快讯型推荐。"
+  },
+  {
+    "id": "documentary-podcast-discovery",
+    "title": "The Documentary Podcast",
+    "feedUrl": "https://podcasts.files.bbci.co.uk/p02nq0gn.rss",
+    "openUrl": "https://www.bbc.co.uk/programmes/p02nq0gn",
+    "language": "english",
+    "author": "BBC World Service",
+    "category": "故事与调查",
+    "sourceLabel": "官方 RSS",
+    "summary": "BBC 的纪录片播客入口，适合扩展全球议题和调查型内容。"
+  },
+  {
+    "id": "lennys-podcast-discovery",
+    "title": "Lenny's Podcast",
+    "feedUrl": "https://feeds.transistor.fm/lennys-podcast-product-growth-career",
+    "openUrl": "https://www.lennysnewsletter.com/podcast",
+    "language": "english",
+    "author": "Lenny Rachitsky",
+    "category": "科技与产品",
+    "sourceLabel": "官方 RSS",
+    "summary": "产品、增长、团队管理都讲得很实，适合推荐给互联网与创业用户。"
+  },
+  {
+    "id": "huberman-lab-discovery",
+    "title": "Huberman Lab",
+    "feedUrl": "https://feeds.megaphone.fm/hubermanlab",
+    "openUrl": "https://www.hubermanlab.com/podcast",
+    "language": "english",
+    "author": "Andrew Huberman",
+    "category": "科学与自然",
+    "sourceLabel": "官方 RSS",
+    "summary": "科学传播能力强，适合做长期稳定的健康与科学类推荐。"
+  },
+  {
+    "id": "hard-fork-discovery",
+    "title": "Hard Fork",
+    "openUrl": "https://www.nytimes.com/column/hard-fork",
+    "language": "english",
+    "author": "Kevin Roose, Casey Newton",
+    "category": "科技与产品",
+    "sourceLabel": "官方站点",
+    "summary": "兼顾科技新闻、行业判断和产品变化，适合推荐给泛科技用户。"
+  },
+  {
+    "id": "decoder-discovery",
+    "title": "Decoder with Nilay Patel",
+    "openUrl": "https://www.theverge.com/decoder-podcast-with-nilay-patel",
+    "language": "english",
+    "author": "Nilay Patel",
+    "category": "科技与产品",
+    "sourceLabel": "官方站点",
+    "summary": "偏管理层与公司决策访谈，适合推荐给产品、媒体和科技商业用户。"
+  },
+  {
+    "id": "ezra-klein-discovery",
+    "title": "The Ezra Klein Show",
+    "openUrl": "https://www.nytimes.com/column/ezra-klein-podcast",
+    "language": "english",
+    "author": "Ezra Klein",
+    "category": "访谈与观点",
+    "sourceLabel": "官方站点",
+    "summary": "以思想型长访谈见长，适合补充观点与公共议题类推荐。"
+  },
+  {
+    "id": "plain-english-discovery",
+    "title": "Plain English with Derek Thompson",
+    "openUrl": "https://www.theringer.com/plain-english-with-derek-thompson-podcast",
+    "language": "english",
+    "author": "Derek Thompson",
+    "category": "访谈与观点",
+    "sourceLabel": "官方站点",
+    "summary": "把复杂趋势讲清楚的能力很强，适合更大众化的高质量推荐。"
+  },
+  {
+    "id": "all-in-discovery",
+    "title": "All-In Podcast",
+    "openUrl": "https://www.allinpodcast.co/",
+    "language": "english",
+    "author": "Chamath Palihapitiya, Jason Calacanis, David Sacks, David Friedberg",
+    "category": "访谈与观点",
+    "sourceLabel": "官方站点",
+    "summary": "创业圈和政策讨论影响力大，适合做热门观点型推荐。"
+  },
+  {
+    "id": "dwarkesh-discovery",
+    "title": "Dwarkesh Podcast",
+    "openUrl": "https://www.dwarkesh.com/podcast",
+    "language": "english",
+    "author": "Dwarkesh Patel",
+    "category": "历史与思想",
+    "sourceLabel": "官方站点",
+    "summary": "长对谈质量高，覆盖 AI、历史、思想与地缘议题。"
+  },
+  {
+    "id": "knowledge-project-discovery",
+    "title": "The Knowledge Project",
+    "openUrl": "https://fs.blog/knowledge-project-podcast/",
+    "language": "english",
+    "author": "Shane Parrish",
+    "category": "心理与成长",
+    "sourceLabel": "官方站点",
+    "summary": "偏决策、思维模型和长期成长，适合优质常青内容推荐。"
+  },
+  {
+    "id": "conversations-with-tyler-discovery",
+    "title": "Conversations with Tyler",
+    "openUrl": "https://conversationswithtyler.com/",
+    "language": "english",
+    "author": "Tyler Cowen",
+    "category": "历史与思想",
+    "sourceLabel": "官方站点",
+    "summary": "高信息密度访谈，适合补充更偏思想和学术气质的节目。"
+  },
+  {
+    "id": "cautionary-tales-discovery",
+    "title": "Cautionary Tales",
+    "openUrl": "https://www.pushkin.fm/podcasts/cautionary-tales",
+    "language": "english",
+    "author": "Tim Harford",
+    "category": "故事与调查",
+    "sourceLabel": "官方站点",
+    "summary": "把历史失误讲成好听的故事，适合新用户友好的高质量推荐。"
+  },
+  {
+    "id": "rest-is-politics-discovery",
+    "title": "The Rest Is Politics",
+    "openUrl": "https://www.goalhangerpodcasts.com/the-rest-is-politics",
+    "language": "english",
+    "author": "Goalhanger",
+    "category": "地区与全球观察",
+    "sourceLabel": "官方站点",
+    "summary": "英国与国际政治观察兼具，适合补充全球公共事务类内容。"
+  },
+  {
+    "id": "rest-is-history-discovery",
+    "title": "The Rest Is History",
+    "openUrl": "https://www.goalhangerpodcasts.com/the-rest-is-history",
+    "language": "english",
+    "author": "Goalhanger",
+    "category": "历史与思想",
+    "sourceLabel": "官方站点",
+    "summary": "历史题材覆盖广、可听性强，适合扩充非新闻类优质推荐。"
+  },
+  {
+    "id": "ft-news-briefing-discovery",
+    "title": "FT News Briefing",
+    "openUrl": "https://www.ft.com/ft-news-briefing",
+    "language": "english",
+    "author": "Financial Times",
+    "category": "地区与全球观察",
+    "sourceLabel": "官方站点",
+    "summary": "更新频率高，适合做全球商业与新闻快报型推荐。"
+  },
+  {
+    "id": "rachman-review-discovery",
+    "title": "The Rachman Review",
+    "openUrl": "https://www.ft.com/rachman-review",
+    "language": "english",
+    "author": "Gideon Rachman",
+    "category": "地区与全球观察",
+    "sourceLabel": "官方站点",
+    "summary": "偏国际关系和地缘政治，适合强化全球观察维度。"
+  },
+  {
+    "id": "money-talks-discovery",
+    "title": "Money Talks",
+    "openUrl": "https://www.economist.com/podcasts/money-talks",
+    "language": "english",
+    "author": "The Economist",
+    "category": "商业与财经",
+    "sourceLabel": "官方站点",
+    "summary": "经济学人出品，适合作为更全球化的财经类候选。"
+  },
+  {
+    "id": "80000-hours-discovery",
+    "title": "The 80,000 Hours Podcast",
+    "openUrl": "https://80000hours.org/podcast/",
+    "language": "english",
+    "author": "80,000 Hours",
+    "category": "心理与成长",
+    "sourceLabel": "官方站点",
+    "summary": "围绕长期主义、职业选择和全球问题，适合更深度的成长向内容。"
+  },
+  {
+    "id": "unexplainable-discovery",
+    "title": "Unexplainable",
+    "openUrl": "https://www.vox.com/unexplainable",
+    "language": "english",
+    "author": "Vox",
+    "category": "科学与自然",
+    "sourceLabel": "官方站点",
+    "summary": "用叙事方式做科学解释，适合补充年轻化的科学内容。"
+  },
+  {
+    "id": "if-books-could-kill-discovery",
+    "title": "If Books Could Kill",
+    "openUrl": "https://www.ifbookspod.com/",
+    "language": "english",
+    "author": "Michael Hobbes, Peter Shamshiri",
+    "category": "文化与语言",
+    "sourceLabel": "官方站点",
+    "summary": "以拆书和批评见长，适合补充文化与观点类推荐。"
+  },
+  {
+    "id": "99pi-discovery",
+    "title": "99% Invisible",
+    "openUrl": "https://99percentinvisible.org/",
+    "language": "english",
+    "author": "Roman Mars",
+    "category": "设计与创意",
+    "sourceLabel": "官方站点",
+    "summary": "设计、城市与系统观察兼备，适合补充创意与人文气质。"
+  },
+  {
+    "id": "radiolab-discovery",
+    "title": "Radiolab",
+    "openUrl": "https://radiolab.org/podcast",
+    "language": "english",
+    "author": "WNYC Studios",
+    "category": "故事与调查",
+    "sourceLabel": "官方站点",
+    "summary": "经典叙事和声音设计都很强，适合作为标杆级内容推荐。"
+  },
+  {
+    "id": "revisionist-history-discovery",
+    "title": "Revisionist History",
+    "openUrl": "https://www.pushkin.fm/podcasts/revisionist-history",
+    "language": "english",
+    "author": "Malcolm Gladwell",
+    "category": "历史与思想",
+    "sourceLabel": "官方站点",
+    "summary": "把熟悉议题重新讲一遍，适合更大众的思想类推荐。"
+  },
+  {
+    "id": "new-yorker-radio-hour-discovery",
+    "title": "The New Yorker Radio Hour",
+    "openUrl": "https://www.newyorker.com/podcast/the-new-yorker-radio-hour",
+    "language": "english",
+    "author": "The New Yorker",
+    "category": "文化与语言",
+    "sourceLabel": "官方站点",
+    "summary": "文化与人物访谈并重，适合补充更成熟的内容消费人群。"
+  },
+  {
+    "id": "tech-wont-save-us-discovery",
+    "title": "Tech Won't Save Us",
+    "openUrl": "https://techwontsave.us/",
+    "language": "english",
+    "author": "Paris Marx",
+    "category": "地区与全球观察",
+    "sourceLabel": "官方站点",
+    "summary": "科技与社会关系的批判视角鲜明，适合扩充更有立场的观察类内容。"
+  },
+  {
+    "id": "search-engine-discovery",
+    "title": "Search Engine",
+    "openUrl": "https://www.searchengine.show/",
+    "language": "english",
+    "author": "PJ Vogt",
+    "category": "故事与调查",
+    "sourceLabel": "官方站点",
+    "summary": "问题驱动型叙事很强，适合做面向泛用户的优质候选。"
+  }
+]
