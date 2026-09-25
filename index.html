@@ -8,20 +8,23 @@
     <meta name="description" content="全球电视 + 全球FM + 统一收藏 · 音频优先" />
     <title>Solo Radio</title>
     <script>
-      // 方案 1（用户指定）：自动跳 HTTP，保证 Chrome/安卓能播 HTTP 电台（浏览器 Mixed Content Block 对 HTTP 页不生效）
-      // 仅命中生产域名时跳；localhost / IP / 非生产域不动，方便调试
+      // 方案 1（用户指定）：尝试跳 HTTP，让 Chrome/安卓能播 HTTP 电台（Mixed Content Block 对 HTTP 页不生效）
+      // 注：GitHub Pages 默认会在 HTTP 层把 HTTP 301 回 HTTPS，因此用 from_https=1 标记来避免无限循环：
+      //   HTTPS(无标记) → 跳 HTTP?from_https=1 → GitHub 301→ HTTPS?from_https=1 → 检测到标记，不再跳 → 兜底横幅显示
       ;(function () {
         try {
           var h = (location.hostname || '').toLowerCase()
-          if (location.protocol === 'https:' && (
-            h === 'zztomatozz.com' ||
-            h === 'www.zztomatozz.com' ||
-            h === 'louwbc.github.io'
-          )) {
-            var httpUrl = 'http://' + location.host + location.pathname + location.search + location.hash
-            // 替换不产生历史记录，避免用户回退到 https 又跳一次
-            location.replace(httpUrl)
-          }
+          var isProd = h === 'zztomatozz.com' || h === 'www.zztomatozz.com' || h === 'louwbc.github.io'
+          if (!isProd) return
+          if (location.protocol !== 'https:') return
+          // 已经带了 from_https=1 标记：说明刚刚已经尝试过跳转，被 301 回来了，不再跳（让兜底横幅工作）
+          var alreadyTried = /[?&]from_https=1(&|$)/.test(location.search)
+          if (alreadyTried) return
+          // 构建跳转 URL：在 search 里加 from_https=1（保留原有 query），hash 一起带上
+          var sep = location.search && location.search !== '?' ? '&' : '?'
+          var newSearch = location.search + sep + 'from_https=1'
+          var httpUrl = 'http://' + location.host + location.pathname + newSearch + location.hash
+          location.replace(httpUrl)
         } catch (e) { /* noop */ }
       })()
     </script>
