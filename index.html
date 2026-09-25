@@ -7,9 +7,27 @@
     <meta name="theme-color" content="#f6f7f9" />
     <meta name="description" content="全球电视 + 全球FM + 统一收藏 · 音频优先" />
     <title>Solo Radio</title>
-    <script type="module" crossorigin src="./assets/index-RSLQ7UKP.js"></script>
-    <link rel="modulepreload" crossorigin href="./assets/vue-BzfBwZcn.js">
-    <link rel="stylesheet" crossorigin href="./assets/index-D0_-SpvN.css">
+    <script>
+      // 方案 1（用户指定）：自动跳 HTTP，保证 Chrome/安卓能播 HTTP 电台（浏览器 Mixed Content Block 对 HTTP 页不生效）
+      // 仅命中生产域名时跳；localhost / IP / 非生产域不动，方便调试
+      ;(function () {
+        try {
+          var h = (location.hostname || '').toLowerCase()
+          if (location.protocol === 'https:' && (
+            h === 'zztomatozz.com' ||
+            h === 'www.zztomatozz.com' ||
+            h === 'louwbc.github.io'
+          )) {
+            var httpUrl = 'http://' + location.host + location.pathname + location.search + location.hash
+            // 替换不产生历史记录，避免用户回退到 https 又跳一次
+            location.replace(httpUrl)
+          }
+        } catch (e) { /* noop */ }
+      })()
+    </script>
+    <script type="module" crossorigin src="./assets/index-DYybX41d.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/vue-CWW1NG4g.js">
+    <link rel="stylesheet" crossorigin href="./assets/index-D7Q9v15w.css">
   </head>
   <body>
     <div id="app"></div>
