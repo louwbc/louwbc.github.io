@@ -8841,5 +8841,15 @@
     "watchUrl": "https://petclub-samsungaus.amagi.tv/playlist.m3u8",
     "note": "香港持牌英语生活频道（宠物主题），来自公开 HLS 源。",
     "id": "petclubtv-hk-sd"
+  },
+  {
+    "id": "fintv-hk",
+    "title": "現代電視 FinTV（財華社）",
+    "region": "亚洲",
+    "language": "粤语",
+    "category": "财经",
+    "kind": "external",
+    "watchUrl": "https://www.fintv.hk/Zhcn/live",
+    "note": "香港财华社集团旗下财经视频新媒体平台，点击「打开」跳转官网直播页观看。"
   }
 ]
