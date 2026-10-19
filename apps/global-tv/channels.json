@@ -8797,5 +8797,49 @@
     "watchUrl": "https://origin2.afxp.telemedia.co.za/abr/trigger/playlist.m3u8",
     "note": "非洲英语频道，分类为综合，来自公开 HLS 直播源。",
     "id": "trigger-za-sd"
+  },
+  {
+    "title": "RTHK TV 31 (港台電視31)",
+    "region": "亚洲",
+    "language": "英语",
+    "category": "公共资讯",
+    "kind": "hls",
+    "streamUrl": "https://rthktv31-live.akamaized.net/hls/live/2036818/RTHKTV31/master.m3u8",
+    "watchUrl": "https://www.rthk.hk/tv",
+    "note": "香港电台旗舰频道，含英语新闻与时事节目，来自官方公开 HLS 源。",
+    "id": "rthktv31-hk-hd"
+  },
+  {
+    "title": "HOY TV (77) (1080p)",
+    "region": "亚洲",
+    "language": "粤语",
+    "category": "综合",
+    "kind": "hls",
+    "streamUrl": "https://hoytv-live-stream.hoy.tv/ch77/index.m3u8",
+    "watchUrl": "https://hoy.tv/live",
+    "note": "香港免费电视综合频道（粤语），来自官方公开 HLS 源。",
+    "id": "hoytv77-hk-sd"
+  },
+  {
+    "title": "HOY Infotainment (78) (1080p)",
+    "region": "亚洲",
+    "language": "粤语",
+    "category": "资讯",
+    "kind": "hls",
+    "streamUrl": "https://hoytv-live-stream.hoy.tv/ch78/index.m3u8",
+    "watchUrl": "https://hoy.tv/live",
+    "note": "香港免费电视资讯频道（粤语），来自官方公开 HLS 源。",
+    "id": "hoyinfotainment-hk-sd"
+  },
+  {
+    "title": "Pet Club TV (1080p)",
+    "region": "亚洲",
+    "language": "英语",
+    "category": "生活",
+    "kind": "hls",
+    "streamUrl": "https://petclub-samsungaus.amagi.tv/playlist.m3u8",
+    "watchUrl": "https://petclub-samsungaus.amagi.tv/playlist.m3u8",
+    "note": "香港持牌英语生活频道（宠物主题），来自公开 HLS 源。",
+    "id": "petclubtv-hk-sd"
   }
 ]
