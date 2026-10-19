@@ -9570,5 +9570,89 @@
     "watchUrl": "https://www.pbs.org/",
     "note": "美国 PBS 旅游与人文频道，来自公开 HLS 源。",
     "id": "pbs-travel-us"
+  },
+  {
+    "title": "The Graham Norton Show (UK) (1080p)",
+    "region": "欧洲",
+    "country": "英国",
+    "language": "英语",
+    "category": "访谈",
+    "kind": "hls",
+    "streamUrl": "https://amg00654-itv-amg00654c35-rakuten-gb-7598.playouts.now.amagi.tv/playlist.m3u8",
+    "watchUrl": "https://www.itv.com/hub/the-graham-norton-show",
+    "note": "英国 ITV 王牌名人访谈脱口秀，来自 Rakuten TV 公开源。",
+    "id": "graham-norton-show-uk"
+  },
+  {
+    "title": "Entertainment Tonight (US) (1080p)",
+    "region": "北美",
+    "country": "美国",
+    "language": "英语",
+    "category": "访谈",
+    "kind": "hls",
+    "streamUrl": "https://enterbcef94b.airspace-cdn.cbsivideo.com/master.m3u8",
+    "watchUrl": "https://www.etonline.com/",
+    "note": "美国好莱坞娱乐新闻与明星访谈节目，来自公开 HLS 源。",
+    "id": "entertainment-tonight-us"
+  },
+  {
+    "title": "TVS Talk Network (US) (360p)",
+    "region": "北美",
+    "country": "美国",
+    "language": "英语",
+    "category": "访谈",
+    "kind": "hls",
+    "streamUrl": "https://rpn.bozztv.com/gusa/gusa-TVStalk/index.m3u8",
+    "watchUrl": "https://www.tvstvnetwork.com/",
+    "note": "美国谈话与人物访谈网络，来自公开 HLS 源。",
+    "id": "tvs-talk-network"
+  },
+  {
+    "title": "The First TV (US) (1080p)",
+    "region": "北美",
+    "country": "美国",
+    "language": "英语",
+    "category": "观点评论",
+    "kind": "hls",
+    "streamUrl": "https://thefirst-oando.amagi.tv/playlist.m3u8",
+    "watchUrl": "https://www.thefirsttv.com/",
+    "note": "美国时政谈话与观点评论频道，来自公开 HLS 源。",
+    "id": "the-first-tv-us"
+  },
+  {
+    "title": "Newsmax 2 (US) (1080p)",
+    "region": "北美",
+    "country": "美国",
+    "language": "英语",
+    "category": "观点评论",
+    "kind": "hls",
+    "streamUrl": "https://amg00217-newsmax-newsmax-zeasn-022k9.amagi.tv/playlist.m3u8",
+    "watchUrl": "https://www.newsmax.com/",
+    "note": "美国 Newsmax 时政谈话与评论频道，来自公开 HLS 源。",
+    "id": "newsmax-2-us"
+  },
+  {
+    "title": "Real America's Voice (US) (1080p)",
+    "region": "北美",
+    "country": "美国",
+    "language": "英语",
+    "category": "观点评论",
+    "kind": "hls",
+    "streamUrl": "https://stream.weathernationtv.com/RAVStirr_poekxujeisurekugzezyg/O1/playlistSCTE35.m3u8",
+    "watchUrl": "https://americasvoice.news/",
+    "note": "美国时政谈话与人物访谈频道，来自公开 HLS 源。",
+    "id": "real-americas-voice-us"
+  },
+  {
+    "title": "Free Speech TV (US) (720p)",
+    "region": "北美",
+    "country": "美国",
+    "language": "英语",
+    "category": "观点评论",
+    "kind": "hls",
+    "streamUrl": "https://na.linear.zype.com/f2f02a72-71d0-45f3-829f-4ae51f721102/86ef0177-697d-41c4-be57-c4d1a2b83cad-hls4/live.m3u8",
+    "watchUrl": "https://www.freespeech.org/",
+    "note": "美国社会议题谈话与纪录片频道，来自公开 HLS 源。",
+    "id": "free-speech-tv-us"
   }
 ]
