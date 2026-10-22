@@ -4,6 +4,7 @@ const ui = {
   q: $('#q'),
   tag: $('#tag'),
   lang: $('#lang'),
+  country: $('#country'),
   insecure: $('#insecure'),
   searchBtn: $('#searchBtn'),
   info: $('#info'),
@@ -35,6 +36,7 @@ const STORE = {
   includeInsecure: 'global-fm:includeInsecure',
   preferredLanguage: 'global-fm:preferredLanguage',
   preferredTag: 'global-fm:preferredTag',
+  preferredCountry: 'global-fm:preferredCountry',
   podcasts: 'global-fm:podcasts',
   recommendedCache: 'global-fm:recommendedCache',
   recommendedCacheMeta: 'global-fm:recommendedCacheMeta',
@@ -94,6 +96,8 @@ async function init() {
   await discoverApiBase()
   await loadLanguages()
   applyPreferredLanguage()
+  await loadCountries()
+  applyPreferredCountry()
   await loadTags()
   applyPreferredTag()
   await loadBundledAvailable(true)
@@ -334,6 +338,11 @@ ui.tag.addEventListener('change', () => {
   setTab('discover', false)
   search(true)
 })
+ui.country.addEventListener('change', () => {
+  save(STORE.preferredCountry, ui.country.value || '')
+  setTab('discover', false)
+  search(true)
+})
 
 async function search(reset) {
   if (state.loading) return
@@ -353,6 +362,7 @@ async function search(reset) {
     const q = ui.q.value.trim()
     const tag = ui.tag.value
     const lang = ui.lang.value
+    const country = ui.country.value
     const includeInsecure = ui.insecure.checked
     const offset = state.page * state.pageSize
 
@@ -362,6 +372,7 @@ async function search(reset) {
       tag_exact: false,
       language: lang || undefined,
       language_exact: false,
+      countrycode: country || undefined,
       hidebroken: true,
       order: 'clickcount',
       reverse: true,
@@ -379,6 +390,9 @@ async function search(reset) {
       } else if (lang && !q && !tag) {
         const byLang = await apiGet(`/stations/bylanguage/${encodeURIComponent(lang)}?hidebroken=true&order=clickcount&reverse=true&offset=0&limit=${state.pageSize}`)
         results = filterHttps(byLang, includeInsecure)
+      } else if (country && !q && !tag && !lang) {
+        const byCountry = await apiGet(`/stations/bycountrycodeexact/${encodeURIComponent(country)}?hidebroken=true&order=clickcount&reverse=true&offset=0&limit=${state.pageSize}`)
+        results = filterHttps(byCountry, includeInsecure)
       }
     }
 
@@ -1894,6 +1908,56 @@ function applyPreferredLanguage() {
   const opts = Array.from(ui.lang.options)
   const match = opts.find(o => o.value.toLowerCase() === String(preferred).toLowerCase())
   if (match) ui.lang.value = match.value
+}
+
+const COUNTRY_SHORT_NAMES = {
+  'The United States Of America': 'United States',
+  'The United Kingdom Of Great Britain And Northern Ireland': 'United Kingdom',
+  'The Russian Federation': 'Russia',
+  'The Democratic Peoples Republic Of Korea': 'North Korea',
+  'The Democratic Republic Of The Congo': 'DR Congo',
+  'The Lao Peoples Democratic Republic': 'Laos',
+  'Bolivarian Republic Of Venezuela': 'Venezuela',
+  'Ascension And Tristan Da Cunha Saint Helena': 'St Helena & Ascension',
+  'The United States Minor Outlying Islands': 'US Minor Outlying Is.',
+  'The Falkland Islands Malvinas': 'Falkland Islands',
+  'The Turks And Caicos Islands': 'Turks And Caicos',
+  'The French Southern Territories': 'French Southern Terr.',
+  'The Central African Republic': 'Central African Rep.',
+  'Republic Of North Macedonia': 'North Macedonia',
+  'United Republic Of Tanzania': 'Tanzania'
+}
+
+async function loadCountries() {
+  try {
+    const countries = await apiGet('/countries?hidebroken=true')
+    const cleaned = (countries || [])
+      .map(x => ({
+        name: String(x.name || '').trim(),
+        code: String(x.iso_3166_1 || '').trim().toUpperCase(),
+        count: x.stationcount || 0
+      }))
+      .filter(x => x.name && x.code && x.count > 0)
+      .sort((a, b) => b.count - a.count)
+    for (const c of cleaned) {
+      const opt = document.createElement('option')
+      opt.value = c.code
+      opt.textContent = `${shortCountryName(c.name)} (${c.count})`
+      ui.country.appendChild(opt)
+    }
+  } catch (_) {}
+}
+
+function shortCountryName(name) {
+  const key = String(name || '').trim()
+  return COUNTRY_SHORT_NAMES[key] || key.replace(/^The /, '')
+}
+
+function applyPreferredCountry() {
+  const preferred = String(load(STORE.preferredCountry, '') || '').trim().toUpperCase()
+  if (!preferred) return
+  const match = Array.from(ui.country.options).find(o => o.value.toUpperCase() === preferred)
+  if (match) ui.country.value = match.value
 }
 
 async function loadTags() {
